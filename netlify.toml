@@ -1,7 +1,7 @@
 [build]
   base = "harava-insights"
   command = "npm run build"
-  publish = "harava-insights/.next"
+  publish = ".next"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
