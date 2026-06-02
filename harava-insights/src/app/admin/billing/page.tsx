@@ -22,9 +22,9 @@ export default function BillingPage() {
       <DashboardHeader title="Billing & Subscriptions" subtitle="Manage plans, invoices, and payments" />
       <div className="p-6 space-y-6">
         <div className="grid grid-cols-3 gap-4">
-          <Card><CardContent className="p-4 flex items-center gap-3"><DollarSign className="w-8 h-8 text-emerald-500" /><div><p className="text-xl font-bold">$4,796</p><p className="text-xs text-gray-500">Monthly Revenue</p></div></CardContent></Card>
+          <Card><CardContent className="p-4 flex items-center gap-3"><DollarSign className="w-8 h-8 text-gold" /><div><p className="text-xl font-bold">$4,796</p><p className="text-xs text-gray-500">Monthly Revenue</p></div></CardContent></Card>
           <Card><CardContent className="p-4 flex items-center gap-3"><CreditCard className="w-8 h-8 text-violet-500" /><div><p className="text-xl font-bold">4</p><p className="text-xs text-gray-500">Active Subscriptions</p></div></CardContent></Card>
-          <Card><CardContent className="p-4 flex items-center gap-3"><Users className="w-8 h-8 text-blue-500" /><div><p className="text-xl font-bold">90</p><p className="text-xs text-gray-500">Licensed Users</p></div></CardContent></Card>
+          <Card><CardContent className="p-4 flex items-center gap-3"><Users className="w-8 h-8 text-navy" /><div><p className="text-xl font-bold">90</p><p className="text-xs text-gray-500">Licensed Users</p></div></CardContent></Card>
         </div>
 
         <Card>

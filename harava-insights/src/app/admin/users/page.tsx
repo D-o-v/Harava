@@ -81,7 +81,7 @@ export default function UsersPage() {
         </Card>
       </div>
 
-      <Modal open={addModal} onClose={() => setAddModal(false)} title="Add New User">
+      <Modal isOpen={addModal} onClose={() => setAddModal(false)} title="Add New User">
         <div className="space-y-4">
           <div><label className="text-xs text-gray-500">Full Name</label><input className="w-full border rounded-lg px-3 py-2 text-sm mt-1" placeholder="Enter name" /></div>
           <div><label className="text-xs text-gray-500">Email</label><input className="w-full border rounded-lg px-3 py-2 text-sm mt-1" placeholder="user@example.com" /></div>

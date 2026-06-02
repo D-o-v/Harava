@@ -32,10 +32,10 @@ export default function ReportsPage() {
           {reports.map((report, i) => {
             const Icon = report.icon;
             return (
-              <Card key={i} className={`cursor-pointer hover:shadow-md transition-shadow ${selectedReport === report.title ? "ring-2 ring-emerald-500" : ""}`} onClick={() => setSelectedReport(report.title)}>
+              <Card key={i} className={`cursor-pointer hover:shadow-md transition-shadow ${selectedReport === report.title ? "ring-2 ring-gold-500" : ""}`} onClick={() => setSelectedReport(report.title)}>
                 <CardContent className="p-5">
                   <div className="flex items-start gap-3">
-                    <Icon className="w-5 h-5 text-emerald-600 mt-0.5" />
+                    <Icon className="w-5 h-5 text-navy mt-0.5" />
                     <div className="flex-1">
                       <p className="text-sm font-medium text-gray-900">{report.title}</p>
                       <p className="text-xs text-gray-500 mt-0.5">{report.desc}</p>

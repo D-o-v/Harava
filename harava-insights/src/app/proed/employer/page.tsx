@@ -23,9 +23,9 @@ export default function EmployerPage() {
       <div className="p-6 space-y-6">
         <div className="grid grid-cols-4 gap-4">
           <Card><CardContent className="p-4 flex items-center gap-3"><Users className="w-8 h-8 text-violet-500" /><div><p className="text-xl font-bold">12</p><p className="text-xs text-gray-500">Team Members</p></div></CardContent></Card>
-          <Card><CardContent className="p-4 flex items-center gap-3"><TrendingUp className="w-8 h-8 text-emerald-500" /><div><p className="text-xl font-bold">78%</p><p className="text-xs text-gray-500">Avg Completion</p></div></CardContent></Card>
+          <Card><CardContent className="p-4 flex items-center gap-3"><TrendingUp className="w-8 h-8 text-gold" /><div><p className="text-xl font-bold">78%</p><p className="text-xs text-gray-500">Avg Completion</p></div></CardContent></Card>
           <Card><CardContent className="p-4 flex items-center gap-3"><Award className="w-8 h-8 text-amber-500" /><div><p className="text-xl font-bold">23</p><p className="text-xs text-gray-500">Certificates Earned</p></div></CardContent></Card>
-          <Card><CardContent className="p-4 flex items-center gap-3"><Building2 className="w-8 h-8 text-blue-500" /><div><p className="text-xl font-bold">75%</p><p className="text-xs text-gray-500">CPD Compliance</p></div></CardContent></Card>
+          <Card><CardContent className="p-4 flex items-center gap-3"><Building2 className="w-8 h-8 text-navy" /><div><p className="text-xl font-bold">75%</p><p className="text-xs text-gray-500">CPD Compliance</p></div></CardContent></Card>
         </div>
 
         <Card>

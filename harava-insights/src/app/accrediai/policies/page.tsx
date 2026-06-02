@@ -50,7 +50,7 @@ export default function PoliciesPage() {
               <tbody className="divide-y">
                 {policies.map((p) => (
                   <tr key={p.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-3 font-medium text-gray-900 flex items-center gap-2"><FileText className="w-4 h-4 text-blue-500" />{p.title}</td>
+                    <td className="px-6 py-3 font-medium text-gray-900 flex items-center gap-2"><FileText className="w-4 h-4 text-navy" />{p.title}</td>
                     <td className="px-6 py-3 text-center text-gray-600">v{p.version}</td>
                     <td className="px-6 py-3 text-center text-gray-500">{p.lastReview}</td>
                     <td className="px-6 py-3 text-center text-gray-500">{p.owner}</td>
@@ -68,7 +68,7 @@ export default function PoliciesPage() {
         </Card>
       </div>
 
-      <Modal open={addModal} onClose={() => setAddModal(false)} title="Create New Policy">
+      <Modal isOpen={addModal} onClose={() => setAddModal(false)} title="Create New Policy">
         <div className="space-y-4">
           <div><label className="text-xs text-gray-500">Policy Title</label><input className="w-full border rounded-lg px-3 py-2 text-sm mt-1" placeholder="Enter policy title" /></div>
           <div><label className="text-xs text-gray-500">Owner</label><input className="w-full border rounded-lg px-3 py-2 text-sm mt-1" placeholder="Responsible team/person" /></div>

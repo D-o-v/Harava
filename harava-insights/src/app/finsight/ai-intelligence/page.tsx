@@ -83,7 +83,7 @@ export default function AiIntelligencePage() {
 
           {/* Predictions */}
           <Card>
-            <CardHeader><CardTitle className="flex items-center gap-2"><TrendingUp className="w-4 h-4 text-emerald-500" /> AI Predictions (Next 30 days)</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="flex items-center gap-2"><TrendingUp className="w-4 h-4 text-gold" /> AI Predictions (Next 30 days)</CardTitle></CardHeader>
             <CardContent className="space-y-3">
               {predictions.map((p, i) => (
                 <div key={i} className="flex items-center justify-between p-3 border rounded-lg">

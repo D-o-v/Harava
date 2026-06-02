@@ -29,7 +29,7 @@ export default function ProEdDashboard() {
           </Card>
           <Card className="cursor-pointer hover:shadow-md" onClick={() => router.push("/proed/tracks")}>
             <CardContent className="p-5 flex items-center gap-3">
-              <Target className="w-8 h-8 text-emerald-500" />
+              <Target className="w-8 h-8 text-gold" />
               <div><p className="text-2xl font-bold">68%</p><p className="text-xs text-gray-500">Track Progress</p></div>
             </CardContent>
           </Card>
@@ -108,8 +108,8 @@ export default function ProEdDashboard() {
         <div className="grid md:grid-cols-4 gap-4">
           {[
             { title: "AI Tutor", icon: Brain, href: "/proed/ai-tutor", color: "text-violet-500" },
-            { title: "Assessment", icon: Target, href: "/proed/assessment", color: "text-blue-500" },
-            { title: "Case Studies", icon: BookOpen, href: "/proed/case-studies", color: "text-emerald-500" },
+            { title: "Assessment", icon: Target, href: "/proed/assessment", color: "text-navy" },
+            { title: "Case Studies", icon: BookOpen, href: "/proed/case-studies", color: "text-gold" },
             { title: "Community", icon: GraduationCap, href: "/proed/community", color: "text-amber-500" },
           ].map((action, i) => {
             const Icon = action.icon;

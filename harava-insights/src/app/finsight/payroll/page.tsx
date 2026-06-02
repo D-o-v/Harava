@@ -38,8 +38,8 @@ export default function PayrollPage() {
 
       <div className="p-6 space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card><CardContent className="p-4 flex items-center gap-3"><Users className="w-8 h-8 text-blue-500" /><div><p className="text-2xl font-bold">24</p><p className="text-xs text-gray-500">Employees</p></div></CardContent></Card>
-          <Card><CardContent className="p-4 flex items-center gap-3"><DollarSign className="w-8 h-8 text-emerald-500" /><div><p className="text-2xl font-bold">$124.8K</p><p className="text-xs text-gray-500">Monthly Gross</p></div></CardContent></Card>
+          <Card><CardContent className="p-4 flex items-center gap-3"><Users className="w-8 h-8 text-navy" /><div><p className="text-2xl font-bold">24</p><p className="text-xs text-gray-500">Employees</p></div></CardContent></Card>
+          <Card><CardContent className="p-4 flex items-center gap-3"><DollarSign className="w-8 h-8 text-gold" /><div><p className="text-2xl font-bold">$124.8K</p><p className="text-xs text-gray-500">Monthly Gross</p></div></CardContent></Card>
           <Card><CardContent className="p-4 flex items-center gap-3"><Calendar className="w-8 h-8 text-violet-500" /><div><p className="text-2xl font-bold">Jun 15</p><p className="text-xs text-gray-500">Next Run</p></div></CardContent></Card>
           <Card className="cursor-pointer hover:shadow-md" onClick={() => setShowRunModal(true)}>
             <CardContent className="p-4 flex items-center gap-3"><Play className="w-8 h-8 text-amber-500" /><div><p className="text-sm font-bold text-amber-600">Run Payroll</p><p className="text-xs text-gray-500">Process next period</p></div></CardContent>
@@ -82,7 +82,7 @@ export default function PayrollPage() {
         </Card>
       </div>
 
-      <Modal open={showRunModal} onClose={() => setShowRunModal(false)} title="Run Payroll">
+      <Modal isOpen={showRunModal} onClose={() => setShowRunModal(false)} title="Run Payroll">
         <div className="space-y-4">
           <p className="text-sm text-gray-600">Process payroll for the period <strong>Jun 1–15, 2026</strong></p>
           <div className="bg-gray-50 rounded-lg p-4 space-y-2">

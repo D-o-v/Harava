@@ -19,8 +19,8 @@ export default function AnalyticsPage() {
 
         <div className="grid grid-cols-4 gap-4">
           <Card><CardContent className="p-4 flex items-center gap-3"><Users className="w-8 h-8 text-violet-500" /><div><p className="text-xl font-bold">3,456</p><p className="text-xs text-gray-500">Monthly Active Users</p></div></CardContent></Card>
-          <Card><CardContent className="p-4 flex items-center gap-3"><Clock className="w-8 h-8 text-blue-500" /><div><p className="text-xl font-bold">24 min</p><p className="text-xs text-gray-500">Avg Session Duration</p></div></CardContent></Card>
-          <Card><CardContent className="p-4 flex items-center gap-3"><TrendingUp className="w-8 h-8 text-emerald-500" /><div><p className="text-xl font-bold">89%</p><p className="text-xs text-gray-500">User Satisfaction</p></div></CardContent></Card>
+          <Card><CardContent className="p-4 flex items-center gap-3"><Clock className="w-8 h-8 text-navy" /><div><p className="text-xl font-bold">24 min</p><p className="text-xs text-gray-500">Avg Session Duration</p></div></CardContent></Card>
+          <Card><CardContent className="p-4 flex items-center gap-3"><TrendingUp className="w-8 h-8 text-gold" /><div><p className="text-xl font-bold">89%</p><p className="text-xs text-gray-500">User Satisfaction</p></div></CardContent></Card>
           <Card><CardContent className="p-4 flex items-center gap-3"><BarChart3 className="w-8 h-8 text-amber-500" /><div><p className="text-xl font-bold">99.9%</p><p className="text-xs text-gray-500">Uptime</p></div></CardContent></Card>
         </div>
 

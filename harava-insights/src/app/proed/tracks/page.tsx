@@ -27,8 +27,8 @@ export default function TracksPage() {
             <Card key={track.id} className="hover:shadow-md transition-shadow">
               <CardContent className="p-6 flex items-center justify-between">
                 <div className="flex items-center gap-4 flex-1">
-                  <div className={`w-12 h-12 rounded-full flex items-center justify-center ${track.status === "completed" ? "bg-emerald-100" : track.status === "active" ? "bg-violet-100" : "bg-gray-100"}`}>
-                    {track.status === "completed" ? <CheckCircle className="w-6 h-6 text-emerald-600" /> : <Target className="w-6 h-6 text-violet-600" />}
+                  <div className={`w-12 h-12 rounded-full flex items-center justify-center ${track.status === "completed" ? "bg-navy/10" : track.status === "active" ? "bg-violet-100" : "bg-gray-100"}`}>
+                    {track.status === "completed" ? <CheckCircle className="w-6 h-6 text-navy" /> : <Target className="w-6 h-6 text-violet-600" />}
                   </div>
                   <div className="flex-1">
                     <h3 className="text-sm font-semibold text-gray-900">{track.title}</h3>

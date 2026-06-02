@@ -30,7 +30,7 @@ export default function TaxPage() {
       <div className="p-6 space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Card><CardContent className="p-4 text-center"><p className="text-2xl font-bold text-amber-600">{deadlines.filter(d => d.status === "upcoming").length}</p><p className="text-xs text-gray-500">Upcoming Deadlines</p></CardContent></Card>
-          <Card><CardContent className="p-4 text-center"><p className="text-2xl font-bold text-emerald-600">{deadlines.filter(d => d.status === "filed").length}</p><p className="text-xs text-gray-500">Filed</p></CardContent></Card>
+          <Card><CardContent className="p-4 text-center"><p className="text-2xl font-bold text-navy">{deadlines.filter(d => d.status === "filed").length}</p><p className="text-xs text-gray-500">Filed</p></CardContent></Card>
           <Card><CardContent className="p-4 text-center"><p className="text-2xl font-bold text-gray-600">$24,800</p><p className="text-xs text-gray-500">Est. Tax Liability (Q2)</p></CardContent></Card>
         </div>
 
@@ -79,7 +79,7 @@ export default function TaxPage() {
               ].map((insight, i) => (
                 <div key={i} className="flex items-start justify-between p-3 rounded-lg bg-gray-50">
                   <div className="flex items-start gap-3">
-                    <AlertTriangle className="w-5 h-5 text-blue-500 mt-0.5 shrink-0" />
+                    <AlertTriangle className="w-5 h-5 text-navy mt-0.5 shrink-0" />
                     <div>
                       <p className="text-sm font-medium text-gray-900">{insight.title}</p>
                       <p className="text-xs text-gray-600 mt-0.5">{insight.message}</p>

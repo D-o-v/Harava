@@ -62,7 +62,7 @@ export default function ApprovalsPage() {
           </Card>
           <Card>
             <CardContent className="p-4 flex items-center gap-3">
-              <CheckCircle className="w-8 h-8 text-emerald-500" />
+              <CheckCircle className="w-8 h-8 text-gold" />
               <div><p className="text-2xl font-bold">{items.filter(i => i.status === "approved").length}</p><p className="text-xs text-gray-500">Approved</p></div>
             </CardContent>
           </Card>
@@ -80,7 +80,7 @@ export default function ApprovalsPage() {
           <CardContent className="p-0">
             {pending.length === 0 ? (
               <div className="p-8 text-center text-gray-500">
-                <CheckCircle className="w-8 h-8 mx-auto mb-2 text-emerald-400" />
+                <CheckCircle className="w-8 h-8 mx-auto mb-2 text-gold" />
                 <p>All caught up! No pending items.</p>
               </div>
             ) : (
@@ -151,7 +151,7 @@ export default function ApprovalsPage() {
       </div>
 
       {/* View Detail Modal */}
-      <Modal open={!!viewItem} onClose={() => setViewItem(null)} title="Approval Details">
+      <Modal isOpen={!!viewItem} onClose={() => setViewItem(null)} title="Approval Details">
         {viewItem && (
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">

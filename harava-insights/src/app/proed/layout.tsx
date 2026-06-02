@@ -34,7 +34,7 @@ export default function ProEdLayout({ children }: { children: React.ReactNode })
   return (
     <div className="flex h-screen overflow-hidden">
       <DashboardSidebar navigation={navigation} product="proed" />
-      <main className="flex-1 overflow-y-auto bg-gray-50">{children}</main>
+      <main className="flex-1 overflow-y-auto bg-[var(--background)] bg-premium-mesh">{children}</main>
     </div>
   );
 }

@@ -110,7 +110,7 @@ export default function ClientsPage() {
       </div>
 
       {/* Add Client Modal */}
-      <Modal open={showAddModal} onClose={() => setShowAddModal(false)} title="Add New Client">
+      <Modal isOpen={showAddModal} onClose={() => setShowAddModal(false)} title="Add New Client">
         <div className="space-y-4">
           <div>
             <label className="text-sm font-medium text-gray-700 block mb-1">Company Name</label>
@@ -140,7 +140,7 @@ export default function ClientsPage() {
       </Modal>
 
       {/* View Client Modal */}
-      <Modal open={!!viewClient} onClose={() => setViewClient(null)} title="Client Details">
+      <Modal isOpen={!!viewClient} onClose={() => setViewClient(null)} title="Client Details">
         {viewClient && (
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">

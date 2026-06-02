@@ -28,8 +28,8 @@ export default function TrainingPage() {
       <div className="p-6 space-y-6">
         <div className="grid grid-cols-3 gap-4">
           <Card><CardContent className="p-4 flex items-center gap-3"><GraduationCap className="w-8 h-8 text-violet-500" /><div><p className="text-xl font-bold">5</p><p className="text-xs text-gray-500">Training Modules</p></div></CardContent></Card>
-          <Card><CardContent className="p-4 flex items-center gap-3"><CheckCircle className="w-8 h-8 text-emerald-500" /><div><p className="text-xl font-bold">65%</p><p className="text-xs text-gray-500">Overall Completion</p></div></CardContent></Card>
-          <Card><CardContent className="p-4 flex items-center gap-3"><Users className="w-8 h-8 text-blue-500" /><div><p className="text-xl font-bold">45</p><p className="text-xs text-gray-500">Team Members</p></div></CardContent></Card>
+          <Card><CardContent className="p-4 flex items-center gap-3"><CheckCircle className="w-8 h-8 text-gold" /><div><p className="text-xl font-bold">65%</p><p className="text-xs text-gray-500">Overall Completion</p></div></CardContent></Card>
+          <Card><CardContent className="p-4 flex items-center gap-3"><Users className="w-8 h-8 text-navy" /><div><p className="text-xl font-bold">45</p><p className="text-xs text-gray-500">Team Members</p></div></CardContent></Card>
         </div>
 
         <div className="space-y-4">
@@ -43,7 +43,7 @@ export default function TrainingPage() {
                   </div>
                   <p className="text-xs text-gray-500">{m.completed} of {m.assigned} completed • Due: {m.due}</p>
                   <div className="w-48 h-2 bg-gray-200 rounded-full mt-2 overflow-hidden">
-                    <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${(m.completed / m.assigned) * 100}%` }} />
+                    <div className="h-full bg-navy rounded-full" style={{ width: `${(m.completed / m.assigned) * 100}%` }} />
                   </div>
                 </div>
                 <div className="flex gap-2">

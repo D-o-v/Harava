@@ -29,7 +29,7 @@ export function ProfileView() {
           <CardHeader><CardTitle>Personal Information</CardTitle></CardHeader>
           <CardContent className="space-y-4">
             <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 mb-4">
-              <div className="w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 text-2xl font-bold">
+              <div className="w-20 h-20 rounded-full bg-navy/10 flex items-center justify-center text-navy text-2xl font-bold">
                 {user.firstName[0]}{user.lastName[0]}
               </div>
               <div>

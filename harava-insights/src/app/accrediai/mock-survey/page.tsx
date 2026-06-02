@@ -27,7 +27,7 @@ export default function MockSurveyPage() {
       <div className="p-6 space-y-6">
         <div className="grid grid-cols-3 gap-4">
           <Card><CardContent className="p-4 flex items-center gap-3"><ClipboardCheck className="w-8 h-8 text-violet-500" /><div><p className="text-xl font-bold">3</p><p className="text-xs text-gray-500">Total Surveys</p></div></CardContent></Card>
-          <Card><CardContent className="p-4 flex items-center gap-3"><BarChart3 className="w-8 h-8 text-emerald-500" /><div><p className="text-xl font-bold">79%</p><p className="text-xs text-gray-500">Avg Score</p></div></CardContent></Card>
+          <Card><CardContent className="p-4 flex items-center gap-3"><BarChart3 className="w-8 h-8 text-gold" /><div><p className="text-xl font-bold">79%</p><p className="text-xs text-gray-500">Avg Score</p></div></CardContent></Card>
           <Card><CardContent className="p-4 flex items-center gap-3"><AlertTriangle className="w-8 h-8 text-amber-500" /><div><p className="text-xl font-bold">20</p><p className="text-xs text-gray-500">Total Findings</p></div></CardContent></Card>
         </div>
 

@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/lib/toast";
 import { useAuth } from "@/lib/auth";
-import { TrendingUp, DollarSign, Receipt, AlertTriangle, CheckCircle, Clock, ArrowRight } from "lucide-react";
+import { TrendingUp, DollarSign, Receipt, AlertTriangle, CheckCircle, Clock, ArrowRight, ArrowUpRight, ArrowDownRight, Sparkles } from "lucide-react";
 
 export default function FinSightDashboard() {
   const router = useRouter();
@@ -34,70 +34,96 @@ export default function FinSightDashboard() {
     <div>
       <DashboardHeader title={`Welcome back, ${user?.firstName || "User"}`} subtitle="Here's your financial overview" />
 
-      <div className="p-6 space-y-6">
+      <div className="p-4 sm:p-6 lg:p-8 space-y-6 page-enter">
         {/* KPI Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => router.push("/finsight/reports")}>
-            <CardContent className="p-5">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-500">Revenue (MTD)</p>
-                  <p className="text-2xl font-bold text-gray-900 mt-1">$124,500</p>
-                  <span className="text-xs text-emerald-600 flex items-center gap-1"><TrendingUp className="w-3 h-3" /> +12% vs last month</span>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-5 stagger-children">
+          {/* Revenue */}
+          <div className="stat-card p-5 cursor-pointer group" onClick={() => router.push("/finsight/reports")}>
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-[12px] font-medium text-navy/45 uppercase tracking-wider">Revenue (MTD)</p>
+                <p className="text-2xl font-bold text-navy mt-2 tracking-tight">$124,500</p>
+                <div className="flex items-center gap-1.5 mt-2">
+                  <span className="inline-flex items-center gap-0.5 text-[11px] font-semibold text-navy bg-navy/5 px-1.5 py-0.5 rounded-md">
+                    <ArrowUpRight className="w-3 h-3" /> +12%
+                  </span>
+                  <span className="text-[11px] text-navy/35">vs last month</span>
                 </div>
-                <DollarSign className="w-8 h-8 text-emerald-500" />
               </div>
-            </CardContent>
-          </Card>
-          <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => router.push("/finsight/accounting")}>
-            <CardContent className="p-5">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-500">Expenses (MTD)</p>
-                  <p className="text-2xl font-bold text-gray-900 mt-1">$78,200</p>
-                  <span className="text-xs text-red-600">+5% vs last month</span>
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-navy/[0.06] to-gold/[0.04] flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                <DollarSign className="w-5 h-5 text-navy/50" />
+              </div>
+            </div>
+          </div>
+
+          {/* Expenses */}
+          <div className="stat-card p-5 cursor-pointer group" onClick={() => router.push("/finsight/accounting")}>
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-[12px] font-medium text-navy/45 uppercase tracking-wider">Expenses (MTD)</p>
+                <p className="text-2xl font-bold text-navy mt-2 tracking-tight">$78,200</p>
+                <div className="flex items-center gap-1.5 mt-2">
+                  <span className="inline-flex items-center gap-0.5 text-[11px] font-semibold text-red-600 bg-red-50 px-1.5 py-0.5 rounded-md">
+                    <ArrowDownRight className="w-3 h-3" /> +5%
+                  </span>
+                  <span className="text-[11px] text-navy/35">vs last month</span>
                 </div>
-                <Receipt className="w-8 h-8 text-red-500" />
               </div>
-            </CardContent>
-          </Card>
-          <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => router.push("/finsight/reconciliation")}>
-            <CardContent className="p-5">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-500">Net Income</p>
-                  <p className="text-2xl font-bold text-gray-900 mt-1">$46,300</p>
-                  <span className="text-xs text-emerald-600">+18% vs last month</span>
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-navy/[0.06] to-gold/[0.04] flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                <Receipt className="w-5 h-5 text-navy/50" />
+              </div>
+            </div>
+          </div>
+
+          {/* Net Income */}
+          <div className="stat-card p-5 cursor-pointer group" onClick={() => router.push("/finsight/reconciliation")}>
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-[12px] font-medium text-navy/45 uppercase tracking-wider">Net Income</p>
+                <p className="text-2xl font-bold text-navy mt-2 tracking-tight">$46,300</p>
+                <div className="flex items-center gap-1.5 mt-2">
+                  <span className="inline-flex items-center gap-0.5 text-[11px] font-semibold text-navy bg-navy/5 px-1.5 py-0.5 rounded-md">
+                    <ArrowUpRight className="w-3 h-3" /> +18%
+                  </span>
+                  <span className="text-[11px] text-navy/35">vs last month</span>
                 </div>
-                <TrendingUp className="w-8 h-8 text-emerald-500" />
               </div>
-            </CardContent>
-          </Card>
-          <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => router.push("/finsight/approvals")}>
-            <CardContent className="p-5">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-500">Pending Approvals</p>
-                  <p className="text-2xl font-bold text-gray-900 mt-1">{pendingApprovals.length}</p>
-                  <span className="text-xs text-amber-600">Requires attention</span>
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-navy/[0.06] to-gold/[0.04] flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                <TrendingUp className="w-5 h-5 text-navy/50" />
+              </div>
+            </div>
+          </div>
+
+          {/* Pending Approvals */}
+          <div className="stat-card p-5 cursor-pointer group" onClick={() => router.push("/finsight/approvals")}>
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-[12px] font-medium text-navy/45 uppercase tracking-wider">Pending Approvals</p>
+                <p className="text-2xl font-bold text-navy mt-2 tracking-tight">{pendingApprovals.length}</p>
+                <div className="flex items-center gap-1.5 mt-2">
+                  <span className="inline-flex items-center gap-0.5 text-[11px] font-semibold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded-md">
+                    Requires attention
+                  </span>
                 </div>
-                <Clock className="w-8 h-8 text-amber-500" />
               </div>
-            </CardContent>
-          </Card>
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-navy/[0.06] to-gold/[0.04] flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                <Clock className="w-5 h-5 text-navy/50" />
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-6">
+        <div className="grid lg:grid-cols-2 gap-5 lg:gap-6">
           {/* Recent Transactions */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Recent Transactions</CardTitle>
-              <Button variant="ghost" size="sm" onClick={() => router.push("/finsight/accounting")}>
+              <Button variant="ghost" size="xs" onClick={() => router.push("/finsight/accounting")}>
                 View All <ArrowRight className="w-3 h-3" />
               </Button>
             </CardHeader>
             <CardContent className="p-0">
-              <div className="divide-y">
+              <div className="divide-y divide-navy/[0.04]">
                 {[
                   { desc: "Client Payment - Acme Corp", amount: "+$15,000", date: "Today", type: "income" },
                   { desc: "SaaS Subscription - Slack", amount: "-$1,200", date: "Today", type: "expense" },
@@ -105,12 +131,12 @@ export default function FinSightDashboard() {
                   { desc: "Office Rent", amount: "-$4,500", date: "Yesterday", type: "expense" },
                   { desc: "Consulting Fee - Delta Inc", amount: "+$22,000", date: "Jun 28", type: "income" },
                 ].map((tx, i) => (
-                  <div key={i} className="flex items-center justify-between px-5 py-3 hover:bg-gray-50 cursor-pointer" onClick={() => router.push("/finsight/accounting")}>
+                  <div key={i} className="flex items-center justify-between px-6 py-3.5 hover:bg-navy/[0.015] cursor-pointer transition-colors duration-200" onClick={() => router.push("/finsight/accounting")}>
                     <div>
-                      <p className="text-sm text-gray-900">{tx.desc}</p>
-                      <p className="text-xs text-gray-500">{tx.date}</p>
+                      <p className="text-[13px] font-medium text-navy">{tx.desc}</p>
+                      <p className="text-[11px] text-navy/35 mt-0.5">{tx.date}</p>
                     </div>
-                    <span className={`text-sm font-medium ${tx.type === "income" ? "text-emerald-600" : "text-red-600"}`}>
+                    <span className={`text-[13px] font-semibold ${tx.type === "income" ? "text-navy" : "text-red-500"}`}>
                       {tx.amount}
                     </span>
                   </div>
@@ -123,30 +149,32 @@ export default function FinSightDashboard() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Pending Approvals</CardTitle>
-              <Button variant="ghost" size="sm" onClick={() => router.push("/finsight/approvals")}>
+              <Button variant="ghost" size="xs" onClick={() => router.push("/finsight/approvals")}>
                 View All <ArrowRight className="w-3 h-3" />
               </Button>
             </CardHeader>
             <CardContent>
               {pendingApprovals.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  <CheckCircle className="w-8 h-8 mx-auto mb-2 text-emerald-400" />
-                  <p className="text-sm">All caught up! No pending approvals.</p>
+                <div className="text-center py-10">
+                  <div className="w-12 h-12 rounded-2xl bg-navy/5 flex items-center justify-center mx-auto mb-3">
+                    <CheckCircle className="w-6 h-6 text-gold" />
+                  </div>
+                  <p className="text-[13px] text-navy/45 font-medium">All caught up! No pending approvals.</p>
                 </div>
               ) : (
                 <div className="space-y-3">
                   {pendingApprovals.map((item) => (
-                    <div key={item.id} className="flex items-center justify-between p-3 border rounded-lg">
+                    <div key={item.id} className="flex items-center justify-between p-4 border border-navy/[0.05] rounded-xl hover:border-navy/[0.1] hover:bg-navy/[0.01] transition-all duration-200">
                       <div>
-                        <p className="text-sm font-medium text-gray-900">{item.title}</p>
-                        <div className="flex items-center gap-2 mt-1">
-                          <Badge variant="info">{item.type}</Badge>
-                          <span className="text-sm text-gray-600">{item.amount}</span>
+                        <p className="text-[13px] font-medium text-navy">{item.title}</p>
+                        <div className="flex items-center gap-2 mt-1.5">
+                          <Badge variant="info" size="sm">{item.type}</Badge>
+                          <span className="text-[12px] text-navy/45 font-medium">{item.amount}</span>
                         </div>
                       </div>
                       <div className="flex gap-2">
-                        <Button variant="primary" size="sm" onClick={() => handleApprove(item.id)}>Approve</Button>
-                        <Button variant="outline" size="sm" onClick={() => handleReject(item.id)}>Reject</Button>
+                        <Button variant="gold" size="xs" onClick={() => handleApprove(item.id)}>Approve</Button>
+                        <Button variant="ghost" size="xs" onClick={() => handleReject(item.id)}>Reject</Button>
                       </div>
                     </div>
                   ))}
@@ -157,10 +185,16 @@ export default function FinSightDashboard() {
         </div>
 
         {/* AI Insights */}
-        <Card>
+        <Card className="overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-gold/60 via-gold-light/40 to-transparent" />
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>AI Insights</CardTitle>
-            <Button variant="ghost" size="sm" onClick={() => router.push("/finsight/ai-intelligence")}>
+            <div className="flex items-center gap-2.5">
+              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-gold/10 to-gold/5 flex items-center justify-center">
+                <Sparkles className="w-3.5 h-3.5 text-gold" />
+              </div>
+              <CardTitle>AI Insights</CardTitle>
+            </div>
+            <Button variant="ghost" size="xs" onClick={() => router.push("/finsight/ai-intelligence")}>
               View All <ArrowRight className="w-3 h-3" />
             </Button>
           </CardHeader>
@@ -171,11 +205,13 @@ export default function FinSightDashboard() {
                 { title: "Cash Flow Forecast", message: "Projected cash position dips to $180K in 2 weeks. Consider delaying non-essential payments.", severity: "warning" },
                 { title: "Month-End Ready", message: "All reconciliations complete. 98% of transactions categorized automatically.", severity: "success" },
               ].map((insight, i) => (
-                <div key={i} className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 cursor-pointer hover:bg-gray-100" onClick={() => router.push("/finsight/ai-intelligence")}>
-                  <AlertTriangle className={`w-5 h-5 mt-0.5 shrink-0 ${insight.severity === "warning" ? "text-amber-500" : "text-emerald-500"}`} />
+                <div key={i} className="flex items-start gap-3.5 p-4 rounded-xl bg-navy/[0.015] border border-navy/[0.04] cursor-pointer hover:bg-navy/[0.025] hover:border-navy/[0.07] transition-all duration-200" onClick={() => router.push("/finsight/ai-intelligence")}>
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${insight.severity === "warning" ? "bg-amber-50" : "bg-navy/5"}`}>
+                    <AlertTriangle className={`w-4 h-4 ${insight.severity === "warning" ? "text-amber-500" : "text-gold"}`} />
+                  </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-900">{insight.title}</p>
-                    <p className="text-xs text-gray-600 mt-0.5">{insight.message}</p>
+                    <p className="text-[13px] font-semibold text-navy">{insight.title}</p>
+                    <p className="text-[12px] text-navy/45 mt-0.5 leading-relaxed">{insight.message}</p>
                   </div>
                 </div>
               ))}

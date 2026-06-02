@@ -49,7 +49,7 @@ export default function GapAnalysisPage() {
         <div className="grid grid-cols-3 gap-4">
           <Card><CardContent className="p-4 text-center"><p className="text-2xl font-bold text-red-600">{gaps.filter(g => g.status === "open").length}</p><p className="text-xs text-gray-500">Open Gaps</p></CardContent></Card>
           <Card><CardContent className="p-4 text-center"><p className="text-2xl font-bold text-amber-600">{gaps.filter(g => g.status === "in-progress").length}</p><p className="text-xs text-gray-500">In Progress</p></CardContent></Card>
-          <Card><CardContent className="p-4 text-center"><p className="text-2xl font-bold text-emerald-600">{gaps.filter(g => g.status === "resolved").length}</p><p className="text-xs text-gray-500">Resolved</p></CardContent></Card>
+          <Card><CardContent className="p-4 text-center"><p className="text-2xl font-bold text-navy">{gaps.filter(g => g.status === "resolved").length}</p><p className="text-xs text-gray-500">Resolved</p></CardContent></Card>
         </div>
 
         <Card>
@@ -93,7 +93,7 @@ export default function GapAnalysisPage() {
         </Card>
       </div>
 
-      <Modal open={!!viewGap} onClose={() => setViewGap(null)} title="Gap Details">
+      <Modal isOpen={!!viewGap} onClose={() => setViewGap(null)} title="Gap Details">
         {viewGap && (
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">

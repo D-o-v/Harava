@@ -32,7 +32,7 @@ export default function PipelinePage() {
   ]);
 
   const stages = ["lead", "proposal", "negotiation", "won", "lost"] as const;
-  const stageColors = { lead: "bg-gray-100", proposal: "bg-blue-100", negotiation: "bg-amber-100", won: "bg-emerald-100", lost: "bg-red-100" };
+  const stageColors = { lead: "bg-gray-100", proposal: "bg-navy/10", negotiation: "bg-amber-100", won: "bg-navy/10", lost: "bg-red-100" };
 
   const advanceStage = (id: number) => {
     setDeals((prev) => prev.map((d) => {
@@ -65,7 +65,7 @@ export default function PipelinePage() {
                         <p className="text-xs font-semibold text-gray-900">{deal.client}</p>
                         <p className="text-xs text-gray-500">{deal.service}</p>
                         <div className="flex items-center justify-between mt-2">
-                          <span className="text-xs font-medium text-emerald-600">{deal.value}</span>
+                          <span className="text-xs font-medium text-navy">{deal.value}</span>
                           <span className="text-xs text-gray-400">{deal.probability}%</span>
                         </div>
                       </CardContent>
@@ -78,7 +78,7 @@ export default function PipelinePage() {
         </div>
       </div>
 
-      <Modal open={!!selected} onClose={() => setSelected(null)} title="Deal Details">
+      <Modal isOpen={!!selected} onClose={() => setSelected(null)} title="Deal Details">
         {selected && (
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">

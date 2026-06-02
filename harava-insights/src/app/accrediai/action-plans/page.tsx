@@ -45,8 +45,8 @@ export default function ActionPlansPage() {
       <div className="p-6 space-y-6">
         <div className="grid grid-cols-3 gap-4">
           <Card><CardContent className="p-4 flex items-center gap-3"><Clock className="w-6 h-6 text-amber-500" /><div><p className="text-xl font-bold">{tasks.filter(t => t.status === "not-started").length}</p><p className="text-xs text-gray-500">Not Started</p></div></CardContent></Card>
-          <Card><CardContent className="p-4 flex items-center gap-3"><AlertTriangle className="w-6 h-6 text-blue-500" /><div><p className="text-xl font-bold">{tasks.filter(t => t.status === "in-progress").length}</p><p className="text-xs text-gray-500">In Progress</p></div></CardContent></Card>
-          <Card><CardContent className="p-4 flex items-center gap-3"><CheckCircle className="w-6 h-6 text-emerald-500" /><div><p className="text-xl font-bold">{tasks.filter(t => t.status === "completed").length}</p><p className="text-xs text-gray-500">Completed</p></div></CardContent></Card>
+          <Card><CardContent className="p-4 flex items-center gap-3"><AlertTriangle className="w-6 h-6 text-navy" /><div><p className="text-xl font-bold">{tasks.filter(t => t.status === "in-progress").length}</p><p className="text-xs text-gray-500">In Progress</p></div></CardContent></Card>
+          <Card><CardContent className="p-4 flex items-center gap-3"><CheckCircle className="w-6 h-6 text-gold" /><div><p className="text-xl font-bold">{tasks.filter(t => t.status === "completed").length}</p><p className="text-xs text-gray-500">Completed</p></div></CardContent></Card>
         </div>
 
         <Card>
@@ -78,7 +78,7 @@ export default function ActionPlansPage() {
                     <td className="px-6 py-3 text-right">
                       {task.status === "not-started" && <Button variant="outline" size="sm" onClick={() => handleStart(task.id)}>Start</Button>}
                       {task.status === "in-progress" && <Button variant="primary" size="sm" onClick={() => handleComplete(task.id)}>Complete</Button>}
-                      {task.status === "completed" && <CheckCircle className="w-5 h-5 text-emerald-500 inline" />}
+                      {task.status === "completed" && <CheckCircle className="w-5 h-5 text-gold inline" />}
                     </td>
                   </tr>
                 ))}

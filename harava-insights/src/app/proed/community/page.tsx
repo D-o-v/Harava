@@ -50,8 +50,8 @@ export default function CommunityPage() {
       <div className="p-6 space-y-6">
         <div className="grid grid-cols-3 gap-4">
           <Card><CardContent className="p-4 flex items-center gap-3"><Users className="w-8 h-8 text-violet-500" /><div><p className="text-xl font-bold">2,450</p><p className="text-xs text-gray-500">Members</p></div></CardContent></Card>
-          <Card><CardContent className="p-4 flex items-center gap-3"><MessageSquare className="w-8 h-8 text-blue-500" /><div><p className="text-xl font-bold">186</p><p className="text-xs text-gray-500">Active Discussions</p></div></CardContent></Card>
-          <Card><CardContent className="p-4 flex items-center gap-3"><ThumbsUp className="w-8 h-8 text-emerald-500" /><div><p className="text-xl font-bold">1.2k</p><p className="text-xs text-gray-500">Helpful Answers</p></div></CardContent></Card>
+          <Card><CardContent className="p-4 flex items-center gap-3"><MessageSquare className="w-8 h-8 text-navy" /><div><p className="text-xl font-bold">186</p><p className="text-xs text-gray-500">Active Discussions</p></div></CardContent></Card>
+          <Card><CardContent className="p-4 flex items-center gap-3"><ThumbsUp className="w-8 h-8 text-gold" /><div><p className="text-xl font-bold">1.2k</p><p className="text-xs text-gray-500">Helpful Answers</p></div></CardContent></Card>
         </div>
 
         {/* New Post */}
@@ -89,7 +89,7 @@ export default function CommunityPage() {
                       <button onClick={() => handleLike(post.id)} className={`flex items-center gap-1 text-xs ${post.liked ? "text-violet-600" : "text-gray-400"} hover:text-violet-600`}>
                         <ThumbsUp className="w-3 h-3" /> {post.likes}
                       </button>
-                      <button onClick={() => toast("Opening thread...", "info")} className="flex items-center gap-1 text-xs text-gray-400 hover:text-blue-600">
+                      <button onClick={() => toast("Opening thread...", "info")} className="flex items-center gap-1 text-xs text-gray-400 hover:text-navy">
                         <MessageSquare className="w-3 h-3" /> {post.replies} replies
                       </button>
                     </div>

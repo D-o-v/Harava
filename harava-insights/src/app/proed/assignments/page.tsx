@@ -44,8 +44,8 @@ export default function AssignmentsPage() {
         <div className="grid grid-cols-4 gap-4">
           <Card><CardContent className="p-4 text-center"><p className="text-xl font-bold text-amber-600">{assignments.filter(a => a.status === "pending").length}</p><p className="text-xs text-gray-500">Pending</p></CardContent></Card>
           <Card><CardContent className="p-4 text-center"><p className="text-xl font-bold text-red-600">{assignments.filter(a => a.status === "overdue").length}</p><p className="text-xs text-gray-500">Overdue</p></CardContent></Card>
-          <Card><CardContent className="p-4 text-center"><p className="text-xl font-bold text-blue-600">{assignments.filter(a => a.status === "submitted").length}</p><p className="text-xs text-gray-500">Submitted</p></CardContent></Card>
-          <Card><CardContent className="p-4 text-center"><p className="text-xl font-bold text-emerald-600">{assignments.filter(a => a.status === "graded").length}</p><p className="text-xs text-gray-500">Graded</p></CardContent></Card>
+          <Card><CardContent className="p-4 text-center"><p className="text-xl font-bold text-navy">{assignments.filter(a => a.status === "submitted").length}</p><p className="text-xs text-gray-500">Submitted</p></CardContent></Card>
+          <Card><CardContent className="p-4 text-center"><p className="text-xl font-bold text-navy">{assignments.filter(a => a.status === "graded").length}</p><p className="text-xs text-gray-500">Graded</p></CardContent></Card>
         </div>
 
         <Card>
@@ -87,7 +87,7 @@ export default function AssignmentsPage() {
         </Card>
       </div>
 
-      <Modal open={!!submitModal} onClose={() => setSubmitModal(null)} title="Submit Assignment">
+      <Modal isOpen={!!submitModal} onClose={() => setSubmitModal(null)} title="Submit Assignment">
         {submitModal && (
           <div className="space-y-4">
             <p className="text-sm text-gray-600">Submitting: <strong>{submitModal.title}</strong></p>

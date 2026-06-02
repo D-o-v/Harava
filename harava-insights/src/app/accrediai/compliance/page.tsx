@@ -36,7 +36,7 @@ export default function CompliancePage() {
       <div className="p-6 space-y-6">
         <div className="grid grid-cols-4 gap-4">
           <Card><CardContent className="p-4 text-center"><p className="text-xl font-bold text-gray-900">{controls.length}</p><p className="text-xs text-gray-500">Total Controls</p></CardContent></Card>
-          <Card><CardContent className="p-4 text-center"><p className="text-xl font-bold text-emerald-600">{compliant}</p><p className="text-xs text-gray-500">Compliant</p></CardContent></Card>
+          <Card><CardContent className="p-4 text-center"><p className="text-xl font-bold text-navy">{compliant}</p><p className="text-xs text-gray-500">Compliant</p></CardContent></Card>
           <Card><CardContent className="p-4 text-center"><p className="text-xl font-bold text-amber-600">{partial}</p><p className="text-xs text-gray-500">Partial</p></CardContent></Card>
           <Card><CardContent className="p-4 text-center"><p className="text-xl font-bold text-red-600">{nonCompliant}</p><p className="text-xs text-gray-500">Non-Compliant</p></CardContent></Card>
         </div>
@@ -60,7 +60,7 @@ export default function CompliancePage() {
                 {controls.map((c) => (
                   <tr key={c.id} className="hover:bg-gray-50">
                     <td className="px-6 py-3 font-medium text-gray-900 flex items-center gap-2">
-                      {c.status === "compliant" ? <CheckCircle className="w-4 h-4 text-emerald-500" /> : c.status === "partial" ? <AlertTriangle className="w-4 h-4 text-amber-500" /> : <XCircle className="w-4 h-4 text-red-500" />}
+                      {c.status === "compliant" ? <CheckCircle className="w-4 h-4 text-gold" /> : c.status === "partial" ? <AlertTriangle className="w-4 h-4 text-amber-500" /> : <XCircle className="w-4 h-4 text-red-500" />}
                       {c.name}
                     </td>
                     <td className="px-6 py-3 text-center text-gray-500">{c.evidence} items</td>

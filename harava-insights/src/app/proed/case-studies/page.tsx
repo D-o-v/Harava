@@ -50,7 +50,7 @@ export default function CaseStudiesPage() {
         </div>
       </div>
 
-      <Modal open={selected !== null} onClose={() => setSelected(null)} title="Case Study Details" size="md">
+      <Modal isOpen={selected !== null} onClose={() => setSelected(null)} title="Case Study Details" size="md">
         {selected && (() => {
           const cs = caseStudies.find((c) => c.id === selected)!;
           return (

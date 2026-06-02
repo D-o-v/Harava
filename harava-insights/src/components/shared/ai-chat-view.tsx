@@ -51,11 +51,11 @@ export function AiChatView() {
           {messages.map((msg) => (
             <div key={msg.id} className={`flex gap-3 ${msg.role === "user" ? "justify-end" : ""}`}>
               {msg.role === "ai" && (
-                <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
-                  <Bot className="w-4 h-4 text-emerald-700" />
+                <div className="w-8 h-8 rounded-full bg-navy/10 flex items-center justify-center shrink-0">
+                  <Bot className="w-4 h-4 text-navy" />
                 </div>
               )}
-              <div className={`max-w-[85%] sm:max-w-[75%] rounded-xl px-4 py-3 text-sm ${msg.role === "user" ? "bg-emerald-600 text-white" : "bg-white border text-gray-800"}`}>
+              <div className={`max-w-[85%] sm:max-w-[75%] rounded-xl px-4 py-3 text-sm ${msg.role === "user" ? "bg-navy text-white" : "bg-white border text-gray-800"}`}>
                 {msg.content}
               </div>
               {msg.role === "user" && (
@@ -69,8 +69,8 @@ export function AiChatView() {
           {messages.length === 1 && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-6">
               {suggestions.map((s, i) => (
-                <button key={i} onClick={() => setInput(s)} className="text-left p-3 border rounded-lg hover:bg-emerald-50 hover:border-emerald-300 text-xs text-gray-600 transition-colors">
-                  <Sparkles className="w-3 h-3 text-emerald-400 inline mr-1" />{s}
+                <button key={i} onClick={() => setInput(s)} className="text-left p-3 border rounded-lg hover:bg-navy/5 hover:border-gold/50 text-xs text-gray-600 transition-colors">
+                  <Sparkles className="w-3 h-3 text-gold inline mr-1" />{s}
                 </button>
               ))}
             </div>
@@ -86,7 +86,7 @@ export function AiChatView() {
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSend()}
             placeholder="Ask anything..."
-            className="flex-1 border rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-emerald-300"
+            className="flex-1 border rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-[3px] focus:ring-gold/30"
           />
           <Button variant="primary" onClick={handleSend} disabled={!input.trim()}>
             <Send className="w-4 h-4" />

@@ -57,7 +57,7 @@ export default function ContentPage() {
               <tbody className="divide-y">
                 {content.filter((c) => c.title.toLowerCase().includes(search.toLowerCase())).map((c) => (
                   <tr key={c.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-3 font-medium text-gray-900 flex items-center gap-2"><FileText className="w-4 h-4 text-blue-500" />{c.title}</td>
+                    <td className="px-6 py-3 font-medium text-gray-900 flex items-center gap-2"><FileText className="w-4 h-4 text-navy" />{c.title}</td>
                     <td className="px-6 py-3 text-center"><Badge variant="default">{c.type}</Badge></td>
                     <td className="px-6 py-3 text-center text-gray-500">{c.product}</td>
                     <td className="px-6 py-3 text-center"><Badge variant={c.status === "published" ? "success" : c.status === "draft" ? "default" : "warning"}>{c.status}</Badge></td>

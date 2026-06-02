@@ -39,7 +39,7 @@ export default function AdminDashboard() {
                   <div>
                     <p className="text-2xl font-bold">{stat.value}</p>
                     <p className="text-xs text-gray-500">{stat.label}</p>
-                    <p className="text-xs text-emerald-600">{stat.change}</p>
+                    <p className="text-xs text-navy">{stat.change}</p>
                   </div>
                 </CardContent>
               </Card>

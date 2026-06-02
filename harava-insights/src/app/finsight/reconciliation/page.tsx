@@ -51,7 +51,7 @@ export default function ReconciliationPage() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div className="text-center">
-              <p className="text-2xl font-bold text-emerald-600">{accounts.filter(a => a.status === "matched").length}</p>
+              <p className="text-2xl font-bold text-navy">{accounts.filter(a => a.status === "matched").length}</p>
               <p className="text-xs text-gray-500">Matched</p>
             </div>
             <div className="text-center">
@@ -89,7 +89,7 @@ export default function ReconciliationPage() {
                     <td className="px-6 py-3 font-medium text-gray-900">{account.name}</td>
                     <td className="px-6 py-3 text-right text-gray-700">{account.bookBalance}</td>
                     <td className="px-6 py-3 text-right text-gray-700">{account.bankBalance}</td>
-                    <td className={`px-6 py-3 text-right font-medium ${account.difference === "$0" ? "text-emerald-600" : "text-red-600"}`}>{account.difference}</td>
+                    <td className={`px-6 py-3 text-right font-medium ${account.difference === "$0" ? "text-navy" : "text-red-600"}`}>{account.difference}</td>
                     <td className="px-6 py-3 text-center">
                       <Badge variant={account.status === "matched" ? "success" : account.status === "unmatched" ? "error" : "warning"}>{account.status}</Badge>
                     </td>

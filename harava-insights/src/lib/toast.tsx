@@ -41,10 +41,10 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   };
 
   const colors = {
-    success: "bg-emerald-50 border-emerald-200 text-emerald-800",
-    error: "bg-red-50 border-red-200 text-red-800",
-    warning: "bg-amber-50 border-amber-200 text-amber-800",
-    info: "bg-blue-50 border-blue-200 text-blue-800",
+    success: "bg-white border-emerald-200/60 text-navy shadow-[var(--shadow-lg)]",
+    error: "bg-white border-red-200/60 text-navy shadow-[var(--shadow-lg)]",
+    warning: "bg-white border-amber-200/60 text-navy shadow-[var(--shadow-lg)]",
+    info: "bg-white border-blue-200/60 text-navy shadow-[var(--shadow-lg)]",
   };
 
   const iconColors = {
@@ -58,20 +58,20 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     <ToastContext.Provider value={{ toast: addToast }}>
       {children}
       {/* Toast Container */}
-      <div className="fixed top-4 right-4 z-100 space-y-2 max-w-sm">
+      <div className="fixed top-4 right-4 z-[100] space-y-2.5 max-w-sm">
         {toasts.map((t) => {
           const Icon = icons[t.type];
           return (
             <div
               key={t.id}
               className={cn(
-                "flex items-center gap-3 px-4 py-3 rounded-lg border shadow-lg animate-in slide-in-from-right",
+                "flex items-center gap-3 px-4 py-3.5 rounded-xl border backdrop-blur-sm animate-slide-in-left",
                 colors[t.type]
               )}
             >
               <Icon className={cn("w-5 h-5 shrink-0", iconColors[t.type])} />
-              <p className="text-sm flex-1">{t.message}</p>
-              <button onClick={() => removeToast(t.id)} className="shrink-0 opacity-60 hover:opacity-100">
+              <p className="text-[13px] flex-1 font-medium">{t.message}</p>
+              <button onClick={() => removeToast(t.id)} className="shrink-0 text-navy/30 hover:text-navy/60 transition-colors">
                 <X className="w-4 h-4" />
               </button>
             </div>

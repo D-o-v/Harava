@@ -106,7 +106,7 @@ export default function AccountingPage() {
                     <td className="px-6 py-3 text-gray-500">{tx.date}</td>
                     <td className="px-6 py-3 font-medium text-gray-900">{tx.description}</td>
                     <td className="px-6 py-3 text-gray-600">{tx.category}</td>
-                    <td className={`px-6 py-3 text-right font-medium ${tx.type === "income" ? "text-emerald-600" : "text-red-600"}`}>
+                    <td className={`px-6 py-3 text-right font-medium ${tx.type === "income" ? "text-navy" : "text-red-600"}`}>
                       {tx.type === "income" ? "+" : "-"}${tx.amount.toLocaleString()}
                     </td>
                     <td className="px-6 py-3 text-center">
@@ -147,7 +147,7 @@ export default function AccountingPage() {
       </div>
 
       {/* Add Transaction Modal */}
-      <Modal open={showAddModal} onClose={() => setShowAddModal(false)} title="Add Transaction">
+      <Modal isOpen={showAddModal} onClose={() => setShowAddModal(false)} title="Add Transaction">
         <div className="space-y-4">
           <div>
             <label className="text-sm font-medium text-gray-700 block mb-1">Description</label>
@@ -186,12 +186,12 @@ export default function AccountingPage() {
       </Modal>
 
       {/* View Transaction Modal */}
-      <Modal open={!!viewTx} onClose={() => setViewTx(null)} title="Transaction Details">
+      <Modal isOpen={!!viewTx} onClose={() => setViewTx(null)} title="Transaction Details">
         {viewTx && (
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-4">
               <div><p className="text-xs text-gray-500">Description</p><p className="text-sm font-medium">{viewTx.description}</p></div>
-              <div><p className="text-xs text-gray-500">Amount</p><p className={`text-sm font-medium ${viewTx.type === "income" ? "text-emerald-600" : "text-red-600"}`}>{viewTx.type === "income" ? "+" : "-"}${viewTx.amount.toLocaleString()}</p></div>
+              <div><p className="text-xs text-gray-500">Amount</p><p className={`text-sm font-medium ${viewTx.type === "income" ? "text-navy" : "text-red-600"}`}>{viewTx.type === "income" ? "+" : "-"}${viewTx.amount.toLocaleString()}</p></div>
               <div><p className="text-xs text-gray-500">Category</p><p className="text-sm font-medium">{viewTx.category}</p></div>
               <div><p className="text-xs text-gray-500">Date</p><p className="text-sm font-medium">{viewTx.date}</p></div>
               <div><p className="text-xs text-gray-500">Status</p><Badge variant={viewTx.status === "reconciled" ? "success" : "info"}>{viewTx.status}</Badge></div>

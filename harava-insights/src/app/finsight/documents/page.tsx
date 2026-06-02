@@ -57,7 +57,7 @@ export default function DocumentsPage() {
               <tbody className="divide-y">
                 {filtered.map((doc) => (
                   <tr key={doc.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-3 font-medium text-gray-900 flex items-center gap-2"><FileText className="w-4 h-4 text-blue-500" />{doc.name}</td>
+                    <td className="px-6 py-3 font-medium text-gray-900 flex items-center gap-2"><FileText className="w-4 h-4 text-navy" />{doc.name}</td>
                     <td className="px-6 py-3 text-center"><Badge variant="default">{doc.category}</Badge></td>
                     <td className="px-6 py-3 text-center text-gray-500">{doc.size}</td>
                     <td className="px-6 py-3 text-center text-gray-500">{doc.uploaded}</td>
@@ -74,7 +74,7 @@ export default function DocumentsPage() {
         </Card>
       </div>
 
-      <Modal open={uploadModal} onClose={() => setUploadModal(false)} title="Upload Document">
+      <Modal isOpen={uploadModal} onClose={() => setUploadModal(false)} title="Upload Document">
         <div className="space-y-4">
           <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
             <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />

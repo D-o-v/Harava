@@ -66,9 +66,9 @@ export function NotificationsView() {
           </Card>
         ) : (
           notifications.map((n) => (
-            <Card key={n.id} className={!n.read ? "border-l-4 border-l-blue-500" : ""}>
+            <Card key={n.id} className={!n.read ? "border-l-4 border-l-gold" : ""}>
               <CardContent className="p-4 flex items-start gap-3">
-                <Bell className={`w-5 h-5 mt-0.5 shrink-0 ${!n.read ? "text-blue-500" : "text-gray-400"}`} />
+                <Bell className={`w-5 h-5 mt-0.5 shrink-0 ${!n.read ? "text-gold" : "text-gray-400"}`} />
                 <div className="flex-1 min-w-0 cursor-pointer" onClick={() => markRead(n.id)}>
                   <div className="flex flex-wrap items-center gap-2">
                     <p className={`text-sm ${!n.read ? "font-semibold text-gray-900" : "text-gray-700"}`}>{n.title}</p>

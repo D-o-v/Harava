@@ -30,13 +30,13 @@ export default function AccrediAIDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card className="cursor-pointer hover:shadow-md" onClick={() => router.push("/accrediai/pipeline")}>
             <CardContent className="p-5 flex items-center gap-3">
-              <Users className="w-8 h-8 text-blue-500" />
+              <Users className="w-8 h-8 text-navy" />
               <div><p className="text-2xl font-bold">7</p><p className="text-xs text-gray-500">Active Clients</p></div>
             </CardContent>
           </Card>
           <Card className="cursor-pointer hover:shadow-md" onClick={() => router.push("/accrediai/readiness")}>
             <CardContent className="p-5 flex items-center gap-3">
-              <Target className="w-8 h-8 text-emerald-500" />
+              <Target className="w-8 h-8 text-gold" />
               <div><p className="text-2xl font-bold">72%</p><p className="text-xs text-gray-500">Avg. Readiness</p></div>
             </CardContent>
           </Card>
@@ -73,7 +73,7 @@ export default function AccrediAIDashboard() {
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
-                      <div className="h-full bg-blue-500 rounded-full" style={{ width: `${eng.progress}%` }} />
+                      <div className="h-full bg-navy rounded-full" style={{ width: `${eng.progress}%` }} />
                     </div>
                     <span className="text-xs text-gray-500 w-8">{eng.progress}%</span>
                   </div>
@@ -94,14 +94,14 @@ export default function AccrediAIDashboard() {
           </Card>
           <Card className="cursor-pointer hover:shadow-md" onClick={() => router.push("/accrediai/policies")}>
             <CardContent className="p-5 text-center">
-              <CheckCircle className="w-8 h-8 text-blue-500 mx-auto mb-2" />
+              <CheckCircle className="w-8 h-8 text-navy mx-auto mb-2" />
               <p className="text-sm font-medium text-gray-900">Policy Manual</p>
               <p className="text-xs text-gray-500">Manage policies & procedures</p>
             </CardContent>
           </Card>
           <Card className="cursor-pointer hover:shadow-md" onClick={() => router.push("/accrediai/mock-survey")}>
             <CardContent className="p-5 text-center">
-              <Target className="w-8 h-8 text-emerald-500 mx-auto mb-2" />
+              <Target className="w-8 h-8 text-gold mx-auto mb-2" />
               <p className="text-sm font-medium text-gray-900">Mock Survey</p>
               <p className="text-xs text-gray-500">Prepare for live survey</p>
             </CardContent>

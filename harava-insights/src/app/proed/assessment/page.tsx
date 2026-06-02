@@ -50,7 +50,7 @@ export default function AssessmentPage() {
       <div className="p-6 space-y-6">
         <div className="grid grid-cols-3 gap-4">
           <Card><CardContent className="p-4 flex items-center gap-3"><Trophy className="w-8 h-8 text-amber-500" /><div><p className="text-xl font-bold">88%</p><p className="text-xs text-gray-500">Avg Score</p></div></CardContent></Card>
-          <Card><CardContent className="p-4 flex items-center gap-3"><ClipboardCheck className="w-8 h-8 text-emerald-500" /><div><p className="text-xl font-bold">2</p><p className="text-xs text-gray-500">Completed</p></div></CardContent></Card>
+          <Card><CardContent className="p-4 flex items-center gap-3"><ClipboardCheck className="w-8 h-8 text-gold" /><div><p className="text-xl font-bold">2</p><p className="text-xs text-gray-500">Completed</p></div></CardContent></Card>
           <Card><CardContent className="p-4 flex items-center gap-3"><Clock className="w-8 h-8 text-violet-500" /><div><p className="text-xl font-bold">2</p><p className="text-xs text-gray-500">Available</p></div></CardContent></Card>
         </div>
 
@@ -91,7 +91,7 @@ export default function AssessmentPage() {
         </Card>
       </div>
 
-      <Modal open={quizModal} onClose={() => setQuizModal(false)} title="Quick Assessment">
+      <Modal isOpen={quizModal} onClose={() => setQuizModal(false)} title="Quick Assessment">
         <div className="space-y-4">
           {score === null ? (
             <>
