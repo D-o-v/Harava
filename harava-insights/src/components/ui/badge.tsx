@@ -9,14 +9,14 @@ const badgeVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-navy/[0.06] text-navy border border-navy/[0.08]",
+        default: "bg-navy/6 text-navy border border-navy/8",
         success: "bg-emerald-50 text-emerald-700 border border-emerald-200/60",
         warning: "bg-amber-50 text-amber-700 border border-amber-200/60",
         error: "bg-red-50 text-red-700 border border-red-200/60",
         info: "bg-blue-50 text-blue-700 border border-blue-200/60",
-        gold: "bg-gold/[0.08] text-gold-dark border border-gold/[0.15]",
-        navy: "bg-navy/[0.06] text-navy border border-navy/[0.1]",
-        outline: "bg-transparent text-navy/70 border border-navy/[0.12]",
+        gold: "bg-gold/8 text-gold-dark border border-gold/15",
+        navy: "bg-navy/6 text-navy border border-navy/10",
+        outline: "bg-transparent text-navy/70 border border-navy/12",
       },
       size: {
         sm: "px-2 py-0.5 text-[10px] rounded-md",

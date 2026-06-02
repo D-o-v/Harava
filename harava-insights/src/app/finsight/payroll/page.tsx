@@ -52,7 +52,7 @@ export default function PayrollPage() {
             <Button variant="primary" size="sm" onClick={() => setShowRunModal(true)}><Play className="w-4 h-4" /> Run Payroll</Button>
           </CardHeader>
           <CardContent className="p-0">
-            <table className="w-full text-sm">
+            <div className="overflow-x-auto"><table className="w-full text-sm min-w-150">
               <thead className="bg-gray-50 border-b">
                 <tr>
                   <th className="text-left px-6 py-3 font-medium text-gray-500">Period</th>
@@ -77,7 +77,7 @@ export default function PayrollPage() {
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </table></div>
           </CardContent>
         </Card>
       </div>

@@ -10,19 +10,19 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-navy text-white rounded-xl hover:bg-navy-light shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-md)] active:scale-[0.97] hover:-translate-y-[1px]",
+          "bg-navy text-white rounded-xl hover:bg-navy-light shadow-[var(--shadow-sm)] hover:shadow-(--shadow-md) active:scale-[0.97] hover:-translate-y-px",
         primary:
-          "bg-gradient-to-r from-gold to-gold-light text-navy font-semibold rounded-xl hover:shadow-[0_8px_24px_-4px_rgba(193,155,63,0.35)] active:scale-[0.97] hover:-translate-y-[1px]",
+          "bg-linear-to-r from-gold to-gold-light text-navy-brand font-semibold rounded-xl hover:shadow-[0_8px_24px_-4px_rgba(193,155,63,0.35)] active:scale-[0.97] hover:-translate-y-px",
         secondary:
-          "bg-navy/[0.04] text-navy rounded-xl hover:bg-navy/[0.08] border border-navy/[0.08] hover:border-navy/[0.12] active:scale-[0.97]",
+          "bg-navy/4 text-navy rounded-xl hover:bg-navy/8 border border-navy/8 hover:border-navy/12 active:scale-[0.97]",
         outline:
-          "border-[1.5px] border-navy/[0.12] bg-white text-navy rounded-xl hover:bg-navy/[0.03] hover:border-navy/[0.2] active:scale-[0.97]",
+          "border-[1.5px] border-navy/12 bg-white text-navy rounded-xl hover:bg-navy/3 hover:border-navy/[0.2] active:scale-[0.97]",
         ghost:
-          "text-navy/60 rounded-xl hover:bg-navy/[0.04] hover:text-navy active:scale-[0.97]",
+          "text-navy/60 rounded-xl hover:bg-navy/4 hover:text-navy active:scale-[0.97]",
         destructive:
           "bg-red-600 text-white rounded-xl hover:bg-red-700 shadow-[var(--shadow-sm)] active:scale-[0.97]",
         gold:
-          "bg-gold text-navy font-semibold rounded-xl hover:bg-gold-light shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-glow-gold)] active:scale-[0.97] hover:-translate-y-[1px]",
+          "bg-gold text-navy-brand font-semibold rounded-xl hover:bg-gold-light shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-glow-gold)] active:scale-[0.97] hover:-translate-y-px",
       },
       size: {
         xs: "h-7 px-2.5 text-[11px] rounded-lg",

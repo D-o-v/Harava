@@ -55,12 +55,12 @@ export function AiChatView() {
                   <Bot className="w-4 h-4 text-navy" />
                 </div>
               )}
-              <div className={`max-w-[85%] sm:max-w-[75%] rounded-xl px-4 py-3 text-sm ${msg.role === "user" ? "bg-navy text-white" : "bg-white border text-gray-800"}`}>
+              <div className={`max-w-[85%] sm:max-w-[75%] rounded-xl px-4 py-3 text-sm ${msg.role === "user" ? "bg-navy text-white" : "bg-white border text-navy"}`}>
                 {msg.content}
               </div>
               {msg.role === "user" && (
-                <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center shrink-0">
-                  <User className="w-4 h-4 text-gray-600" />
+                <div className="w-8 h-8 rounded-full bg-navy/10 flex items-center justify-center shrink-0">
+                  <User className="w-4 h-4 text-navy/60" />
                 </div>
               )}
             </div>
@@ -69,7 +69,7 @@ export function AiChatView() {
           {messages.length === 1 && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-6">
               {suggestions.map((s, i) => (
-                <button key={i} onClick={() => setInput(s)} className="text-left p-3 border rounded-lg hover:bg-navy/5 hover:border-gold/50 text-xs text-gray-600 transition-colors">
+                <button key={i} onClick={() => setInput(s)} className="text-left p-3 border rounded-lg hover:bg-navy/5 hover:border-gold/50 text-xs text-navy/60 transition-colors">
                   <Sparkles className="w-3 h-3 text-gold inline mr-1" />{s}
                 </button>
               ))}

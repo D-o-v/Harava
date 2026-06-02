@@ -33,7 +33,7 @@ export default function FinSightLayout({ children }: { children: React.ReactNode
   return (
     <div className="flex h-screen overflow-hidden">
       <DashboardSidebar navigation={navigation} product="finsight" />
-      <main className="flex-1 overflow-y-auto bg-[var(--background)] bg-premium-mesh">{children}</main>
+      <main className="flex-1 overflow-y-auto bg-background bg-premium-mesh">{children}</main>
     </div>
   );
 }

@@ -33,7 +33,7 @@ export default function BillingPage() {
             <Button variant="outline" size="sm" onClick={() => toast("Exporting billing data...", "success")}><Download className="w-3 h-3" /> Export</Button>
           </CardHeader>
           <CardContent className="p-0">
-            <table className="w-full text-sm">
+            <div className="overflow-x-auto"><table className="w-full text-sm min-w-150">
               <thead className="bg-gray-50 border-b">
                 <tr>
                   <th className="text-left px-6 py-3 font-medium text-gray-500">Client</th>
@@ -60,7 +60,7 @@ export default function BillingPage() {
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </table></div>
           </CardContent>
         </Card>
       </div>

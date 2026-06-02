@@ -53,7 +53,7 @@ export default function PipelinePage() {
           {stages.map((stage) => {
             const stageDeals = deals.filter((d) => d.stage === stage);
             return (
-              <div key={stage} className={`rounded-lg p-3 ${stageColors[stage]} min-h-[300px]`}>
+              <div key={stage} className={`rounded-lg p-3 ${stageColors[stage]} min-h-75`}>
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="text-xs font-semibold text-gray-700 uppercase">{stage}</h3>
                   <Badge variant="default">{stageDeals.length}</Badge>

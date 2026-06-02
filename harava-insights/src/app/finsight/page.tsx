@@ -50,7 +50,7 @@ export default function FinSightDashboard() {
                   <span className="text-[11px] text-navy/35">vs last month</span>
                 </div>
               </div>
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-navy/[0.06] to-gold/[0.04] flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+              <div className="w-10 h-10 rounded-xl bg-linear-to-br from-navy/6 to-gold/4 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
                 <DollarSign className="w-5 h-5 text-navy/50" />
               </div>
             </div>
@@ -69,7 +69,7 @@ export default function FinSightDashboard() {
                   <span className="text-[11px] text-navy/35">vs last month</span>
                 </div>
               </div>
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-navy/[0.06] to-gold/[0.04] flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+              <div className="w-10 h-10 rounded-xl bg-linear-to-br from-navy/6 to-gold/4 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
                 <Receipt className="w-5 h-5 text-navy/50" />
               </div>
             </div>
@@ -88,7 +88,7 @@ export default function FinSightDashboard() {
                   <span className="text-[11px] text-navy/35">vs last month</span>
                 </div>
               </div>
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-navy/[0.06] to-gold/[0.04] flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+              <div className="w-10 h-10 rounded-xl bg-linear-to-br from-navy/6 to-gold/4 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
                 <TrendingUp className="w-5 h-5 text-navy/50" />
               </div>
             </div>
@@ -106,7 +106,7 @@ export default function FinSightDashboard() {
                   </span>
                 </div>
               </div>
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-navy/[0.06] to-gold/[0.04] flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+              <div className="w-10 h-10 rounded-xl bg-linear-to-br from-navy/6 to-gold/4 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
                 <Clock className="w-5 h-5 text-navy/50" />
               </div>
             </div>
@@ -123,7 +123,7 @@ export default function FinSightDashboard() {
               </Button>
             </CardHeader>
             <CardContent className="p-0">
-              <div className="divide-y divide-navy/[0.04]">
+              <div className="divide-y divide-navy/4">
                 {[
                   { desc: "Client Payment - Acme Corp", amount: "+$15,000", date: "Today", type: "income" },
                   { desc: "SaaS Subscription - Slack", amount: "-$1,200", date: "Today", type: "expense" },
@@ -131,7 +131,7 @@ export default function FinSightDashboard() {
                   { desc: "Office Rent", amount: "-$4,500", date: "Yesterday", type: "expense" },
                   { desc: "Consulting Fee - Delta Inc", amount: "+$22,000", date: "Jun 28", type: "income" },
                 ].map((tx, i) => (
-                  <div key={i} className="flex items-center justify-between px-6 py-3.5 hover:bg-navy/[0.015] cursor-pointer transition-colors duration-200" onClick={() => router.push("/finsight/accounting")}>
+                  <div key={i} className="flex items-center justify-between px-6 py-3.5 hover:bg-navy/1.5 cursor-pointer transition-colors duration-200" onClick={() => router.push("/finsight/accounting")}>
                     <div>
                       <p className="text-[13px] font-medium text-navy">{tx.desc}</p>
                       <p className="text-[11px] text-navy/35 mt-0.5">{tx.date}</p>
@@ -164,7 +164,7 @@ export default function FinSightDashboard() {
               ) : (
                 <div className="space-y-3">
                   {pendingApprovals.map((item) => (
-                    <div key={item.id} className="flex items-center justify-between p-4 border border-navy/[0.05] rounded-xl hover:border-navy/[0.1] hover:bg-navy/[0.01] transition-all duration-200">
+                    <div key={item.id} className="flex items-center justify-between p-4 border border-navy/5 rounded-xl hover:border-navy/10 hover:bg-navy/1 transition-all duration-200">
                       <div>
                         <p className="text-[13px] font-medium text-navy">{item.title}</p>
                         <div className="flex items-center gap-2 mt-1.5">
@@ -186,10 +186,10 @@ export default function FinSightDashboard() {
 
         {/* AI Insights */}
         <Card className="overflow-hidden">
-          <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-gold/60 via-gold-light/40 to-transparent" />
+          <div className="absolute top-0 left-0 right-0 h-0.5 bg-linear-to-r from-gold/60 via-gold-light/40 to-transparent" />
           <CardHeader className="flex flex-row items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-gold/10 to-gold/5 flex items-center justify-center">
+              <div className="w-7 h-7 rounded-lg bg-linear-to-br from-gold/10 to-gold/5 flex items-center justify-center">
                 <Sparkles className="w-3.5 h-3.5 text-gold" />
               </div>
               <CardTitle>AI Insights</CardTitle>
@@ -205,7 +205,7 @@ export default function FinSightDashboard() {
                 { title: "Cash Flow Forecast", message: "Projected cash position dips to $180K in 2 weeks. Consider delaying non-essential payments.", severity: "warning" },
                 { title: "Month-End Ready", message: "All reconciliations complete. 98% of transactions categorized automatically.", severity: "success" },
               ].map((insight, i) => (
-                <div key={i} className="flex items-start gap-3.5 p-4 rounded-xl bg-navy/[0.015] border border-navy/[0.04] cursor-pointer hover:bg-navy/[0.025] hover:border-navy/[0.07] transition-all duration-200" onClick={() => router.push("/finsight/ai-intelligence")}>
+                <div key={i} className="flex items-start gap-3.5 p-4 rounded-xl bg-navy/1.5 border border-navy/4 cursor-pointer hover:bg-navy/2.5 hover:border-navy/[0.07] transition-all duration-200" onClick={() => router.push("/finsight/ai-intelligence")}>
                   <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${insight.severity === "warning" ? "bg-amber-50" : "bg-navy/5"}`}>
                     <AlertTriangle className={`w-4 h-4 ${insight.severity === "warning" ? "text-amber-500" : "text-gold"}`} />
                   </div>

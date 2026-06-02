@@ -41,10 +41,10 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   };
 
   const colors = {
-    success: "bg-white border-emerald-200/60 text-navy shadow-[var(--shadow-lg)]",
-    error: "bg-white border-red-200/60 text-navy shadow-[var(--shadow-lg)]",
-    warning: "bg-white border-amber-200/60 text-navy shadow-[var(--shadow-lg)]",
-    info: "bg-white border-blue-200/60 text-navy shadow-[var(--shadow-lg)]",
+    success: "bg-white border-emerald-200/60 text-navy shadow-(--shadow-lg)",
+    error: "bg-white border-red-200/60 text-navy shadow-(--shadow-lg)",
+    warning: "bg-white border-amber-200/60 text-navy shadow-(--shadow-lg)",
+    info: "bg-white border-blue-200/60 text-navy shadow-(--shadow-lg)",
   };
 
   const iconColors = {
@@ -58,7 +58,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     <ToastContext.Provider value={{ toast: addToast }}>
       {children}
       {/* Toast Container */}
-      <div className="fixed top-4 right-4 z-[100] space-y-2.5 max-w-sm">
+      <div className="fixed top-4 right-4 z-100 space-y-2.5 max-w-sm">
         {toasts.map((t) => {
           const Icon = icons[t.type];
           return (

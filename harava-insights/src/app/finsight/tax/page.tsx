@@ -37,7 +37,7 @@ export default function TaxPage() {
         <Card>
           <CardHeader><CardTitle>Tax Calendar</CardTitle></CardHeader>
           <CardContent className="p-0">
-            <table className="w-full text-sm">
+            <div className="overflow-x-auto"><table className="w-full text-sm min-w-150">
               <thead className="bg-gray-50 border-b">
                 <tr>
                   <th className="text-left px-6 py-3 font-medium text-gray-500">Filing</th>
@@ -64,7 +64,7 @@ export default function TaxPage() {
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </table></div>
           </CardContent>
         </Card>
 

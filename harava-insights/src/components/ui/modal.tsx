@@ -45,7 +45,7 @@ export function Modal({ isOpen, onClose, title, description, children, size = "m
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-100 flex items-center justify-center p-4">
       {/* Backdrop */}
       <div
         ref={overlayRef}
@@ -57,12 +57,12 @@ export function Modal({ isOpen, onClose, title, description, children, size = "m
       {/* Modal */}
       <div
         className={cn(
-          "relative w-full bg-white rounded-2xl shadow-[var(--shadow-2xl)] border border-navy/[0.06] animate-scale-in-bounce overflow-hidden",
+          "relative w-full bg-white rounded-2xl shadow-(--shadow-2xl) border border-navy/6 animate-scale-in-bounce overflow-hidden",
           sizeClasses[size]
         )}
       >
         {/* Gold accent line */}
-        <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-gold via-gold-light to-gold opacity-80" />
+        <div className="absolute top-0 left-0 right-0 h-0.75 bg-linear-to-r from-gold via-gold-light to-gold opacity-80" />
 
         {/* Header */}
         {(title || description) && (
@@ -74,7 +74,7 @@ export function Modal({ isOpen, onClose, title, description, children, size = "m
               </div>
               <button
                 onClick={onClose}
-                className="p-2 rounded-xl text-navy/30 hover:text-navy/60 hover:bg-navy/[0.04] transition-all duration-200 -mt-1 -mr-1"
+                className="p-2 rounded-xl text-navy/30 hover:text-navy/60 hover:bg-navy/4 transition-all duration-200 -mt-1 -mr-1"
               >
                 <X className="w-4.5 h-4.5" />
               </button>
@@ -86,7 +86,7 @@ export function Modal({ isOpen, onClose, title, description, children, size = "m
         {!title && !description && (
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 p-2 rounded-xl text-navy/30 hover:text-navy/60 hover:bg-navy/[0.04] transition-all duration-200 z-10"
+            className="absolute top-4 right-4 p-2 rounded-xl text-navy/30 hover:text-navy/60 hover:bg-navy/4 transition-all duration-200 z-10"
           >
             <X className="w-4.5 h-4.5" />
           </button>
