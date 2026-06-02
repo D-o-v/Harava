@@ -139,23 +139,6 @@
   --font-mono: var(--font-geist-mono);
 }
 
-/* ===== Landing page: force light mode regardless of system preference ===== */
-.light-page,
-.light-page * {
-  --navy-text: #182954 !important;
-  --navy-light-text: #1e3a6e !important;
-  --navy-dark-text: #0f1a38 !important;
-  --navy-900-text: #0a1229 !important;
-  --background: #f8fafc !important;
-  --foreground: #182954 !important;
-  --surface: #ffffff !important;
-  --surface-elevated: #ffffff !important;
-  --surface-hover: #f1f5f9 !important;
-  --border: rgba(24, 41, 84, 0.06) !important;
-  --border-strong: rgba(24, 41, 84, 0.12) !important;
-  --border-gold: rgba(193, 155, 63, 0.2) !important;
-}
-
 /* ===== Dark Mode Comprehensive Overrides ===== */
 
 /* --- Backgrounds --- */

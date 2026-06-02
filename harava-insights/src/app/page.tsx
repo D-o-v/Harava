@@ -21,10 +21,11 @@ import {
 import { Button } from "@/components/ui/button";
 import { AnimatedChart } from "@/components/ui/animated-chart";
 import { MonitorCarousel, PhoneCarousel } from "@/components/ui/screen-carousel";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 export default function Home() {
   return (
-    <div className="flex flex-col min-h-screen overflow-x-hidden bg-[#f6f7fa] light-page">
+    <div className="flex flex-col min-h-screen overflow-x-hidden bg-[#f6f7fa] dark:bg-[#080d1a]">
       {/* Navigation - blends into dark hero */}
       <header className="absolute top-0 left-0 right-0 z-50">
         <div className="max-w-350 mx-auto px-4 sm:px-6 lg:px-8">
@@ -42,6 +43,7 @@ export default function Home() {
               <a href="#pricing" className="text-[13px] text-white/50 hover:text-white/90 transition-colors font-medium">Pricing</a>
             </nav>
             <div className="flex items-center gap-3">
+              <ThemeToggle variant="light" />
               <Link href="/auth/login">
                 <Button variant="ghost" size="sm" className="text-white/70 hover:text-white hover:bg-white/6">Sign In</Button>
               </Link>
@@ -233,7 +235,7 @@ export default function Home() {
 
       {/* ============ PRODUCTS ============ */}
       <section id="products" className="py-20 lg:py-24 relative">
-        <div className="absolute inset-0 bg-linear-to-b from-[#f6f7fa] to-[#f0f2f7]" />
+        <div className="absolute inset-0 bg-linear-to-b from-[#f6f7fa] to-[#f0f2f7] dark:from-[#080d1a] dark:to-[#0c1225]" />
         <div className="absolute inset-0 bg-radial-glow" />
         {/* Logo watermark */}
         <div className="absolute left-[3%] bottom-[8%] pointer-events-none">
@@ -252,7 +254,7 @@ export default function Home() {
           
           <div className="grid lg:grid-cols-3 gap-6 lg:gap-8 stagger-children">
             {/* FinSight AI */}
-            <div className="group relative rounded-3xl border border-navy/6 p-8 lg:p-10 hover:border-gold/20 transition-all duration-500 bg-white hover:shadow-(--shadow-xl) overflow-hidden">
+            <div className="group relative rounded-3xl border border-navy/6 dark:border-white/8 p-8 lg:p-10 hover:border-gold/20 transition-all duration-500 bg-white dark:bg-white/5 dark:backdrop-blur-xl hover:shadow-(--shadow-xl) overflow-hidden">
               <div className="absolute inset-0 rounded-3xl bg-linear-to-br from-gold/3 via-transparent to-navy/2 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
               <div className="absolute top-0 left-8 right-8 h-0.5 bg-linear-to-r from-transparent via-gold/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
               <div className="absolute -bottom-20 -right-20 w-40 h-40 bg-gold/4 rounded-full blur-3xl group-hover:bg-gold/8 transition-colors duration-700" />
@@ -281,7 +283,7 @@ export default function Home() {
             </div>
 
             {/* AccrediAI - featured */}
-            <div className="group relative rounded-3xl border-2 border-gold/20 p-8 lg:p-10 hover:border-gold/40 transition-all duration-500 bg-white shadow-(--shadow-lg) hover:shadow-(--shadow-2xl) overflow-hidden lg:scale-[1.02]">
+            <div className="group relative rounded-3xl border-2 border-gold/20 p-8 lg:p-10 hover:border-gold/40 transition-all duration-500 bg-white dark:bg-white/5 dark:backdrop-blur-xl shadow-(--shadow-lg) hover:shadow-(--shadow-2xl) overflow-hidden lg:scale-[1.02]">
               <div className="absolute inset-0 rounded-3xl bg-linear-to-br from-gold/4 via-transparent to-navy/3 opacity-100" />
               <div className="absolute top-0 left-0 right-0 h-0.75 bg-linear-to-r from-gold/60 via-gold to-gold/60" />
               <div className="absolute -bottom-20 -right-20 w-40 h-40 bg-gold/6 rounded-full blur-3xl group-hover:bg-gold/10 transition-colors duration-700" />
@@ -311,7 +313,7 @@ export default function Home() {
             </div>
 
             {/* ProEd AI */}
-            <div className="group relative rounded-3xl border border-navy/6 p-8 lg:p-10 hover:border-gold/20 transition-all duration-500 bg-white hover:shadow-(--shadow-xl) overflow-hidden">
+            <div className="group relative rounded-3xl border border-navy/6 dark:border-white/8 p-8 lg:p-10 hover:border-gold/20 transition-all duration-500 bg-white dark:bg-white/5 dark:backdrop-blur-xl hover:shadow-(--shadow-xl) overflow-hidden">
               <div className="absolute inset-0 rounded-3xl bg-linear-to-br from-navy/2 via-transparent to-gold/3 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
               <div className="absolute top-0 left-8 right-8 h-0.5 bg-linear-to-r from-transparent via-gold/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
               <div className="absolute -bottom-20 -left-20 w-40 h-40 bg-navy/3 rounded-full blur-3xl group-hover:bg-navy/6 transition-colors duration-700" />
@@ -343,7 +345,7 @@ export default function Home() {
       </section>
 
       {/* ============ FEATURES BENTO GRID ============ */}
-      <section id="features" className="py-20 lg:py-24 bg-[#eef0f5] relative">
+      <section id="features" className="py-20 lg:py-24 bg-[#eef0f5] dark:bg-[#060a16] relative">
         <div className="absolute inset-0 bg-premium-mesh" />
         <div className="relative max-w-350 mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12 lg:mb-14">
@@ -359,9 +361,9 @@ export default function Home() {
           {/* Phone Mockup Feature Showcase */}
           <div className="grid lg:grid-cols-2 gap-16 items-center mb-16">
             <div>
-              <div className="inline-flex items-center gap-2 bg-navy/4 border border-navy/6 rounded-full px-3 py-1.5 mb-5">
+              <div className="inline-flex items-center gap-2 bg-navy/4 dark:bg-white/5 border border-navy/6 dark:border-white/10 rounded-full px-3 py-1.5 mb-5">
                 <Brain className="w-4 h-4 text-gold" />
-                <span className="text-[10px] font-semibold text-navy/60 uppercase tracking-wider">AI Engine</span>
+                <span className="text-[10px] font-semibold text-navy/60 dark:text-white/60 uppercase tracking-wider">AI Engine</span>
               </div>
               <h3 className="text-3xl lg:text-4xl font-bold text-navy mb-4 tracking-tight">AI That Actually Works</h3>
               <p className="text-navy/50 leading-relaxed text-base mb-8 max-w-md">Not just chatbots — our AI performs real analytical work. Financial forecasting, compliance risk scoring, personalized learning — all running autonomously.</p>
@@ -373,7 +375,7 @@ export default function Home() {
                   { icon: ShieldCheck, title: "Compliance Automation", desc: "Auto-scan against 47+ regulatory standards with continuous monitoring." },
                   { icon: GraduationCap, title: "Adaptive Learning", desc: "Personalized paths that adjust to each learner's pace and performance." },
                 ].map((item, i) => (
-                  <div key={i} className="flex items-start gap-4 p-4 rounded-xl bg-white border border-navy/5 hover:border-gold/15 hover:shadow-md transition-all duration-300">
+                  <div key={i} className="flex items-start gap-4 p-4 rounded-xl bg-white dark:bg-white/5 border border-navy/5 dark:border-white/8 hover:border-gold/15 hover:shadow-md transition-all duration-300">
                     <div className="w-10 h-10 rounded-lg bg-gold/8 flex items-center justify-center shrink-0">
                       <item.icon className="w-5 h-5 text-gold" />
                     </div>
@@ -388,26 +390,26 @@ export default function Home() {
               {/* Tags */}
               <div className="flex flex-wrap gap-2 mb-8">
                 {["GPT-4o Powered", "Real-time Analysis", "Predictive Models", "Autonomous Agents", "Multi-modal"].map((tag) => (
-                  <span key={tag} className="text-[10px] font-semibold bg-navy/4 border border-navy/8 text-navy/55 px-3.5 py-1.5 rounded-full">{tag}</span>
+                  <span key={tag} className="text-[10px] font-semibold bg-navy/4 dark:bg-white/5 border border-navy/8 dark:border-white/10 text-navy/55 dark:text-white/55 px-3.5 py-1.5 rounded-full">{tag}</span>
                 ))}
               </div>
 
               {/* Stats row */}
               <div className="grid grid-cols-3 gap-4">
-                <div className="relative p-4 rounded-2xl bg-white border border-navy/6 text-center overflow-hidden group hover:border-gold/15 transition-colors">
+                <div className="relative p-4 rounded-2xl bg-white dark:bg-white/5 border border-navy/6 dark:border-white/8 text-center overflow-hidden group hover:border-gold/15 transition-colors">
                   <div className="absolute inset-0 bg-linear-to-b from-gold/3 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                  <p className="relative text-2xl font-bold text-navy tracking-tight">&lt;100ms</p>
-                  <p className="relative text-[11px] text-navy/40 mt-1 font-medium">Response Time</p>
+                  <p className="relative text-2xl font-bold text-navy dark:text-white tracking-tight">&lt;100ms</p>
+                  <p className="relative text-[11px] text-navy/40 dark:text-white/40 mt-1 font-medium">Response Time</p>
                 </div>
-                <div className="relative p-4 rounded-2xl bg-white border border-navy/6 text-center overflow-hidden group hover:border-gold/15 transition-colors">
+                <div className="relative p-4 rounded-2xl bg-white dark:bg-white/5 border border-navy/6 dark:border-white/8 text-center overflow-hidden group hover:border-gold/15 transition-colors">
                   <div className="absolute inset-0 bg-linear-to-b from-gold/3 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                  <p className="relative text-2xl font-bold text-navy tracking-tight">99.9%</p>
-                  <p className="relative text-[11px] text-navy/40 mt-1 font-medium">Uptime SLA</p>
+                  <p className="relative text-2xl font-bold text-navy dark:text-white tracking-tight">99.9%</p>
+                  <p className="relative text-[11px] text-navy/40 dark:text-white/40 mt-1 font-medium">Uptime SLA</p>
                 </div>
-                <div className="relative p-4 rounded-2xl bg-white border border-navy/6 text-center overflow-hidden group hover:border-gold/15 transition-colors">
+                <div className="relative p-4 rounded-2xl bg-white dark:bg-white/5 border border-navy/6 dark:border-white/8 text-center overflow-hidden group hover:border-gold/15 transition-colors">
                   <div className="absolute inset-0 bg-linear-to-b from-gold/3 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                  <p className="relative text-2xl font-bold text-navy tracking-tight">50+</p>
-                  <p className="relative text-[11px] text-navy/40 mt-1 font-medium">Integrations</p>
+                  <p className="relative text-2xl font-bold text-navy dark:text-white tracking-tight">50+</p>
+                  <p className="relative text-[11px] text-navy/40 dark:text-white/40 mt-1 font-medium">Integrations</p>
                 </div>
               </div>
             </div>
@@ -504,7 +506,7 @@ export default function Home() {
 
       {/* ============ TESTIMONIALS ============ */}
       <section id="testimonials" className="py-20 lg:py-24 relative">
-        <div className="absolute inset-0 bg-linear-to-b from-[#f6f7fa] to-[#eef0f5]" />
+        <div className="absolute inset-0 bg-linear-to-b from-[#f6f7fa] to-[#eef0f5] dark:from-[#080d1a] dark:to-[#060a16]" />
         {/* Logo watermark faded */}
         <div className="absolute right-[5%] top-[10%] pointer-events-none">
           <Image src="/logo.png" alt="" width={280} height={280} className="w-55 h-55 object-contain opacity-[0.03]" />
@@ -541,7 +543,7 @@ export default function Home() {
                 metric: "3x engagement",
               },
             ].map((t, i) => (
-              <div key={i} className="group relative rounded-2xl border border-navy/6 bg-white p-7 lg:p-8 hover:border-gold/15 hover:shadow-(--shadow-lg) transition-all duration-300">
+              <div key={i} className="group relative rounded-2xl border border-navy/6 dark:border-white/8 bg-white dark:bg-white/5 dark:backdrop-blur-xl p-7 lg:p-8 hover:border-gold/15 hover:shadow-(--shadow-lg) transition-all duration-300">
                 <div className="absolute top-0 left-6 right-6 h-0.5 bg-linear-to-r from-transparent via-gold/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                 <div className="flex items-center gap-0.5 mb-5">
                   {[1,2,3,4,5].map((s) => (
@@ -563,7 +565,7 @@ export default function Home() {
       </section>
 
       {/* ============ FOOTER ============ */}
-      <footer className="bg-navy-900 text-white/35 pt-14 pb-8 border-t border-white/3">
+      <footer className="text-white/35 pt-14 pb-8 border-t border-white/3" style={{ backgroundColor: '#060b18' }}>
         <div className="max-w-350 mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8 mb-10">
             {/* Brand */}

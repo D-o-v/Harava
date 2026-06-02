@@ -7,6 +7,7 @@ import Image from "next/image";
 import { Loader2, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { GlobePanel } from "@/components/auth/globe-panel";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/lib/toast";
 
@@ -65,14 +66,17 @@ export default function LoginPage() {
       <GlobePanel variant="login" />
 
       {/* Right Panel - Form */}
-      <div className="flex-1 flex items-center justify-center p-6 sm:p-8 bg-[#f6f7fa] relative">
+      <div className="flex-1 flex items-center justify-center p-6 sm:p-8 bg-[#f6f7fa] dark:bg-[#080d1a] relative">
+        <div className="absolute top-4 right-4 z-10">
+          <ThemeToggle />
+        </div>
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(193,155,63,0.03),transparent_60%)]" />
         <div className="relative w-full max-w-100 animate-fade-in">
           {/* Mobile Logo */}
-          <div className="lg:hidden flex items-center gap-2.5 mb-8">
+          <Link href="/" className="lg:hidden flex items-center gap-2.5 mb-8">
             <Image src="/logo.png" alt="Harava" width={32} height={32} className="w-8 h-8 rounded-xl object-cover ring-1 ring-navy/6" />
             <span className="text-xl font-bold text-navy tracking-tight">Harava<span className="text-gold">.</span></span>
-          </div>
+          </Link>
 
           <h1 className="text-2xl font-bold text-navy mb-1.5 tracking-tight">Welcome back</h1>
           <p className="text-navy/40 mb-7 text-[14px]">

@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { Globe, BarChart3, ShieldCheck, GraduationCap } from "lucide-react";
 import { LoginGlobe } from "./login-globe";
 
@@ -53,12 +54,12 @@ export function GlobePanel({ variant = "login" }: GlobePanelProps) {
       </div>
 
       {/* Logo - top left with fade in */}
-      <div className="absolute top-8 left-8 z-10 animate-[fadeInDown_0.8s_ease-out_both]">
+      <Link href="/" className="absolute top-8 left-8 z-10 animate-[fadeInDown_0.8s_ease-out_both]">
         <div className="flex items-center gap-2.5">
           <Image src="/logo.png" alt="Harava" width={36} height={36} className="w-8 h-8 rounded-lg object-cover ring-1 ring-white/10" />
           <span className="text-lg font-bold text-white tracking-tight">Harava<span className="text-gold">.</span></span>
         </div>
-      </div>
+      </Link>
 
       {/* Center content — animated entrance */}
       <div className="relative z-10 text-center max-w-75 px-6">
