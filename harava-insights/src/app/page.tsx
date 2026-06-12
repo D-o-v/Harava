@@ -82,7 +82,7 @@ export default function Home() {
               {/* Announcement badge */}
               <div className="inline-flex items-center gap-2.5 bg-white/5 border border-white/[0.07] rounded-full px-4 py-2 mb-7 animate-fade-in backdrop-blur-sm">
                 <span className="w-2 h-2 rounded-full bg-gold animate-pulse-gold" />
-                <span className="text-[12px] font-medium text-white/60 tracking-wide">Now with GPT-4o Intelligence</span>
+                <span className="text-[12px] font-medium text-white/60 tracking-wide">AI-Powered Business Platform</span>
                 <ArrowUpRight className="w-3 h-3 text-gold" />
               </div>
 
@@ -392,7 +392,7 @@ export default function Home() {
 
               {/* Tags */}
               <div className="flex flex-wrap gap-2 mb-8">
-                {["GPT-4o Powered", "Real-time Analysis", "Predictive Models", "Autonomous Agents", "Multi-modal"].map((tag) => (
+                {["AI-Powered", "Real-time Analysis", "Predictive Models", "Autonomous Agents", "Multi-modal"].map((tag) => (
                   <span key={tag} className="text-[10px] font-semibold bg-navy/4 dark:bg-white/5 border border-navy/8 dark:border-white/10 text-navy/55 dark:text-white/55 px-3.5 py-1.5 rounded-full">{tag}</span>
                 ))}
               </div>
@@ -460,6 +460,29 @@ export default function Home() {
                 <div className="absolute -right-1 top-[25%] w-0.5 h-10 bg-[#2a2a2e] rounded-l" />
                 <div className="absolute -left-1 top-[20%] w-0.5 h-6 bg-[#2a2a2e] rounded-r" />
                 <div className="absolute -left-1 top-[30%] w-0.5 h-12 bg-[#2a2a2e] rounded-r" />
+              </div>
+
+              {/* Download App CTA */}
+              <div className="mt-8 flex flex-col items-center gap-3">
+                <p className="text-[11px] font-medium text-navy/50 dark:text-white/50 uppercase tracking-wider">Get the mobile app</p>
+                <div className="flex items-center gap-3">
+                  {/* App Store */}
+                  <a href="#" className="inline-flex items-center gap-2.5 bg-navy dark:bg-white/10 hover:bg-navy-light dark:hover:bg-white/15 border border-navy/10 dark:border-white/10 rounded-xl px-4 py-2.5 transition-all duration-200 group">
+                    <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5C17.88 20.74 17 21.95 15.66 21.97C14.32 22 13.89 21.18 12.37 21.18C10.84 21.18 10.37 21.95 9.1 22C7.79 22.05 6.8 20.68 5.96 19.47C4.25 16.56 2.93 11.3 4.7 7.72C5.57 5.94 7.36 4.86 9.28 4.84C10.56 4.81 11.78 5.7 12.57 5.7C13.36 5.7 14.85 4.62 16.4 4.8C17.06 4.83 18.89 5.08 20.06 6.81C19.95 6.88 17.63 8.22 17.66 11.09C17.69 14.52 20.59 15.63 20.63 15.64C20.59 15.74 20.12 17.39 18.71 19.5ZM13 3.5C13.73 2.67 14.94 2.04 15.94 2C16.07 3.17 15.6 4.35 14.9 5.19C14.21 6.04 13.07 6.7 11.95 6.61C11.8 5.46 12.36 4.26 13 3.5Z"/></svg>
+                    <div>
+                      <p className="text-[8px] text-white/60 leading-none">Download on the</p>
+                      <p className="text-[12px] font-semibold text-white leading-tight">App Store</p>
+                    </div>
+                  </a>
+                  {/* Google Play */}
+                  <a href="#" className="inline-flex items-center gap-2.5 bg-navy dark:bg-white/10 hover:bg-navy-light dark:hover:bg-white/15 border border-navy/10 dark:border-white/10 rounded-xl px-4 py-2.5 transition-all duration-200 group">
+                    <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor"><path d="M3.61 1.81L13.53 11.73L3.61 21.65C3.19 21.26 3 20.66 3 20.04V3.42C3 2.8 3.19 2.2 3.61 1.81ZM14.95 13.15L17.65 11.73L14.95 10.31L5.03 0.39C5.55 0.14 6.17 0.11 6.73 0.37L16.23 5.64L14.95 13.15ZM14.95 13.15L5.03 23.07C5.55 23.32 6.17 23.35 6.73 23.09L16.23 17.82L14.95 13.15ZM20.16 10.44L17.65 11.73L20.16 13.02C20.94 13.44 20.94 14.02 20.16 14.44L18.38 15.42L14.95 13.15L18.38 8.04L20.16 9.02C20.94 9.44 20.94 10.02 20.16 10.44Z"/></svg>
+                    <div>
+                      <p className="text-[8px] text-white/60 leading-none">Get it on</p>
+                      <p className="text-[12px] font-semibold text-white leading-tight">Google Play</p>
+                    </div>
+                  </a>
+                </div>
               </div>
             </div>
           </div>
