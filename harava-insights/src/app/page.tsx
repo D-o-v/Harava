@@ -142,8 +142,8 @@ export default function Home() {
                           </div>
                           <div className="w-px h-4 bg-white/5 ml-2" />
                           <div className="flex items-center gap-2">
-                            <div className="w-6 h-6 rounded-lg bg-gold/15 flex items-center justify-center">
-                              <BarChart3 className="w-3 h-3 text-gold" />
+                            <div className="w-6 h-6 rounded-lg overflow-hidden bg-white/10 flex items-center justify-center">
+                              <Image src="/logo.png" alt="Harava" width={20} height={20} className="w-5 h-5 object-contain" />
                             </div>
                             <span className="text-[10px] font-semibold text-white/60">Harava · Platform</span>
                           </div>
@@ -177,11 +177,11 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Floating notification card */}
+              {/* Floating notification card - AccrediAI */}
               <div className="absolute -left-8 top-[30%] rounded-xl bg-[#151b2d]/95 backdrop-blur-xl border border-white/8 p-2.5 shadow-2xl animate-float">
                 <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-lg bg-green-500/15 flex items-center justify-center">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-green-400" />
+                  <div className="w-7 h-7 rounded-lg overflow-hidden bg-white/10 flex items-center justify-center">
+                    <Image src={AccrediAILogo} alt="AccrediAI" width={28} height={28} className="w-6 h-6 object-contain" />
                   </div>
                   <div>
                     <p className="text-[8px] font-semibold text-white/70">Compliance Pass</p>
@@ -190,11 +190,11 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Revenue alert */}
+              {/* Revenue alert - FinSight */}
               <div className="absolute -right-6 top-[20%] rounded-xl bg-[#151b2d]/95 backdrop-blur-xl border border-white/8 p-2.5 shadow-2xl animate-float" style={{ animationDelay: "1.5s" }}>
                 <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-lg bg-gold/15 flex items-center justify-center">
-                    <TrendingUp className="w-3.5 h-3.5 text-gold" />
+                  <div className="w-7 h-7 rounded-lg overflow-hidden bg-white/10 flex items-center justify-center">
+                    <Image src={FinSightLogo} alt="FinSight" width={28} height={28} className="w-6 h-6 object-contain" />
                   </div>
                   <div>
                     <p className="text-[8px] font-semibold text-white/70">Revenue Up</p>
@@ -203,24 +203,24 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* AI Processing tag */}
+              {/* ProEd learning tag */}
               <div className="absolute -left-4 bottom-[25%] rounded-xl bg-[#151b2d]/95 backdrop-blur-xl border border-white/8 p-2.5 shadow-2xl animate-float" style={{ animationDelay: "3s" }}>
                 <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-lg bg-blue-500/15 flex items-center justify-center">
-                    <Zap className="w-3.5 h-3.5 text-blue-400" />
+                  <div className="w-7 h-7 rounded-lg overflow-hidden bg-white/10 flex items-center justify-center">
+                    <Image src={ProEdLogo} alt="ProEd" width={28} height={28} className="w-6 h-6 object-contain" />
                   </div>
                   <div>
-                    <p className="text-[8px] font-semibold text-white/70">AI Processing</p>
-                    <p className="text-[7px] text-white/35">1,847 tasks active</p>
+                    <p className="text-[8px] font-semibold text-white/70">Course Complete</p>
+                    <p className="text-[7px] text-white/35">95% pass rate</p>
                   </div>
                 </div>
               </div>
 
-              {/* Security badge */}
+              {/* Platform badge */}
               <div className="absolute -right-4 bottom-[35%] rounded-xl bg-[#151b2d]/95 backdrop-blur-xl border border-white/8 p-2.5 shadow-2xl animate-float" style={{ animationDelay: "4.5s" }}>
                 <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-lg bg-purple-500/15 flex items-center justify-center">
-                    <ShieldCheck className="w-3.5 h-3.5 text-purple-400" />
+                  <div className="w-7 h-7 rounded-lg overflow-hidden bg-white/10 flex items-center justify-center">
+                    <Image src="/logo.png" alt="Harava" width={28} height={28} className="w-6 h-6 object-contain" />
                   </div>
                   <div>
                     <p className="text-[8px] font-semibold text-white/70">SOC 2 Certified</p>
@@ -418,7 +418,7 @@ export default function Home() {
             </div>
 
             {/* Phone Mockup */}
-            <div className="flex justify-center">
+            <div className="flex flex-col items-center">
               <div className="relative w-70 animate-fade-in-up">
                 {/* Glow behind phone */}
                 <div className="absolute -inset-8 bg-radial-[at_center] from-gold/8 via-transparent to-transparent rounded-full blur-2xl" />
@@ -462,24 +462,32 @@ export default function Home() {
                 <div className="absolute -left-1 top-[30%] w-0.5 h-12 bg-[#2a2a2e] rounded-r" />
               </div>
 
-              {/* Download App CTA */}
-              <div className="mt-8 flex flex-col items-center gap-3">
+              {/* Download App CTA - directly under the phone */}
+              <div className="mt-20 flex flex-col items-center gap-3">
                 <p className="text-[11px] font-medium text-navy/50 dark:text-white/50 uppercase tracking-wider">Get the mobile app</p>
                 <div className="flex items-center gap-3">
-                  {/* App Store */}
-                  <a href="#" className="inline-flex items-center gap-2.5 bg-navy dark:bg-white/10 hover:bg-navy-light dark:hover:bg-white/15 border border-navy/10 dark:border-white/10 rounded-xl px-4 py-2.5 transition-all duration-200 group">
-                    <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5C17.88 20.74 17 21.95 15.66 21.97C14.32 22 13.89 21.18 12.37 21.18C10.84 21.18 10.37 21.95 9.1 22C7.79 22.05 6.8 20.68 5.96 19.47C4.25 16.56 2.93 11.3 4.7 7.72C5.57 5.94 7.36 4.86 9.28 4.84C10.56 4.81 11.78 5.7 12.57 5.7C13.36 5.7 14.85 4.62 16.4 4.8C17.06 4.83 18.89 5.08 20.06 6.81C19.95 6.88 17.63 8.22 17.66 11.09C17.69 14.52 20.59 15.63 20.63 15.64C20.59 15.74 20.12 17.39 18.71 19.5ZM13 3.5C13.73 2.67 14.94 2.04 15.94 2C16.07 3.17 15.6 4.35 14.9 5.19C14.21 6.04 13.07 6.7 11.95 6.61C11.8 5.46 12.36 4.26 13 3.5Z"/></svg>
+                  {/* App Store Badge */}
+                  <a href="#" className="inline-flex items-center gap-2.5 bg-black hover:bg-[#1a1a1a] rounded-xl pl-3.5 pr-4 py-2.5 transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-[1.02]">
+                    <svg className="w-6 h-6" viewBox="0 0 24 24" fill="white">
+                      <path d="M18.71 19.5C17.88 20.74 17 21.95 15.66 21.97C14.32 22 13.89 21.18 12.37 21.18C10.84 21.18 10.37 21.95 9.1 22C7.79 22.05 6.8 20.68 5.96 19.47C4.25 16.56 2.93 11.3 4.7 7.72C5.57 5.94 7.36 4.86 9.28 4.84C10.56 4.81 11.78 5.7 12.57 5.7C13.36 5.7 14.85 4.62 16.4 4.8C17.06 4.83 18.89 5.08 20.06 6.81C19.95 6.88 17.63 8.22 17.66 11.09C17.69 14.52 20.59 15.63 20.63 15.64C20.59 15.74 20.12 17.39 18.71 19.5ZM13 3.5C13.73 2.67 14.94 2.04 15.94 2C16.07 3.17 15.6 4.35 14.9 5.19C14.21 6.04 13.07 6.7 11.95 6.61C11.8 5.46 12.36 4.26 13 3.5Z"/>
+                    </svg>
                     <div>
-                      <p className="text-[8px] text-white/60 leading-none">Download on the</p>
-                      <p className="text-[12px] font-semibold text-white leading-tight">App Store</p>
+                      <p className="text-[8px] text-white/60 leading-none font-medium">Download on the</p>
+                      <p className="text-[13px] font-semibold text-white leading-tight mt-0.5">App Store</p>
                     </div>
                   </a>
-                  {/* Google Play */}
-                  <a href="#" className="inline-flex items-center gap-2.5 bg-navy dark:bg-white/10 hover:bg-navy-light dark:hover:bg-white/15 border border-navy/10 dark:border-white/10 rounded-xl px-4 py-2.5 transition-all duration-200 group">
-                    <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor"><path d="M3.61 1.81L13.53 11.73L3.61 21.65C3.19 21.26 3 20.66 3 20.04V3.42C3 2.8 3.19 2.2 3.61 1.81ZM14.95 13.15L17.65 11.73L14.95 10.31L5.03 0.39C5.55 0.14 6.17 0.11 6.73 0.37L16.23 5.64L14.95 13.15ZM14.95 13.15L5.03 23.07C5.55 23.32 6.17 23.35 6.73 23.09L16.23 17.82L14.95 13.15ZM20.16 10.44L17.65 11.73L20.16 13.02C20.94 13.44 20.94 14.02 20.16 14.44L18.38 15.42L14.95 13.15L18.38 8.04L20.16 9.02C20.94 9.44 20.94 10.02 20.16 10.44Z"/></svg>
+                  {/* Google Play Badge */}
+                  <a href="#" className="inline-flex items-center gap-2.5 bg-black hover:bg-[#1a1a1a] rounded-xl pl-3.5 pr-4 py-2.5 transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-[1.02]">
+                    <svg className="w-5 h-5" viewBox="0 0 512 512" fill="none">
+                      <path d="M325.3 234.3L104.6 13l280.8 161.2-60.1 60.1z" fill="#34A853"/>
+                      <path d="M47 0C34 6.8 25.3 19.2 25.3 35.3v441.3c0 16.1 8.7 28.5 21.7 35.3l256.6-256L47 0z" fill="#4285F4"/>
+                      <path d="M325.3 277.7l-60.1-60.1L47 512l258.9-149.4 19.4-85z" fill="#FBBC04"/>
+                      <path d="M486.8 234.3l-86.1-49.7-75.4 71.7 75.5 71.7 86-49.7c17.9-10.3 17.9-34.7 0-44z" fill="#EA4335"/>
+                      <path d="M104.6 499l280.8-161.2-60.1-60.1L104.6 499z" fill="#FBBC04"/>
+                    </svg>
                     <div>
-                      <p className="text-[8px] text-white/60 leading-none">Get it on</p>
-                      <p className="text-[12px] font-semibold text-white leading-tight">Google Play</p>
+                      <p className="text-[8px] text-white/60 leading-none font-medium">GET IT ON</p>
+                      <p className="text-[13px] font-semibold text-white leading-tight mt-0.5">Google Play</p>
                     </div>
                   </a>
                 </div>

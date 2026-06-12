@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import {
   BarChart3,
   ShieldCheck,
@@ -13,6 +14,9 @@ import {
   PieChart,
   Activity,
 } from "lucide-react";
+import FinSightLogo from "@/assets/4. FinSights AI Logo -TM.png";
+import AccrediAILogo from "@/assets/3. Accredi AI logo -TM.png";
+import ProEdLogo from "@/assets/2. ProEd AI logo -TM.png";
 
 // ─── Monitor Carousel Screens ───────────────────────────────────────────────
 
@@ -233,8 +237,8 @@ const phoneScreens = [
       <div className="px-5 pb-8 space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-gold/15 flex items-center justify-center">
-              <BarChart3 className="w-4 h-4 text-gold" />
+            <div className="w-9 h-9 rounded-xl overflow-hidden bg-white/10 flex items-center justify-center">
+              <Image src={FinSightLogo} alt="FinSight" width={32} height={32} className="w-7 h-7 object-contain" />
             </div>
             <div>
               <span className="text-[11px] font-bold text-white/85 block">FinSight</span>
@@ -290,8 +294,8 @@ const phoneScreens = [
       <div className="px-5 pb-8 space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-green-400/15 flex items-center justify-center">
-              <ShieldCheck className="w-4 h-4 text-green-400" />
+            <div className="w-9 h-9 rounded-xl overflow-hidden bg-white/10 flex items-center justify-center">
+              <Image src={AccrediAILogo} alt="AccrediAI" width={32} height={32} className="w-7 h-7 object-contain" />
             </div>
             <div>
               <span className="text-[11px] font-bold text-white/85 block">AccrediAI</span>
@@ -338,8 +342,8 @@ const phoneScreens = [
       <div className="px-5 pb-8 space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-purple-400/15 flex items-center justify-center">
-              <GraduationCap className="w-4 h-4 text-purple-400" />
+            <div className="w-9 h-9 rounded-xl overflow-hidden bg-white/10 flex items-center justify-center">
+              <Image src={ProEdLogo} alt="ProEd AI" width={32} height={32} className="w-7 h-7 object-contain" />
             </div>
             <div>
               <span className="text-[11px] font-bold text-white/85 block">ProEd AI</span>

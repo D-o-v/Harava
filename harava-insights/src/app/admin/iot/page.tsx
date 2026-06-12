@@ -39,33 +39,33 @@ export default function IoTPage() {
         {/* Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 stagger-children">
           <div className="stat-card p-4">
-            <p className="text-[11px] font-medium text-navy/45 uppercase tracking-wider">Total Devices</p>
-            <p className="text-2xl font-bold text-navy mt-1">{devices.length}</p>
+            <p className="text-[11px] font-medium text-navy/45 dark:text-white/45 uppercase tracking-wider">Total Devices</p>
+            <p className="text-2xl font-bold text-navy dark:text-white mt-1">{devices.length}</p>
           </div>
           <div className="stat-card p-4">
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-emerald-500" />
-              <p className="text-[11px] font-medium text-navy/45 uppercase tracking-wider">Online</p>
+              <p className="text-[11px] font-medium text-navy/45 dark:text-white/45 uppercase tracking-wider">Online</p>
             </div>
-            <p className="text-2xl font-bold text-emerald-600 mt-1">{onlineCount}</p>
+            <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">{onlineCount}</p>
           </div>
           <div className="stat-card p-4">
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-red-500" />
-              <p className="text-[11px] font-medium text-navy/45 uppercase tracking-wider">Offline</p>
+              <p className="text-[11px] font-medium text-navy/45 dark:text-white/45 uppercase tracking-wider">Offline</p>
             </div>
-            <p className="text-2xl font-bold text-red-600 mt-1">{offlineCount}</p>
+            <p className="text-2xl font-bold text-red-600 dark:text-red-400 mt-1">{offlineCount}</p>
           </div>
           <div className="stat-card p-4">
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-amber-500" />
-              <p className="text-[11px] font-medium text-navy/45 uppercase tracking-wider">Warnings</p>
+              <p className="text-[11px] font-medium text-navy/45 dark:text-white/45 uppercase tracking-wider">Warnings</p>
             </div>
-            <p className="text-2xl font-bold text-amber-600 mt-1">{warningCount}</p>
+            <p className="text-2xl font-bold text-amber-600 dark:text-amber-400 mt-1">{warningCount}</p>
           </div>
           <div className="stat-card p-4">
-            <p className="text-[11px] font-medium text-navy/45 uppercase tracking-wider">Avg Battery</p>
-            <p className="text-2xl font-bold text-navy mt-1">{Math.round(devices.reduce((s, d) => s + d.battery, 0) / devices.length)}%</p>
+            <p className="text-[11px] font-medium text-navy/45 dark:text-white/45 uppercase tracking-wider">Avg Battery</p>
+            <p className="text-2xl font-bold text-navy dark:text-white mt-1">{Math.round(devices.reduce((s, d) => s + d.battery, 0) / devices.length)}%</p>
           </div>
         </div>
 
@@ -109,9 +109,9 @@ export default function IoTPage() {
 
         {/* Filter Bar */}
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1.5 bg-white dark:bg-white/5 border border-navy/8 rounded-xl p-1">
+          <div className="flex items-center gap-1.5 bg-white dark:bg-white/5 border border-navy/8 dark:border-white/10 rounded-xl p-1">
             {["all", "online", "warning", "offline"].map(f => (
-              <button key={f} onClick={() => setFilter(f)} className={`text-[11px] font-medium px-3.5 py-1.5 rounded-lg capitalize transition-colors ${filter === f ? "bg-navy text-white" : "text-navy/50 hover:text-navy"}`}>
+              <button key={f} onClick={() => setFilter(f)} className={`text-[11px] font-medium px-3.5 py-1.5 rounded-lg capitalize transition-colors ${filter === f ? "bg-navy dark:bg-white text-white dark:text-navy" : "text-navy/50 dark:text-white/50 hover:text-navy dark:hover:text-white"}`}>
                 {f} {f === "all" ? `(${devices.length})` : f === "online" ? `(${onlineCount})` : f === "offline" ? `(${offlineCount})` : `(${warningCount})`}
               </button>
             ))}
@@ -128,12 +128,12 @@ export default function IoTPage() {
               <CardContent className="p-4">
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-2.5">
-                    <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${device.status === "online" ? "bg-emerald-50" : device.status === "warning" ? "bg-amber-50" : "bg-red-50"}`}>
-                      <Cpu className={`w-4.5 h-4.5 ${device.status === "online" ? "text-emerald-600" : device.status === "warning" ? "text-amber-600" : "text-red-600"}`} />
+                    <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${device.status === "online" ? "bg-emerald-50 dark:bg-emerald-500/10" : device.status === "warning" ? "bg-amber-50 dark:bg-amber-500/10" : "bg-red-50 dark:bg-red-500/10"}`}>
+                      <Cpu className={`w-4.5 h-4.5 ${device.status === "online" ? "text-emerald-600 dark:text-emerald-400" : device.status === "warning" ? "text-amber-600 dark:text-amber-400" : "text-red-600 dark:text-red-400"}`} />
                     </div>
                     <div>
-                      <p className="text-[12px] font-semibold text-navy">{device.name}</p>
-                      <p className="text-[10px] text-navy/40">{device.id}</p>
+                      <p className="text-[12px] font-semibold text-navy dark:text-white">{device.name}</p>
+                      <p className="text-[10px] text-navy/40 dark:text-white/40">{device.id}</p>
                     </div>
                   </div>
                   <Badge variant={device.status === "online" ? "success" : device.status === "warning" ? "warning" : "error"} size="sm">
@@ -143,24 +143,24 @@ export default function IoTPage() {
 
                 <div className="space-y-2 mb-3">
                   <div className="flex items-center justify-between text-[11px]">
-                    <span className="text-navy/45 inline-flex items-center gap-1"><MapPin className="w-3 h-3" />{device.location}</span>
+                    <span className="text-navy/45 dark:text-white/45 inline-flex items-center gap-1"><MapPin className="w-3 h-3" />{device.location}</span>
                   </div>
                   <div className="flex items-center justify-between text-[11px]">
-                    <span className="text-navy/45">Reading:</span>
-                    <span className="font-medium text-navy">{device.lastReading}</span>
+                    <span className="text-navy/45 dark:text-white/45">Reading:</span>
+                    <span className="font-medium text-navy dark:text-white">{device.lastReading}</span>
                   </div>
                   <div className="flex items-center justify-between text-[11px]">
-                    <span className="text-navy/45">Last Ping:</span>
-                    <span className="text-navy/60">{device.lastPing}</span>
+                    <span className="text-navy/45 dark:text-white/45">Last Ping:</span>
+                    <span className="text-navy/60 dark:text-white/60">{device.lastPing}</span>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between pt-2.5 border-t border-navy/5">
+                <div className="flex items-center justify-between pt-2.5 border-t border-navy/5 dark:border-white/5">
                   <div className="flex items-center gap-3">
-                    <span className="inline-flex items-center gap-1 text-[10px] text-navy/40">
+                    <span className="inline-flex items-center gap-1 text-[10px] text-navy/40 dark:text-white/40">
                       <Battery className="w-3 h-3" /> {device.battery}%
                     </span>
-                    <span className="inline-flex items-center gap-1 text-[10px] text-navy/40">
+                    <span className="inline-flex items-center gap-1 text-[10px] text-navy/40 dark:text-white/40">
                       <Signal className="w-3 h-3" /> {device.signal}
                     </span>
                   </div>

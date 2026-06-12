@@ -145,7 +145,7 @@ export default function PayrollPage() {
           </CardHeader>
           <CardContent className="p-0">
             <div className="overflow-x-auto">
-              <table className="w-full text-sm min-w-[700px]">
+              <table className="w-full text-sm min-w-175">
                 <thead className="bg-navy/2 border-b border-navy/6">
                   <tr>
                     <th className="text-left px-6 py-3 text-[11px] font-semibold text-navy/50 uppercase tracking-wider">Employee</th>

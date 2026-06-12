@@ -89,7 +89,7 @@ export default function AuditLogPage() {
         <Card>
           <CardContent className="p-0">
             <div className="overflow-x-auto">
-              <table className="w-full text-sm min-w-[900px]">
+              <table className="w-full text-sm min-w-225">
                 <thead className="bg-navy/2 border-b border-navy/6">
                   <tr>
                     <th className="text-left px-5 py-3 text-[11px] font-semibold text-navy/50 uppercase tracking-wider">Timestamp</th>

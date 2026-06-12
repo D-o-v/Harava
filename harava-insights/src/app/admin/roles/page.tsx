@@ -130,7 +130,7 @@ export default function RolesPage() {
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
-              <table className="w-full text-[11px] min-w-[800px]">
+              <table className="w-full text-[11px] min-w-200">
                 <thead>
                   <tr className="border-b border-navy/6">
                     <th className="text-left py-3 px-3 font-semibold text-navy/60 w-40">Permission</th>
