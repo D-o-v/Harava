@@ -10,6 +10,7 @@ import {
   Target, Users, Clock, AlertTriangle, ArrowRight,
   ArrowUpRight, Sparkles, FileText,
 } from "lucide-react";
+import { TrendChart, DonutChart, MetricBarChart, ChartCard } from "@/components/ui/charts";
 
 export default function AccrediAIDashboard() {
   const router = useRouter();
@@ -98,6 +99,82 @@ export default function AccrediAIDashboard() {
             </div>
           </div>
         </div>
+
+        {/* Compliance Trend Charts */}
+        <div className="grid lg:grid-cols-3 gap-5 lg:gap-6">
+          <div className="lg:col-span-2">
+            <ChartCard
+              title="Readiness Score Trend"
+              subtitle="Client compliance progress over time"
+              action={
+                <Button variant="ghost" size="xs" onClick={() => router.push("/accrediai/readiness")}>
+                  Details <ArrowRight className="w-3 h-3" />
+                </Button>
+              }
+            >
+              <TrendChart
+                data={[
+                  { name: "Jan", readiness: 42, gaps: 28 },
+                  { name: "Feb", readiness: 48, gaps: 24 },
+                  { name: "Mar", readiness: 55, gaps: 21 },
+                  { name: "Apr", readiness: 61, gaps: 18 },
+                  { name: "May", readiness: 67, gaps: 15 },
+                  { name: "Jun", readiness: 72, gaps: 12 },
+                ]}
+                dataKeys={[
+                  { key: "readiness", label: "Avg. Readiness %", color: "#182954" },
+                  { key: "gaps", label: "Open Gaps", color: "#d97706" },
+                ]}
+                valueSuffix=""
+                height={260}
+              />
+            </ChartCard>
+          </div>
+
+          <ChartCard title="Standards Coverage" subtitle="By CARF domain">
+            <DonutChart
+              data={[
+                { name: "Leadership", value: 92, color: "#182954" },
+                { name: "HR & Training", value: 78, color: "#C19B3F" },
+                { name: "Health & Safety", value: 85, color: "#4A9EFF" },
+                { name: "Rights & Ethics", value: 88, color: "#059669" },
+                { name: "Performance", value: 65, color: "#7c3aed" },
+              ]}
+              centerValue="82%"
+              centerLabel="Average"
+              height={220}
+              innerRadius={55}
+              outerRadius={85}
+            />
+          </ChartCard>
+        </div>
+
+        {/* Gap Resolution Progress */}
+        <ChartCard
+          title="Gap Resolution Progress"
+          subtitle="Monthly resolved vs new gaps identified"
+          action={
+            <Button variant="ghost" size="xs" onClick={() => router.push("/accrediai/gap-analysis")}>
+              Gap Analysis <ArrowRight className="w-3 h-3" />
+            </Button>
+          }
+        >
+          <MetricBarChart
+            data={[
+              { name: "Jan", resolved: 5, newGaps: 8 },
+              { name: "Feb", resolved: 7, newGaps: 4 },
+              { name: "Mar", resolved: 6, newGaps: 3 },
+              { name: "Apr", resolved: 9, newGaps: 5 },
+              { name: "May", resolved: 8, newGaps: 2 },
+              { name: "Jun", resolved: 6, newGaps: 1 },
+            ]}
+            dataKeys={[
+              { key: "resolved", label: "Resolved", color: "#059669" },
+              { key: "newGaps", label: "New Gaps", color: "#d97706" },
+            ]}
+            height={200}
+          />
+        </ChartCard>
 
         <div className="grid lg:grid-cols-2 gap-5 lg:gap-6">
           {/* Active Engagements */}

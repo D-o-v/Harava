@@ -11,6 +11,7 @@ import {
   BookOpen, Target, Award, Clock, Brain, ArrowRight,
   GraduationCap, ArrowUpRight, Sparkles,
 } from "lucide-react";
+import { TrendChart, MetricBarChart, DonutChart, ChartCard } from "@/components/ui/charts";
 
 export default function ProEdDashboard() {
   const router = useRouter();
@@ -93,6 +94,84 @@ export default function ProEdDashboard() {
             </div>
           </div>
         </div>
+
+        {/* Learning Analytics Charts */}
+        <div className="grid lg:grid-cols-3 gap-5 lg:gap-6">
+          <div className="lg:col-span-2">
+            <ChartCard
+              title="Learning Activity"
+              subtitle="Hours spent per week"
+              action={
+                <Button variant="ghost" size="xs" onClick={() => router.push("/proed/tracks")}>
+                  Track Details <ArrowRight className="w-3 h-3" />
+                </Button>
+              }
+            >
+              <TrendChart
+                data={[
+                  { name: "W1", hours: 4.5, target: 6 },
+                  { name: "W2", hours: 6.2, target: 6 },
+                  { name: "W3", hours: 5.8, target: 6 },
+                  { name: "W4", hours: 7.1, target: 6 },
+                  { name: "W5", hours: 5.5, target: 6 },
+                  { name: "W6", hours: 8.3, target: 6 },
+                  { name: "W7", hours: 6.9, target: 6 },
+                  { name: "W8", hours: 7.5, target: 6 },
+                ]}
+                dataKeys={[
+                  { key: "hours", label: "Study Hours", color: "#182954" },
+                  { key: "target", label: "Weekly Target", color: "#d4b366" },
+                ]}
+                height={250}
+              />
+            </ChartCard>
+          </div>
+
+          <ChartCard title="Skills Distribution" subtitle="By category">
+            <DonutChart
+              data={[
+                { name: "Finance", value: 35, color: "#182954" },
+                { name: "Compliance", value: 25, color: "#C19B3F" },
+                { name: "Technology", value: 20, color: "#4A9EFF" },
+                { name: "Leadership", value: 12, color: "#7c3aed" },
+                { name: "Soft Skills", value: 8, color: "#059669" },
+              ]}
+              centerValue="68%"
+              centerLabel="Progress"
+              height={220}
+              innerRadius={55}
+              outerRadius={85}
+            />
+          </ChartCard>
+        </div>
+
+        {/* Assessment Scores */}
+        <ChartCard
+          title="Assessment Performance"
+          subtitle="Score trends across modules"
+          action={
+            <Button variant="ghost" size="xs" onClick={() => router.push("/proed/assessment")}>
+              All Assessments <ArrowRight className="w-3 h-3" />
+            </Button>
+          }
+        >
+          <MetricBarChart
+            data={[
+              { name: "Module 1", score: 88, average: 72 },
+              { name: "Module 2", score: 92, average: 75 },
+              { name: "Module 3", score: 78, average: 70 },
+              { name: "Module 4", score: 85, average: 74 },
+              { name: "Module 5", score: 91, average: 76 },
+              { name: "Module 6", score: 95, average: 78 },
+            ]}
+            dataKeys={[
+              { key: "score", label: "Your Score", color: "#182954" },
+              { key: "average", label: "Class Average", color: "#C19B3F" },
+            ]}
+            valueSuffix="%"
+            height={200}
+          />
+        </ChartCard>
 
         <div className="grid lg:grid-cols-2 gap-5 lg:gap-6">
           {/* Continue Learning */}

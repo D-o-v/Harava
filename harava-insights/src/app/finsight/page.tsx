@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/lib/toast";
 import { useAuth } from "@/lib/auth";
 import { TrendingUp, DollarSign, Receipt, AlertTriangle, CheckCircle, Clock, ArrowRight, ArrowUpRight, ArrowDownRight, Sparkles } from "lucide-react";
+import { TrendChart, MetricBarChart, DonutChart, ChartCard } from "@/components/ui/charts";
 
 export default function FinSightDashboard() {
   const router = useRouter();
@@ -112,6 +113,85 @@ export default function FinSightDashboard() {
             </div>
           </div>
         </div>
+
+        {/* Revenue & Expense Trends */}
+        <div className="grid lg:grid-cols-3 gap-5 lg:gap-6">
+          <div className="lg:col-span-2">
+            <ChartCard
+              title="Revenue vs Expenses"
+              subtitle="6-month trend overview"
+              action={
+                <Button variant="ghost" size="xs" onClick={() => router.push("/finsight/reports")}>
+                  Details <ArrowRight className="w-3 h-3" />
+                </Button>
+              }
+            >
+              <TrendChart
+                data={[
+                  { name: "Jan", revenue: 98000, expenses: 62000 },
+                  { name: "Feb", revenue: 105000, expenses: 68000 },
+                  { name: "Mar", revenue: 112000, expenses: 71000 },
+                  { name: "Apr", revenue: 108000, expenses: 65000 },
+                  { name: "May", revenue: 118000, expenses: 74000 },
+                  { name: "Jun", revenue: 124500, expenses: 78200 },
+                ]}
+                dataKeys={[
+                  { key: "revenue", label: "Revenue", color: "#182954" },
+                  { key: "expenses", label: "Expenses", color: "#C19B3F" },
+                ]}
+                valuePrefix="$"
+                height={260}
+              />
+            </ChartCard>
+          </div>
+
+          <ChartCard title="Expense Breakdown" subtitle="Current month">
+            <DonutChart
+              data={[
+                { name: "Payroll", value: 38000, color: "#182954" },
+                { name: "Operations", value: 18500, color: "#C19B3F" },
+                { name: "Marketing", value: 12200, color: "#4A9EFF" },
+                { name: "Software", value: 5800, color: "#059669" },
+                { name: "Other", value: 3700, color: "#64748b" },
+              ]}
+              centerValue="$78.2K"
+              centerLabel="Total"
+              height={220}
+              innerRadius={55}
+              outerRadius={85}
+            />
+          </ChartCard>
+        </div>
+
+        {/* Cash Flow Bar Chart */}
+        <ChartCard
+          title="Monthly Cash Flow"
+          subtitle="Net income trend with projections"
+          action={
+            <Button variant="ghost" size="xs" onClick={() => router.push("/finsight/reconciliation")}>
+              Reconciliation <ArrowRight className="w-3 h-3" />
+            </Button>
+          }
+        >
+          <MetricBarChart
+            data={[
+              { name: "Jan", income: 36000, projected: 34000 },
+              { name: "Feb", income: 37000, projected: 36000 },
+              { name: "Mar", income: 41000, projected: 39000 },
+              { name: "Apr", income: 43000, projected: 41000 },
+              { name: "May", income: 44000, projected: 43000 },
+              { name: "Jun", income: 46300, projected: 45000 },
+              { name: "Jul", income: 0, projected: 48000 },
+              { name: "Aug", income: 0, projected: 51000 },
+            ]}
+            dataKeys={[
+              { key: "income", label: "Actual", color: "#182954" },
+              { key: "projected", label: "Projected", color: "#d4b366" },
+            ]}
+            valuePrefix="$"
+            height={220}
+          />
+        </ChartCard>
 
         <div className="grid lg:grid-cols-2 gap-5 lg:gap-6">
           {/* Recent Transactions */}
