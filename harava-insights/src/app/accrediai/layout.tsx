@@ -1,6 +1,7 @@
 "use client";
 
 import { DashboardSidebar, NavItem } from "@/components/layout/dashboard-sidebar";
+import { LogoBackground } from "@/components/shared/logo-background";
 import {
   LayoutDashboard,
   Users,
@@ -29,7 +30,10 @@ export default function AccrediAILayout({ children }: { children: React.ReactNod
   return (
     <div className="flex h-screen overflow-hidden">
       <DashboardSidebar navigation={navigation} product="accrediai" />
-      <main className="flex-1 overflow-y-auto bg-background bg-premium-mesh">{children}</main>
+      <main className="relative flex-1 overflow-y-auto bg-background bg-premium-mesh">
+        <LogoBackground product="accrediai" />
+        <div className="relative z-10">{children}</div>
+      </main>
     </div>
   );
 }

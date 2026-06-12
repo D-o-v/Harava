@@ -5,6 +5,10 @@ import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useAuth, ROLE_LABELS } from "@/lib/auth";
+import HaravaLogo from "@/assets/1. Harava Insights Logo -TM.png";
+import ProEdLogo from "@/assets/2. ProEd AI logo -TM.png";
+import AccrediAILogo from "@/assets/3. Accredi AI logo -TM.png";
+import FinSightLogo from "@/assets/4. FinSights AI Logo -TM.png";
 import {
   BarChart3,
   ShieldCheck,
@@ -32,10 +36,10 @@ interface SidebarProps {
 }
 
 const productConfig = {
-  finsight: { icon: BarChart3, name: "FinSight AI", href: "/finsight", color: "from-navy to-navy-light" },
-  accrediai: { icon: ShieldCheck, name: "AccrediAI", href: "/accrediai", color: "from-navy to-navy-light" },
-  proed: { icon: GraduationCap, name: "ProEd AI", href: "/proed", color: "from-navy to-navy-light" },
-  admin: { icon: Settings, name: "Admin", href: "/admin", color: "from-navy to-navy-light" },
+  finsight: { icon: BarChart3, name: "FinSight AI", href: "/finsight", color: "from-navy to-navy-light", logo: FinSightLogo },
+  accrediai: { icon: ShieldCheck, name: "AccrediAI", href: "/accrediai", color: "from-navy to-navy-light", logo: AccrediAILogo },
+  proed: { icon: GraduationCap, name: "ProEd AI", href: "/proed", color: "from-navy to-navy-light", logo: ProEdLogo },
+  admin: { icon: Settings, name: "Admin", href: "/admin", color: "from-navy to-navy-light", logo: HaravaLogo },
 };
 
 export function DashboardSidebar({ navigation, product }: SidebarProps) {
@@ -45,7 +49,6 @@ export function DashboardSidebar({ navigation, product }: SidebarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
   const [showProductSwitcher, setShowProductSwitcher] = useState(false);
-  const ProductIcon = productConfig[product].icon;
 
   useEffect(() => {
     const handler = () => setMobileOpen((prev) => !prev);
@@ -82,8 +85,8 @@ export function DashboardSidebar({ navigation, product }: SidebarProps) {
           className="w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl transition-all duration-300 bg-navy/2 hover:bg-navy/4 border border-navy/5 hover:border-navy/8"
         >
           <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-lg bg-linear-to-br from-navy-brand to-navy-brand-light flex items-center justify-center shadow-sm">
-              <ProductIcon className="w-3.5 h-3.5 text-white" />
+            <div className="w-7 h-7 rounded-lg overflow-hidden bg-white dark:bg-white/10 flex items-center justify-center shadow-sm ring-1 ring-navy/6 dark:ring-white/10">
+              <Image src={productConfig[product].logo} alt={productConfig[product].name} width={28} height={28} className="w-6 h-6 object-contain" />
             </div>
             <span className="text-sm font-semibold text-navy tracking-tight">{productConfig[product].name}</span>
           </div>
@@ -97,15 +100,14 @@ export function DashboardSidebar({ navigation, product }: SidebarProps) {
               if (key === product) return null;
               if (!hasAccess(key)) return null;
               const config = productConfig[key];
-              const Icon = config.icon;
               return (
                 <button
                   key={key}
                   onClick={() => { router.push(config.href); setShowProductSwitcher(false); }}
                   className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-sm text-navy/70 hover:bg-navy/3 hover:text-navy transition-all duration-200"
                 >
-                  <div className="w-6 h-6 rounded-lg bg-linear-to-br from-navy-brand/80 to-navy-brand flex items-center justify-center">
-                    <Icon className="w-3 h-3 text-white" />
+                  <div className="w-6 h-6 rounded-lg overflow-hidden bg-white dark:bg-white/10 flex items-center justify-center ring-1 ring-navy/6 dark:ring-white/10">
+                    <Image src={config.logo} alt={config.name} width={24} height={24} className="w-5 h-5 object-contain" />
                   </div>
                   <span className="font-medium">{config.name}</span>
                 </button>

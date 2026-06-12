@@ -22,6 +22,9 @@ import { Button } from "@/components/ui/button";
 import { AnimatedChart } from "@/components/ui/animated-chart";
 import { MonitorCarousel, PhoneCarousel } from "@/components/ui/screen-carousel";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
+import FinSightLogo from "@/assets/4. FinSights AI Logo -TM.png";
+import AccrediAILogo from "@/assets/3. Accredi AI logo -TM.png";
+import ProEdLogo from "@/assets/2. ProEd AI logo -TM.png";
 
 export default function Home() {
   return (
@@ -260,8 +263,8 @@ export default function Home() {
               <div className="absolute -bottom-20 -right-20 w-40 h-40 bg-gold/4 rounded-full blur-3xl group-hover:bg-gold/8 transition-colors duration-700" />
               
               <div className="relative">
-                <div className="w-14 h-14 bg-linear-to-br from-navy via-navy to-navy-light rounded-2xl flex items-center justify-center mb-7 shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-105 group-hover:-rotate-3">
-                  <BarChart3 className="w-6 h-6 text-white" />
+                <div className="w-14 h-14 bg-white dark:bg-white/10 rounded-2xl flex items-center justify-center mb-7 shadow-lg ring-1 ring-navy/6 dark:ring-white/10 group-hover:shadow-xl transition-all duration-300 group-hover:scale-105 group-hover:-rotate-3 overflow-hidden">
+                  <Image src={FinSightLogo} alt="FinSight AI" width={48} height={48} className="w-11 h-11 object-contain" />
                 </div>
                 <div className="flex items-center gap-2 mb-4">
                   <h3 className="text-2xl font-bold text-navy tracking-tight">FinSight AI</h3>
@@ -290,8 +293,8 @@ export default function Home() {
               <div className="absolute -top-20 -left-20 w-40 h-40 bg-navy/4 rounded-full blur-3xl" />
               
               <div className="relative">
-                <div className="w-14 h-14 bg-linear-to-br from-gold via-gold to-gold-light rounded-2xl flex items-center justify-center mb-7 shadow-lg shadow-gold/25 group-hover:shadow-xl group-hover:shadow-gold/30 transition-all duration-300 group-hover:scale-105 group-hover:rotate-3">
-                  <ShieldCheck className="w-6 h-6 text-white" />
+                <div className="w-14 h-14 bg-white dark:bg-white/10 rounded-2xl flex items-center justify-center mb-7 shadow-lg shadow-gold/25 ring-1 ring-gold/20 group-hover:shadow-xl group-hover:shadow-gold/30 transition-all duration-300 group-hover:scale-105 group-hover:rotate-3 overflow-hidden">
+                  <Image src={AccrediAILogo} alt="AccrediAI" width={48} height={48} className="w-11 h-11 object-contain" />
                 </div>
                 <div className="flex items-center gap-2 mb-4">
                   <h3 className="text-2xl font-bold text-navy tracking-tight">AccrediAI</h3>
@@ -319,8 +322,8 @@ export default function Home() {
               <div className="absolute -bottom-20 -left-20 w-40 h-40 bg-navy/3 rounded-full blur-3xl group-hover:bg-navy/6 transition-colors duration-700" />
               
               <div className="relative">
-                <div className="w-14 h-14 bg-linear-to-br from-navy via-navy to-navy-light rounded-2xl flex items-center justify-center mb-7 shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-105 group-hover:rotate-3">
-                  <GraduationCap className="w-6 h-6 text-white" />
+                <div className="w-14 h-14 bg-white dark:bg-white/10 rounded-2xl flex items-center justify-center mb-7 shadow-lg ring-1 ring-navy/6 dark:ring-white/10 group-hover:shadow-xl transition-all duration-300 group-hover:scale-105 group-hover:rotate-3 overflow-hidden">
+                  <Image src={ProEdLogo} alt="ProEd AI" width={48} height={48} className="w-11 h-11 object-contain" />
                 </div>
                 <div className="flex items-center gap-2 mb-4">
                   <h3 className="text-2xl font-bold text-navy tracking-tight">ProEd AI</h3>
@@ -579,10 +582,10 @@ export default function Home() {
             {/* Links */}
             <div>
               <h4 className="text-[11px] font-semibold text-white/50 uppercase tracking-wider mb-4">Products</h4>
-              <ul className="space-y-2.5 text-[13px]">
-                <li><Link href="/finsight" className="hover:text-white/60 transition-colors">FinSight AI</Link></li>
-                <li><Link href="/accrediai" className="hover:text-white/60 transition-colors">AccrediAI</Link></li>
-                <li><Link href="/proed" className="hover:text-white/60 transition-colors">ProEd AI</Link></li>
+              <ul className="space-y-3 text-[13px]">
+                <li><Link href="/finsight" className="flex items-center gap-2.5 hover:text-white/60 transition-colors group"><span className="w-5 h-5 rounded-md overflow-hidden bg-white/10 flex items-center justify-center ring-1 ring-white/10 group-hover:ring-white/20 transition-all"><Image src={FinSightLogo} alt="" width={18} height={18} className="w-4 h-4 object-contain" /></span>FinSight AI</Link></li>
+                <li><Link href="/accrediai" className="flex items-center gap-2.5 hover:text-white/60 transition-colors group"><span className="w-5 h-5 rounded-md overflow-hidden bg-white/10 flex items-center justify-center ring-1 ring-white/10 group-hover:ring-white/20 transition-all"><Image src={AccrediAILogo} alt="" width={18} height={18} className="w-4 h-4 object-contain" /></span>AccrediAI</Link></li>
+                <li><Link href="/proed" className="flex items-center gap-2.5 hover:text-white/60 transition-colors group"><span className="w-5 h-5 rounded-md overflow-hidden bg-white/10 flex items-center justify-center ring-1 ring-white/10 group-hover:ring-white/20 transition-all"><Image src={ProEdLogo} alt="" width={18} height={18} className="w-4 h-4 object-contain" /></span>ProEd AI</Link></li>
                 <li><a href="#" className="hover:text-white/60 transition-colors">Pricing</a></li>
               </ul>
             </div>

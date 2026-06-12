@@ -1,6 +1,7 @@
 "use client";
 
 import { DashboardSidebar, NavItem } from "@/components/layout/dashboard-sidebar";
+import { LogoBackground } from "@/components/shared/logo-background";
 import {
   LayoutDashboard,
   Brain,
@@ -34,7 +35,10 @@ export default function ProEdLayout({ children }: { children: React.ReactNode })
   return (
     <div className="flex h-screen overflow-hidden">
       <DashboardSidebar navigation={navigation} product="proed" />
-      <main className="flex-1 overflow-y-auto bg-background bg-premium-mesh">{children}</main>
+      <main className="relative flex-1 overflow-y-auto bg-background bg-premium-mesh">
+        <LogoBackground product="proed" />
+        <div className="relative z-10">{children}</div>
+      </main>
     </div>
   );
 }

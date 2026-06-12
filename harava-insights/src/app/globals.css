@@ -636,6 +636,54 @@ body {
 .stagger-children > *:nth-child(7) { animation-delay: 360ms; }
 .stagger-children > *:nth-child(8) { animation-delay: 420ms; }
 
+/* ===== Logo Background Animations ===== */
+@keyframes logo-breathe {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.85; transform: scale(1.02); }
+}
+
+@keyframes logo-float-slow {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  33% { transform: translate(8px, -12px) rotate(1.5deg); }
+  66% { transform: translate(-6px, 8px) rotate(-1deg); }
+}
+
+@keyframes logo-float-reverse {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  33% { transform: translate(-10px, 10px) rotate(-1.5deg); }
+  66% { transform: translate(8px, -6px) rotate(1deg); }
+}
+
+@keyframes logo-drift {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(12px, -8px); }
+}
+
+@keyframes logo-drift-alt {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(-10px, 12px); }
+}
+
+.animate-logo-breathe {
+  animation: logo-breathe 8s ease-in-out infinite;
+}
+
+.animate-logo-float-slow {
+  animation: logo-float-slow 20s ease-in-out infinite;
+}
+
+.animate-logo-float-reverse {
+  animation: logo-float-reverse 24s ease-in-out infinite;
+}
+
+.animate-logo-drift {
+  animation: logo-drift 16s ease-in-out infinite;
+}
+
+.animate-logo-drift-alt {
+  animation: logo-drift-alt 18s ease-in-out infinite;
+}
+
 /* ===== Premium Skeleton Loading ===== */
 .skeleton {
   background: linear-gradient(
