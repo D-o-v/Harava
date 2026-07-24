@@ -4,6 +4,7 @@ import { createContext, useContext, useState, useEffect, ReactNode, useCallback 
 import { useRouter, usePathname } from "next/navigation";
 import { tokens, type TokenScope } from "@/lib/api/tokens";
 import { accountApi, authApi, platformApi, portalApi, type LoginResponse, type UserProfile } from "@/lib/api/endpoints";
+import { isPlatformHost, resolveTenant } from "@/lib/api/tenant-context";
 
 export type UserRole = "super_admin" | "accountant" | "consultant" | "learner" | "corporate_admin";
 
