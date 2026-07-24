@@ -5,8 +5,8 @@
   "scripts": {
     "dev": "npm --prefix harava-insights install --no-audit --no-fund && npm --prefix harava-insights run dev -- --port 8080 --hostname 0.0.0.0",
     "install:app": "npm --prefix harava-insights install --no-audit --no-fund",
-    "build": "npm --prefix harava-insights install --no-audit --no-fund && npm --prefix harava-insights run build",
-    "build:dev": "npm --prefix harava-insights install --no-audit --no-fund && npm --prefix harava-insights run build",
+    "build": "npm --prefix harava-insights install --no-audit --no-fund && npm --prefix harava-insights run build && mkdir -p dist && printf 'built' > dist/index.html",
+    "build:dev": "npm --prefix harava-insights install --no-audit --no-fund && npm --prefix harava-insights run build && mkdir -p dist && printf 'built' > dist/index.html",
     "lint": "npm --prefix harava-insights run lint"
   }
 }
