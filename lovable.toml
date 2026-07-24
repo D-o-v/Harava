@@ -1,0 +1,5 @@
+[run]
+dev = "bash -lc 'cd harava-insights && npm install --no-audit --no-fund && exec npm run dev -- --port 8080 --hostname 0.0.0.0'"
+install = "bash -lc 'cd harava-insights && npm install --no-audit --no-fund'"
+build = "bash -lc 'cd harava-insights && npm run build'"
+lint = "bash -lc 'cd harava-insights && npm run lint'"
