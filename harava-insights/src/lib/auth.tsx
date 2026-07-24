@@ -38,7 +38,7 @@ type LoginResult =
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
-  login: (email: string, password: string, opts?: { scope?: "auto" | "platform" }) => Promise<LoginResult>;
+  login: (email: string, password: string) => Promise<LoginResult>;
   verifyMfa: (mfaToken: string, code: string) => Promise<LoginResult>;
   finalizeFromLoginResponse: (res: LoginResponse, scope: TokenScope) => Promise<User | null>;
   logout: () => void;
