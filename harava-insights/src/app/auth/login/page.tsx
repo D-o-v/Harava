@@ -88,18 +88,8 @@ export default function LoginPage() {
                 <Link href="/auth/register" className="text-gold-dark font-semibold hover:text-gold">Create one</Link>
               </p>
 
-              <div className="mb-4 flex items-center gap-1.5 bg-white border border-navy/8 rounded-xl p-1 w-fit">
-                {(["auto", "platform"] as const).map((s) => (
-                  <button
-                    key={s}
-                    type="button"
-                    onClick={() => setScope(s)}
-                    className={`text-[11px] font-semibold px-3 py-1.5 rounded-lg transition-colors ${scope === s ? "bg-navy text-white" : "text-navy/50 hover:text-navy"}`}
-                  >
-                    {s === "auto" ? "Firm / Client" : "Platform Admin"}
-                  </button>
-                ))}
-              </div>
+
+
 
               {error && <div className="mb-4 p-3.5 rounded-xl bg-red-50 border border-red-200/60 text-red-700 text-sm">{error}</div>}
 
