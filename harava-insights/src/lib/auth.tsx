@@ -30,6 +30,17 @@ export const ROLE_LABELS: Record<UserRole, string> = {
   corporate_admin: "Corporate Admin",
 };
 
+export function defaultRouteForRole(role: string): string {
+  const normalized = role.toLowerCase();
+  if (normalized.includes("platform") || normalized.includes("owner") || normalized.includes("admin")) {
+    return "/admin";
+  }
+  if (normalized.includes("client") || normalized.includes("portal")) {
+    return "/portal";
+  }
+  return "/finsight";
+}
+
 type LoginResult =
   | { success: true; mfa?: false }
   | { success: true; mfa: true; mfaToken: string; channels?: string[] }

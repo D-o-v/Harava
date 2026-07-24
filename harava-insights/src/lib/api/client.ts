@@ -26,6 +26,12 @@ interface ApiRequestInit extends Omit<RequestInit, "body"> {
   raw?: boolean; // return raw Response instead of unwrapping
   /** Skip attaching X-Tenant-ID (used for platform-only endpoints). */
   skipTenant?: boolean;
+  /** Backward-compatible alias used by older API modules. */
+  noAuth?: boolean;
+  /** Backward-compatible alias used by older API modules. */
+  skipTenantHeader?: boolean;
+  /** Backward-compatible flag kept for older token endpoint callers. */
+  isTokenEndpoint?: boolean;
 }
 
 interface Envelope<T> {
@@ -91,16 +97,17 @@ export async function apiRequest<T = unknown>(
   path: string,
   init: ApiRequestInit = {},
 ): Promise<T> {
-  const { body, query, scope, headers, raw, skipTenant, ...rest } = init;
-  const activeScope = resolveScope(scope);
+  const { body, query, scope, headers, raw, skipTenant, noAuth, skipTenantHeader, isTokenEndpoint: _isTokenEndpoint, ...rest } = init;
+  const activeScope = noAuth ? null : resolveScope(scope);
   const method = (rest.method || "GET").toUpperCase();
   const fullUrl = buildUrl(path, query);
   const isPlatformPath = path.startsWith("/api/v1/platform/");
+  const shouldSkipTenant = Boolean(skipTenant || skipTenantHeader);
 
   // Kick off tenant resolution once per session; safe to await concurrently.
   // Platform endpoints never carry X-Tenant-ID.
   const tenantPromise =
-    skipTenant || isPlatformPath ? Promise.resolve(null) : resolveTenant();
+    shouldSkipTenant || isPlatformPath ? Promise.resolve(null) : resolveTenant();
 
   const doFetch = async (): Promise<Response> => {
     const h = new Headers(headers as HeadersInit | undefined);
@@ -118,7 +125,7 @@ export async function apiRequest<T = unknown>(
     // Tenant header — resolved from current subdomain (localhost dev included).
     await tenantPromise;
     const tenantId = getResolvedTenantId();
-    if (tenantId && !skipTenant && !isPlatformPath && !h.has("X-Tenant-ID")) {
+    if (tenantId && !shouldSkipTenant && !isPlatformPath && !h.has("X-Tenant-ID")) {
       h.set("X-Tenant-ID", tenantId);
     }
 
@@ -173,3 +180,5 @@ export async function apiRequest<T = unknown>(
   if (json && "data" in json) return json.data as T;
   return (json ?? (text as unknown)) as T;
 }
+
+export const api = apiRequest;
