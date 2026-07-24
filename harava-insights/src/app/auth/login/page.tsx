@@ -16,7 +16,6 @@ const ENABLE_DEMO = process.env.NEXT_PUBLIC_ENABLE_DEMO_LOGIN === "true";
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [scope, setScope] = useState<"auto" | "platform">("auto");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -46,7 +45,7 @@ export default function LoginPage() {
     e.preventDefault();
     setError("");
     setLoading(true);
-    const result = await login(email, password, { scope });
+    const result = await login(email, password);
     setLoading(false);
     if (!result.success) return setError(result.error);
     if ("mfa" in result && result.mfa) {
@@ -89,18 +88,8 @@ export default function LoginPage() {
                 <Link href="/auth/register" className="text-gold-dark font-semibold hover:text-gold">Create one</Link>
               </p>
 
-              <div className="mb-4 flex items-center gap-1.5 bg-white border border-navy/8 rounded-xl p-1 w-fit">
-                {(["auto", "platform"] as const).map((s) => (
-                  <button
-                    key={s}
-                    type="button"
-                    onClick={() => setScope(s)}
-                    className={`text-[11px] font-semibold px-3 py-1.5 rounded-lg transition-colors ${scope === s ? "bg-navy text-white" : "text-navy/50 hover:text-navy"}`}
-                  >
-                    {s === "auto" ? "Firm / Client" : "Platform Admin"}
-                  </button>
-                ))}
-              </div>
+
+
 
               {error && <div className="mb-4 p-3.5 rounded-xl bg-red-50 border border-red-200/60 text-red-700 text-sm">{error}</div>}
 
@@ -134,10 +123,10 @@ export default function LoginPage() {
                     <div className="relative flex justify-center text-[10px]"><span className="px-3 bg-[#f6f7fa] text-navy/30 font-medium uppercase tracking-wider">Quick demo login</span></div>
                   </div>
                   <div className="mt-3.5 grid grid-cols-2 gap-2">
-                    <button onClick={() => { setEmail("sandbox-admin@harava.com.ng"); setPassword("Password!2026"); setScope("platform"); }} className="text-[12px] font-medium text-navy/50 bg-white border border-navy/6 rounded-lg px-3 py-2 hover:border-gold/20 hover:text-navy">
+                    <button onClick={() => { setEmail("sandbox-admin@harava.com.ng"); setPassword("Password!2026"); }} className="text-[12px] font-medium text-navy/50 bg-white border border-navy/6 rounded-lg px-3 py-2 hover:border-gold/20 hover:text-navy">
                       Platform Admin
                     </button>
-                    <button onClick={() => { setEmail("owner@dju.example"); setPassword("ChangeMe123"); setScope("auto"); }} className="text-[12px] font-medium text-navy/50 bg-white border border-navy/6 rounded-lg px-3 py-2 hover:border-gold/20 hover:text-navy">
+                    <button onClick={() => { setEmail("owner@dju.example"); setPassword("ChangeMe123"); }} className="text-[12px] font-medium text-navy/50 bg-white border border-navy/6 rounded-lg px-3 py-2 hover:border-gold/20 hover:text-navy">
                       Firm Owner
                     </button>
                   </div>

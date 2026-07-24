@@ -4,6 +4,7 @@ import { createContext, useContext, useState, useEffect, ReactNode, useCallback 
 import { useRouter, usePathname } from "next/navigation";
 import { tokens, type TokenScope } from "@/lib/api/tokens";
 import { accountApi, authApi, platformApi, portalApi, type LoginResponse, type UserProfile } from "@/lib/api/endpoints";
+import { isPlatformHost, resolveTenant } from "@/lib/api/tenant-context";
 
 export type UserRole = "super_admin" | "accountant" | "consultant" | "learner" | "corporate_admin";
 
@@ -37,7 +38,7 @@ type LoginResult =
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
-  login: (email: string, password: string, opts?: { scope?: "auto" | "platform" }) => Promise<LoginResult>;
+  login: (email: string, password: string) => Promise<LoginResult>;
   verifyMfa: (mfaToken: string, code: string) => Promise<LoginResult>;
   finalizeFromLoginResponse: (res: LoginResponse, scope: TokenScope) => Promise<User | null>;
   logout: () => void;
@@ -132,24 +133,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const login = useCallback<AuthContextType["login"]>(
-    async (email, password, opts = {}) => {
+    async (email, password) => {
       try {
-        const scopeChoice = opts.scope ?? "auto";
-        const res =
-          scopeChoice === "platform"
-            ? await platformApi.login(email, password)
-            : await authApi.login(email, password);
+        // Scope is derived from the host, never the UI:
+        //   subdomain present → tenant login (staff or client)
+        //   no subdomain      → platform-admin login
+        const platform = isPlatformHost();
+        if (!platform) {
+          // Ensure the tenantId is resolved before we hit /auth/login so
+          // the client can attach X-Tenant-ID automatically.
+          const resolved = await resolveTenant();
+          if (!resolved) {
+            return { success: false, error: "Unknown workspace subdomain" };
+          }
+        }
+
+        const res = platform
+          ? await platformApi.login(email, password)
+          : await authApi.login(email, password);
+
         if (res.mfaRequired && res.mfaToken) {
           return { success: true, mfa: true, mfaToken: res.mfaToken, channels: res.mfaChannels };
         }
-        const scope: TokenScope =
-          scopeChoice === "platform"
+
+        // Scope hint from the server; fall back to host-based guess.
+        const scope: TokenScope = platform
+          ? "platform"
+          : res.scope === "PLATFORM"
             ? "platform"
-            : res.scope === "PLATFORM"
-              ? "platform"
-              : res.scope === "CLIENT"
-                ? "portal"
-                : "staff";
+            : res.scope === "CLIENT"
+              ? "portal"
+              : "staff";
+
         const u = await finalizeFromLoginResponse(res, scope);
         if (!u) return { success: false, error: "Session could not be loaded" };
         return { success: true };

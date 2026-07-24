@@ -1,6 +1,8 @@
 "use client";
 
 import { tokens, type TokenScope } from "./tokens";
+import { createDpopProof } from "./dpop";
+import { resolveTenant, getResolvedTenantId } from "./tenant-context";
 
 export const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "") || "http://localhost:8080";
@@ -22,6 +24,8 @@ interface ApiRequestInit extends Omit<RequestInit, "body"> {
   query?: Record<string, string | number | boolean | undefined | null>;
   scope?: TokenScope | "auto" | "none";
   raw?: boolean; // return raw Response instead of unwrapping
+  /** Skip attaching X-Tenant-ID (used for platform-only endpoints). */
+  skipTenant?: boolean;
 }
 
 interface Envelope<T> {
@@ -44,9 +48,11 @@ async function refreshToken(scope: TokenScope): Promise<boolean> {
   if (refreshInFlight) return refreshInFlight;
   refreshInFlight = (async () => {
     try {
-      const res = await fetch(`${API_BASE_URL}${REFRESH_PATHS[scope]}`, {
+      const url = `${API_BASE_URL}${REFRESH_PATHS[scope]}`;
+      const proof = await createDpopProof("POST", url, null);
+      const res = await fetch(url, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", DPoP: proof },
         body: JSON.stringify({ refreshToken: refresh }),
       });
       if (!res.ok) return false;
@@ -85,19 +91,46 @@ export async function apiRequest<T = unknown>(
   path: string,
   init: ApiRequestInit = {},
 ): Promise<T> {
-  const { body, query, scope, headers, raw, ...rest } = init;
+  const { body, query, scope, headers, raw, skipTenant, ...rest } = init;
   const activeScope = resolveScope(scope);
+  const method = (rest.method || "GET").toUpperCase();
+  const fullUrl = buildUrl(path, query);
+  const isPlatformPath = path.startsWith("/api/v1/platform/");
+
+  // Kick off tenant resolution once per session; safe to await concurrently.
+  // Platform endpoints never carry X-Tenant-ID.
+  const tenantPromise =
+    skipTenant || isPlatformPath ? Promise.resolve(null) : resolveTenant();
+
   const doFetch = async (): Promise<Response> => {
     const h = new Headers(headers as HeadersInit | undefined);
     if (!h.has("Accept")) h.set("Accept", "application/json");
     if (body !== undefined && !(body instanceof FormData)) {
       if (!h.has("Content-Type")) h.set("Content-Type", "application/json");
     }
+
+    let bearer: string | null = null;
     if (activeScope) {
-      const t = tokens.get(activeScope).access;
-      if (t) h.set("Authorization", `Bearer ${t}`);
+      bearer = tokens.get(activeScope).access;
+      if (bearer) h.set("Authorization", `Bearer ${bearer}`);
     }
-    return fetch(buildUrl(path, query), {
+
+    // Tenant header — resolved from current subdomain (localhost dev included).
+    await tenantPromise;
+    const tenantId = getResolvedTenantId();
+    if (tenantId && !skipTenant && !isPlatformPath && !h.has("X-Tenant-ID")) {
+      h.set("X-Tenant-ID", tenantId);
+    }
+
+    // DPoP proof — required by backend on every request; harmless when disabled.
+    try {
+      const proof = await createDpopProof(method, fullUrl.split("?")[0], bearer);
+      h.set("DPoP", proof);
+    } catch {
+      // DPoP failure shouldn't kill the request outright — server will 401 if required.
+    }
+
+    return fetch(fullUrl, {
       ...rest,
       headers: h,
       body:
@@ -115,7 +148,6 @@ export async function apiRequest<T = unknown>(
     if (ok) res = await doFetch();
   }
 
-  
   if (raw) return res as unknown as T;
 
   const text = await res.text();
