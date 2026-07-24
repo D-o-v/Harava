@@ -1,0 +1,2135 @@
+{
+  "info": {
+    "_postman_id": "2be27459-95d3-4641-be2b-9d0e2aaec0ec",
+    "name": "Harava Platform API",
+    "description": "Harava Insights multi-tenant financial platform. Folders 1 to 6 are the existing platform, auth, account, staff, and MFA endpoints. Folders 7 to 10 are the company, insights, QuickBooks, and client-portal endpoints added in the groundwork phase. Login and accept requests capture tokens into collection variables automatically.\n\nDPoP: a collection-level pre-request script auto-attaches a `DPoP` proof to every request (generating one EC P-256 key pair the first time and caching it). It uses the jsrsasign library (pure JS), loaded from a CDN on the very first request and cached in the `jsrsasignSrc` variable — so the FIRST request after import only loads the library; re-send it once and every request is signed thereafter. When the server has `harava.dpop.enabled=true` this proof is required; when false it is harmless.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "21652294"
+  },
+  "item": [
+    {
+      "name": "1. Platform Admin",
+      "item": [
+        {
+          "name": "Login (platform admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var d = pm.response.json().data;",
+                  "if (d && d.accessToken) {",
+                  "  pm.collectionVariables.set('platformToken', d.accessToken);",
+                  "  pm.collectionVariables.set('platformRefresh', d.refreshToken);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{platformEmail}}\",\n  \"password\": \"{{platformPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/platform/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "platform",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Refresh platform token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var d = pm.response.json().data;",
+                  "if (d && d.accessToken) {",
+                  "  pm.collectionVariables.set('platformToken', d.accessToken);",
+                  "  pm.collectionVariables.set('platformRefresh', d.refreshToken);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{platformRefresh}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/platform/auth/refresh",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "platform",
+                "auth",
+                "refresh"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Platform logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{platformRefresh}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/platform/auth/logout",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "platform",
+                "auth",
+                "logout"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Provision tenant + owner",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{platformToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"organizationName\": \"Dju Financials\",\n  \"subdomain\": \"{{tenantSubdomain}}\",\n  \"ownerEmail\": \"{{ownerEmail}}\",\n  \"billingMode\": \"{{billingMode}}\",\n  \"countryCode\": \"NG\",\n  \"defaultCurrency\": \"NGN\",\n  \"timezone\": \"Africa/Lagos\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/platform/tenants",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "platform",
+                "tenants"
+              ]
+            },
+            "description": "Creates the tenant and emails the owner an invitation. Copy the invite token from the email into {{inviteToken}}.\n\nbillingMode is optional and defaults to SUBSCRIPTION when omitted — set {{billingMode}} to OPEN for a tenant that is not subject to paid billing. countryCode (ISO 3166-1 alpha-2), defaultCurrency (ISO 4217), and timezone (IANA) are the firm's optional display defaults; remove them to omit."
+          },
+          "response": []
+        },
+        {
+          "name": "List tenants",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{platformToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/platform/tenants",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "platform",
+                "tenants"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Suspend tenant",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{platformToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/platform/tenants/{{tenantId}}/suspend",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "platform",
+                "tenants",
+                "{{tenantId}}",
+                "suspend"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Activate tenant",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{platformToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/platform/tenants/{{tenantId}}/activate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "platform",
+                "tenants",
+                "{{tenantId}}",
+                "activate"
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "description": "Platform control plane. Onboard and manage tenants (firms)."
+    },
+    {
+      "name": "2. Owner Onboarding",
+      "item": [
+        {
+          "name": "Preview invitation",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/invitations/preview?token={{inviteToken}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "invitations",
+                "preview"
+              ],
+              "query": [
+                {
+                  "key": "token",
+                  "value": "{{inviteToken}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Accept invitation (owner sets password)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var d = pm.response.json().data;",
+                  "if (d && d.accessToken) {",
+                  "  pm.collectionVariables.set('token', d.accessToken);",
+                  "  pm.collectionVariables.set('refreshToken', d.refreshToken);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"{{inviteToken}}\",\n  \"password\": \"{{ownerPassword}}\",\n  \"firstName\": \"Owner\",\n  \"lastName\": \"One\",\n  \"phoneNumber\": \"+2348012345678\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/invitations/accept",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "invitations",
+                "accept"
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "description": "Owner arrives by invitation only, sets a password, and is signed in."
+    },
+    {
+      "name": "3. Tenant Auth",
+      "item": [
+        {
+          "name": "Resolve tenant by subdomain",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/tenant?subdomain={{tenantSubdomain}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "tenant"
+              ],
+              "query": [
+                {
+                  "key": "subdomain",
+                  "value": "{{tenantSubdomain}}",
+                  "description": "Tenant subdomain/slug to resolve (required)."
+                }
+              ]
+            },
+            "description": "Resolves a workspace subdomain to its tenantId and display name. Returns 404 if the subdomain is unknown or the tenant is suspended. Clients call this on the login screen, then send the returned tenantId as the X-Tenant-ID header on /auth/login."
+          },
+          "response": []
+        },
+        {
+          "name": "Subdomain available?",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/subdomain-available?subdomain=acme",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "subdomain-available"
+              ],
+              "query": [
+                {
+                  "key": "subdomain",
+                  "value": "acme"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Login (email + password)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var d = pm.response.json().data;",
+                  "if (d && d.tokens) {",
+                  "  pm.collectionVariables.set('token', d.tokens.accessToken);",
+                  "  pm.collectionVariables.set('refreshToken', d.tokens.refreshToken);",
+                  "} else if (d && d.mfaToken) {",
+                  "  pm.collectionVariables.set('mfaToken', d.mfaToken);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{ownerEmail}}\",\n  \"password\": \"{{ownerPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "MFA verify (complete login)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var d = pm.response.json().data;",
+                  "var t = d && (d.tokens || d);",
+                  "if (t && t.accessToken) {",
+                  "  pm.collectionVariables.set('token', t.accessToken);",
+                  "  pm.collectionVariables.set('refreshToken', t.refreshToken);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mfaToken\": \"{{mfaToken}}\",\n  \"code\": \"{{mfaCode}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/mfa/verify",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "mfa",
+                "verify"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Refresh token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var d = pm.response.json().data;",
+                  "var t = d && (d.tokens || d);",
+                  "if (t && t.accessToken) {",
+                  "  pm.collectionVariables.set('token', t.accessToken);",
+                  "  pm.collectionVariables.set('refreshToken', t.refreshToken);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/refresh",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "refresh"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/logout",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "logout"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Forgot password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{ownerEmail}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/password/forgot",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "password",
+                "forgot"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Reset password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"{{resetToken}}\",\n  \"password\": \"{{ownerPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/password/reset",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "password",
+                "reset"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Verify email",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"{{verifyToken}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/verify-email",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "verify-email"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Resend verification",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{ownerEmail}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/resend-verification",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "resend-verification"
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "description": "Tenant user authentication, MFA, and password recovery."
+    },
+    {
+      "name": "4. Account (authenticated)",
+      "item": [
+        {
+          "name": "Get my profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/account/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "account",
+                "me"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Change password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentPassword\": \"{{ownerPassword}}\",\n  \"newPassword\": \"{{newPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/account/password/change",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "account",
+                "password",
+                "change"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "My audit trail",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/account/audit",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "account",
+                "audit"
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "description": "Authenticated self-service."
+    },
+    {
+      "name": "5. Staff Invitations (owner/admin)",
+      "item": [
+        {
+          "name": "Invite member",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{memberEmail}}\",\n  \"role\": \"ADMIN\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/account/invitations",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "account",
+                "invitations"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List pending invitations",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/account/invitations",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "account",
+                "invitations"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Resend invitation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/account/invitations/{{invitationId}}/resend",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "account",
+                "invitations",
+                "{{invitationId}}",
+                "resend"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Revoke invitation",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/account/invitations/{{invitationId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "account",
+                "invitations",
+                "{{invitationId}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "description": "Firm staff management (ADMIN or MEMBER)."
+    },
+    {
+      "name": "6. MFA (authenticated)",
+      "item": [
+        {
+          "name": "TOTP setup (returns QR + secret)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/account/mfa/totp/setup",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "account",
+                "mfa",
+                "totp",
+                "setup"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "TOTP enable (confirm code)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"{{mfaCode}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/account/mfa/totp/enable",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "account",
+                "mfa",
+                "totp",
+                "enable"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Email MFA enable",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/account/mfa/email/enable",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "account",
+                "mfa",
+                "email",
+                "enable"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Send email OTP (step-up)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/account/mfa/otp/send",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "account",
+                "mfa",
+                "otp",
+                "send"
+              ]
+            },
+            "description": "Sends a fresh email OTP to the signed-in user (only works while EMAIL MFA is active). Use this before 'Disable MFA' when switching to the authenticator: send the code, read it from your email (or MailHog), then put it in {{mfaCode}} and call Disable MFA."
+          },
+          "response": []
+        },
+        {
+          "name": "SMS MFA enable",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/account/mfa/sms/enable",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "account",
+                "mfa",
+                "sms",
+                "enable"
+              ]
+            },
+            "description": "Enables SMS MFA. Requires a phone number on the account (collected at invite acceptance). Stubbed until Twilio is wired up: no real SMS is sent and the login SMS challenge is satisfied by the configured static code (SMS_STUB_CODE, default 123456)."
+          },
+          "response": []
+        },
+        {
+          "name": "Send SMS OTP (step-up)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/account/mfa/sms/send",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "account",
+                "mfa",
+                "sms",
+                "send"
+              ]
+            },
+            "description": "Sends a fresh SMS OTP to the signed-in user (only works while SMS MFA is active). While stubbed, nothing is delivered — just pass the static stub code (default 123456) as {{mfaCode}}."
+          },
+          "response": []
+        },
+        {
+          "name": "Disable MFA",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"{{mfaCode}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/account/mfa/disable",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "account",
+                "mfa",
+                "disable"
+              ]
+            },
+            "description": "Disables MFA. Requires a current second-factor code in {{mfaCode}}: a live TOTP code, a fresh email OTP (use 'Send email OTP (step-up)' first), or a backup code."
+          },
+          "response": []
+        }
+      ],
+      "description": "Multi-factor enrolment and management."
+    },
+    {
+      "name": "7. Companies (firm console)",
+      "item": [
+        {
+          "name": "Create company",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var d = pm.response.json().data;",
+                  "if (d && d.id) { pm.collectionVariables.set('companyId', d.id); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Acme Retail Ltd\",\n  \"externalRef\": \"CLIENT-001\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/tenant/companies",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "tenant",
+                "companies"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List companies",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/tenant/companies",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "tenant",
+                "companies"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get company",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/tenant/companies/{{companyId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "tenant",
+                "companies",
+                "{{companyId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update company",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Acme Retail Limited\",\n  \"externalRef\": \"CLIENT-001\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/tenant/companies/{{companyId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "tenant",
+                "companies",
+                "{{companyId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Suspend company",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/tenant/companies/{{companyId}}/suspend",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "tenant",
+                "companies",
+                "{{companyId}}",
+                "suspend"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Activate company",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/tenant/companies/{{companyId}}/activate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "tenant",
+                "companies",
+                "{{companyId}}",
+                "activate"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List company users",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/tenant/companies/{{companyId}}/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "tenant",
+                "companies",
+                "{{companyId}}",
+                "users"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Invite company user",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var d = pm.response.json().data;",
+                  "if (d && d.id) { pm.collectionVariables.set('invitationId', d.id); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{companyUserEmail}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/tenant/companies/{{companyId}}/users/invite",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "tenant",
+                "companies",
+                "{{companyId}}",
+                "users",
+                "invite"
+              ]
+            },
+            "description": "Invite a portal viewer to this company. Repeat for any number of users. Copy the emailed token into {{companyInviteToken}}."
+          },
+          "response": []
+        }
+      ],
+      "description": "Firm manages its companies (clients) and their portal users. NEW this phase."
+    },
+    {
+      "name": "8. Company Insights (firm view)",
+      "item": [
+        {
+          "name": "Summary",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/tenant/companies/{{companyId}}/insights/summary",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "tenant",
+                "companies",
+                "{{companyId}}",
+                "insights",
+                "summary"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Cash flow",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/tenant/companies/{{companyId}}/insights/cashflow",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "tenant",
+                "companies",
+                "{{companyId}}",
+                "insights",
+                "cashflow"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Profit and loss",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/tenant/companies/{{companyId}}/insights/pnl",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "tenant",
+                "companies",
+                "{{companyId}}",
+                "insights",
+                "pnl"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Reports",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/tenant/companies/{{companyId}}/reports",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "tenant",
+                "companies",
+                "{{companyId}}",
+                "reports"
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "description": "Owner/admin views a company's dashboard as the client sees it. Stubbed data for now."
+    },
+    {
+      "name": "9. QuickBooks (firm console)",
+      "item": [
+        {
+          "name": "Connection status",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/tenant/companies/{{companyId}}/quickbooks",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "tenant",
+                "companies",
+                "{{companyId}}",
+                "quickbooks"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Connect (stub; OAuth later)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/tenant/companies/{{companyId}}/quickbooks/connect",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "tenant",
+                "companies",
+                "{{companyId}}",
+                "quickbooks",
+                "connect"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Disconnect",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/tenant/companies/{{companyId}}/quickbooks",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "tenant",
+                "companies",
+                "{{companyId}}",
+                "quickbooks"
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "description": "Per-company QuickBooks connection. Stubbed; real OAuth arrives later."
+    },
+    {
+      "name": "10. Client Portal (company user)",
+      "item": [
+        {
+          "name": "Accept company invitation",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var d = pm.response.json().data;",
+                  "if (d && d.accessToken) {",
+                  "  pm.collectionVariables.set('clientToken', d.accessToken);",
+                  "  pm.collectionVariables.set('clientRefresh', d.refreshToken);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"{{companyInviteToken}}\",\n  \"password\": \"{{companyUserPassword}}\",\n  \"firstName\": \"Viewer\",\n  \"lastName\": \"One\",\n  \"phoneNumber\": \"+2348087654321\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/invitations/accept",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "invitations",
+                "accept"
+              ]
+            },
+            "description": "Company user accepts their invite and is signed in with ROLE_CLIENT, scoped to one company."
+          },
+          "response": []
+        },
+        {
+          "name": "Login (company user)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var d = pm.response.json().data;",
+                  "var t = d && (d.tokens || d);",
+                  "if (t && t.accessToken) {",
+                  "  pm.collectionVariables.set('clientToken', t.accessToken);",
+                  "  pm.collectionVariables.set('clientRefresh', t.refreshToken);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{companyUserEmail}}\",\n  \"password\": \"{{companyUserPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Me (profile + firm branding)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{clientToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/portal/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "portal",
+                "me"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Insights summary",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{clientToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/portal/insights/summary",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "portal",
+                "insights",
+                "summary"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Insights cash flow",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{clientToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/portal/insights/cashflow",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "portal",
+                "insights",
+                "cashflow"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Insights profit and loss",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{clientToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/portal/insights/pnl",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "portal",
+                "insights",
+                "pnl"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Reports",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{clientToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/portal/reports",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "portal",
+                "reports"
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "description": "The client portal. Company is taken from the token; a user only ever sees their own company."
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Harava DPoP — attaches a signed proof-of-possession header to every request.",
+          "// Postman sandboxes have no Node 'crypto', so we use jsrsasign (pure JS, ECDSA + JWS).",
+          "// The library is fetched once and cached; signing happens even on the first request",
+          "// (it runs inside the load callback, which Postman waits for).",
+          "",
+          "function attachDpopProof(libSrc) {",
+          "  try {",
+          "    // jsrsasign's RNG seeding references browser globals — stub them for the sandbox.",
+          "    var window = { crypto: undefined };",
+          "    var navigator = { appName: 'postman', userAgent: 'postman', appVersion: '5.0' };",
+          "    var self = {};",
+          "    eval(libSrc); // defines KJUR, KEYUTIL, hextob64u in this scope",
+          "",
+          "    // 1. One persistent EC P-256 key pair (cached as collection variables).",
+          "    var prvPem = pm.collectionVariables.get('dpopPrivateKeyPem');",
+          "    var pubJwk = pm.collectionVariables.get('dpopPublicJwk');",
+          "    var prvKey, jwk;",
+          "    if (prvPem && pubJwk) {",
+          "      prvKey = KEYUTIL.getKey(prvPem);",
+          "      jwk = JSON.parse(pubJwk);",
+          "    } else {",
+          "      var kp = KEYUTIL.generateKeypair('EC', 'secp256r1');",
+          "      prvKey = kp.prvKeyObj;",
+          "      prvPem = KEYUTIL.getPEM(kp.prvKeyObj, 'PKCS8PRV');",
+          "      var pj = KEYUTIL.getJWKFromKey(kp.pubKeyObj);",
+          "      jwk = { crv: 'P-256', kty: 'EC', x: pj.x, y: pj.y };",
+          "      pm.collectionVariables.set('dpopPrivateKeyPem', prvPem);",
+          "      pm.collectionVariables.set('dpopPublicJwk', JSON.stringify(jwk));",
+          "    }",
+          "",
+          "    // 2. Build the proof for this request.",
+          "    var htu = pm.variables.replaceIn(pm.request.url.toString()).split('?')[0];",
+          "    var payload = { htm: pm.request.method.toUpperCase(), htu: htu,",
+          "                    iat: Math.floor(Date.now() / 1000),",
+          "                    jti: 'jti-' + Date.now() + '-' + Math.floor(Math.random() * 1e9) };",
+          "",
+          "    // 3. Bind to the access token via `ath` when this request sends a Bearer token.",
+          "    var authHeader = pm.request.headers.get('Authorization');",
+          "    if (authHeader) {",
+          "      var resolved = pm.variables.replaceIn(authHeader);",
+          "      var m = resolved.match(/^Bearer\\s+(.+)$/i);",
+          "      if (m && m[1] && m[1].indexOf('{{') === -1) {",
+          "        payload.ath = hextob64u(KJUR.crypto.Util.hashString(m[1], 'sha256'));",
+          "      }",
+          "    }",
+          "",
+          "    // 4. Sign (ES256, JOSE R||S) and attach.",
+          "    var header = { alg: 'ES256', typ: 'dpop+jwt', jwk: jwk };",
+          "    var proof = KJUR.jws.JWS.sign(null, JSON.stringify(header), JSON.stringify(payload), prvKey);",
+          "    pm.request.headers.upsert({ key: 'DPoP', value: proof });",
+          "    console.log('DPoP: proof attached for ' + payload.htm + ' ' + htu);",
+          "  } catch (e) {",
+          "    console.error('DPoP: failed to build proof —', e);",
+          "  }",
+          "}",
+          "",
+          "var libSrc = pm.collectionVariables.get('jsrsasignSrc');",
+          "if (libSrc) {",
+          "  attachDpopProof(libSrc);",
+          "} else {",
+          "  pm.sendRequest('https://cdn.jsdelivr.net/npm/jsrsasign@11.1.0/lib/jsrsasign-all-min.js',",
+          "    function (err, res) {",
+          "      if (err || !res) { console.error('DPoP: could not load jsrsasign —', err); return; }",
+          "      var src = res.text();",
+          "      pm.collectionVariables.set('jsrsasignSrc', src);",
+          "      attachDpopProof(src);",
+          "    });",
+          "}"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string",
+      "description": "Matches APP_BASE_URL in .env. Platform admin works on this host directly; for tenant login by subdomain use http://<tenantSubdomain>.localhost:8080 or send the X-Tenant-ID header. (http://lvh.me:8080 also works for non-subdomain calls.)"
+    },
+    {
+      "key": "tenantSubdomain",
+      "value": "dju",
+      "type": "string"
+    },
+    {
+      "key": "tenantId",
+      "value": "",
+      "type": "string",
+      "description": "Copy from List Tenants."
+    },
+    {
+      "key": "platformEmail",
+      "value": "sandbox-admin@harava.com.ng",
+      "type": "string"
+    },
+    {
+      "key": "platformPassword",
+      "value": "Password!2026",
+      "type": "string"
+    },
+    {
+      "key": "platformToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "platformRefresh",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "ownerEmail",
+      "value": "owner@dju.example",
+      "type": "string"
+    },
+    {
+      "key": "billingMode",
+      "value": "OPEN",
+      "type": "string",
+      "description": "Tenant billing mode sent when provisioning: SUBSCRIPTION (subject to paid billing, the API default) or OPEN (not billed)."
+    },
+    {
+      "key": "ownerPassword",
+      "value": "ChangeMe123",
+      "type": "string"
+    },
+    {
+      "key": "newPassword",
+      "value": "ChangeMe456",
+      "type": "string"
+    },
+    {
+      "key": "inviteToken",
+      "value": "",
+      "type": "string",
+      "description": "Owner invitation token from the email."
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string",
+      "description": "Tenant access token (set automatically on login/accept)."
+    },
+    {
+      "key": "refreshToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "mfaToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "mfaCode",
+      "value": "123456",
+      "type": "string"
+    },
+    {
+      "key": "resetToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "verifyToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "memberEmail",
+      "value": "admin2@dju.example",
+      "type": "string"
+    },
+    {
+      "key": "invitationId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "companyId",
+      "value": "",
+      "type": "string",
+      "description": "Set automatically on Create company."
+    },
+    {
+      "key": "companyUserEmail",
+      "value": "viewer@acme.example",
+      "type": "string"
+    },
+    {
+      "key": "companyUserPassword",
+      "value": "ViewMe12345",
+      "type": "string"
+    },
+    {
+      "key": "companyInviteToken",
+      "value": "",
+      "type": "string",
+      "description": "Company-user invitation token from the email."
+    },
+    {
+      "key": "clientToken",
+      "value": "",
+      "type": "string",
+      "description": "Client-portal access token (set automatically)."
+    },
+    {
+      "key": "clientRefresh",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "dpopPrivateKeyPem",
+      "value": "",
+      "type": "string",
+      "description": "Auto-generated DPoP private key (PKCS#8 PEM). Leave blank; the pre-request script fills it once. Clear it to rotate to a new key."
+    },
+    {
+      "key": "dpopPublicJwk",
+      "value": "",
+      "type": "string",
+      "description": "Auto-generated DPoP public key (JWK). Leave blank; set automatically alongside the private key."
+    },
+    {
+      "key": "jsrsasignSrc",
+      "value": "",
+      "type": "string",
+      "description": "Cached jsrsasign library source (loaded from CDN on the first request). Leave blank; clear it to force a reload."
+    }
+  ]
+}
