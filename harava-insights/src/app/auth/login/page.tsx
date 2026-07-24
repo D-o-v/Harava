@@ -16,7 +16,6 @@ const ENABLE_DEMO = process.env.NEXT_PUBLIC_ENABLE_DEMO_LOGIN === "true";
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [scope, setScope] = useState<"auto" | "platform">("auto");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
