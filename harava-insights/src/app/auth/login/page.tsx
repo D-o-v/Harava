@@ -45,7 +45,7 @@ export default function LoginPage() {
     e.preventDefault();
     setError("");
     setLoading(true);
-    const result = await login(email, password, { scope });
+    const result = await login(email, password);
     setLoading(false);
     if (!result.success) return setError(result.error);
     if ("mfa" in result && result.mfa) {
