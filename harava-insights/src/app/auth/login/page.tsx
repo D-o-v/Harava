@@ -123,10 +123,10 @@ export default function LoginPage() {
                     <div className="relative flex justify-center text-[10px]"><span className="px-3 bg-[#f6f7fa] text-navy/30 font-medium uppercase tracking-wider">Quick demo login</span></div>
                   </div>
                   <div className="mt-3.5 grid grid-cols-2 gap-2">
-                    <button onClick={() => { setEmail("sandbox-admin@harava.com.ng"); setPassword("Password!2026"); setScope("platform"); }} className="text-[12px] font-medium text-navy/50 bg-white border border-navy/6 rounded-lg px-3 py-2 hover:border-gold/20 hover:text-navy">
+                    <button onClick={() => { setEmail("sandbox-admin@harava.com.ng"); setPassword("Password!2026"); }} className="text-[12px] font-medium text-navy/50 bg-white border border-navy/6 rounded-lg px-3 py-2 hover:border-gold/20 hover:text-navy">
                       Platform Admin
                     </button>
-                    <button onClick={() => { setEmail("owner@dju.example"); setPassword("ChangeMe123"); setScope("auto"); }} className="text-[12px] font-medium text-navy/50 bg-white border border-navy/6 rounded-lg px-3 py-2 hover:border-gold/20 hover:text-navy">
+                    <button onClick={() => { setEmail("owner@dju.example"); setPassword("ChangeMe123"); }} className="text-[12px] font-medium text-navy/50 bg-white border border-navy/6 rounded-lg px-3 py-2 hover:border-gold/20 hover:text-navy">
                       Firm Owner
                     </button>
                   </div>
