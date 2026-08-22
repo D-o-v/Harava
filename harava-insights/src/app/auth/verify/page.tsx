@@ -1,12 +1,13 @@
 "use client";
 
 import { Suspense, useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Loader2, CheckCircle2, XCircle } from "lucide-react";
 import { authApi } from "@/lib/api/endpoints";
 
 function VerifyInner() {
+  const router = useRouter();
   const params = useSearchParams();
   const token = params.get("token") || "";
   const [state, setState] = useState<"loading" | "ok" | "err">("loading");
@@ -14,11 +15,31 @@ function VerifyInner() {
 
   useEffect(() => {
     if (!token) { setState("err"); setMessage("Missing token."); return; }
-    authApi.verifyEmail(token).then(
-      () => setState("ok"),
-      (e: unknown) => { setState("err"); setMessage(e instanceof Error ? e.message : "Verification failed"); },
-    );
-  }, [token]);
+
+    let cancelled = false;
+    const verifyToken = async () => {
+      try {
+        await authApi.previewInvitation(token);
+        if (!cancelled) router.replace(`/auth/accept?token=${encodeURIComponent(token)}`);
+        return;
+      } catch {
+        // If it is not an invitation token, continue with email verification.
+      }
+
+      try {
+        await authApi.verifyEmail(token);
+        if (!cancelled) setState("ok");
+      } catch (e: unknown) {
+        if (!cancelled) {
+          setState("err");
+          setMessage(e instanceof Error ? e.message : "Verification failed");
+        }
+      }
+    };
+
+    verifyToken();
+    return () => { cancelled = true; };
+  }, [router, token]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#f6f7fa] p-6">
