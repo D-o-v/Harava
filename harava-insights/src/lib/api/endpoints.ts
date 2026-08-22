@@ -10,6 +10,8 @@ export interface LoginResponse {
   // flat shape (platform login / MFA verify)
   accessToken?: string;
   refreshToken?: string;
+  // nested shape returned by the tenant MFA verification endpoint
+  tokens?: { accessToken?: string; refreshToken?: string; tokenType?: string; expiresIn?: number };
   // nested shape (tenant staff login)
   session?: {
     tokens?: { accessToken?: string; refreshToken?: string };
@@ -29,6 +31,7 @@ export interface UserProfile {
   firstName?: string;
   lastName?: string;
   role?: string;
+  roles?: string[];
   scope?: "STAFF" | "CLIENT" | "PLATFORM";
   tenantId?: string;
   companyId?: string;
@@ -234,7 +237,7 @@ export const staffApi = {
 
 export const mfaApi = {
   totpSetup: () =>
-    apiRequest<{ secret: string; qrCodeUri?: string; qrCode?: string }>(
+    apiRequest<{ secret: string; otpauthUri: string; qrCodeDataUri: string }>(
       "/api/v1/account/mfa/totp/setup",
       { method: "POST" },
     ),

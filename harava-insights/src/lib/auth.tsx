@@ -62,7 +62,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const PUBLIC_ROUTES = ["/", "/auth/login", "/auth/register", "/auth/forgot-password", "/auth/reset-password", "/auth/accept", "/auth/verify", "/finsight/quickbooks/callback"];
 
 function toUser(profile: UserProfile, scope: TokenScope): User {
-  const rawRole = (profile.role || "").toLowerCase();
+  const rawRole = (profile.role || profile.roles?.[0] || "").toLowerCase();
   let role: UserRole = "learner";
   let products: string[] = [];
   if (scope === "platform") {
@@ -151,8 +151,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const finalizeFromLoginResponse = useCallback(
     async (res: LoginResponse, scope: TokenScope): Promise<User | null> => {
-      const accessToken = res.accessToken ?? res.session?.tokens?.accessToken;
-      const refreshToken = res.refreshToken ?? res.session?.tokens?.refreshToken ?? null;
+      const accessToken = res.accessToken ?? res.tokens?.accessToken ?? res.session?.tokens?.accessToken;
+      const refreshToken = res.refreshToken ?? res.tokens?.refreshToken ?? res.session?.tokens?.refreshToken ?? null;
       if (!accessToken) return null;
       tokens.set(scope, accessToken, refreshToken);
       tokens.setActive(scope);
