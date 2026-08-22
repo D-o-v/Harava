@@ -5,200 +5,145 @@ import { DashboardHeader } from "@/components/layout/dashboard-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Modal } from "@/components/ui/modal";
-import { useToast } from "@/lib/toast";
-import { Plus, Download, Filter, Eye, Edit, Trash2 } from "lucide-react";
+import { useAuth } from "@/lib/auth";
+import { quickbooksApi } from "@/lib/api/endpoints";
+import { useApi } from "@/lib/api/hooks";
+import { RefreshCw, Loader2 } from "lucide-react";
+import { PageLoader, PageError } from "@/components/ui/page-loader";
 
-interface Transaction {
-  id: number;
-  date: string;
-  description: string;
-  category: string;
-  amount: number;
-  type: "income" | "expense";
-  status: "posted" | "pending" | "reconciled";
+const ENTITY_TABS = [
+  { slug: "invoices", label: "Invoices" },
+  { slug: "bills", label: "Bills" },
+  { slug: "payments", label: "Payments" },
+  { slug: "bill-payments", label: "Bill Payments" },
+  { slug: "purchases", label: "Purchases" },
+  { slug: "journal-entries", label: "Journal Entries" },
+] as const;
+
+type Slug = typeof ENTITY_TABS[number]["slug"];
+
+function fmt(n: unknown) {
+  const v = Number(n);
+  if (isNaN(v)) return "—";
+  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 2 }).format(v);
+}
+
+function dateStr(v: unknown) {
+  if (!v) return "—";
+  try { return new Date(String(v)).toLocaleDateString(); } catch { return String(v); }
 }
 
 export default function AccountingPage() {
-  const { toast } = useToast();
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [viewTx, setViewTx] = useState<Transaction | null>(null);
-  const [filterType, setFilterType] = useState<"all" | "income" | "expense">("all");
-  const [newTx, setNewTx] = useState({ description: "", amount: "", category: "Revenue", type: "income" as "income" | "expense" });
+  const { user } = useAuth();
+  const companyId = user?.companyId ?? "";
+  const [slug, setSlug] = useState<Slug>("invoices");
 
-  const [transactions, setTransactions] = useState<Transaction[]>([
-    { id: 1, date: "Jun 1, 2026", description: "Client Payment - Acme Corp", category: "Revenue", amount: 15000, type: "income", status: "posted" },
-    { id: 2, date: "Jun 1, 2026", description: "SaaS Subscription - Slack", category: "Software", amount: 1200, type: "expense", status: "reconciled" },
-    { id: 3, date: "May 31, 2026", description: "Client Payment - Beta LLC", category: "Revenue", amount: 8500, type: "income", status: "posted" },
-    { id: 4, date: "May 31, 2026", description: "Office Rent - June", category: "Facilities", amount: 4500, type: "expense", status: "posted" },
-    { id: 5, date: "May 30, 2026", description: "Consulting Fee - Delta Inc", category: "Revenue", amount: 22000, type: "income", status: "reconciled" },
-    { id: 6, date: "May 30, 2026", description: "Payroll - May", category: "Payroll", amount: 45000, type: "expense", status: "reconciled" },
-    { id: 7, date: "May 29, 2026", description: "Marketing - Google Ads", category: "Marketing", amount: 3200, type: "expense", status: "pending" },
-    { id: 8, date: "May 28, 2026", description: "Client Payment - Omega Retail", category: "Revenue", amount: 12000, type: "income", status: "posted" },
-  ]);
+  const data = useApi(
+    () => companyId ? quickbooksApi.list(companyId, slug, 0, 50) : Promise.resolve(null),
+    [companyId, slug],
+    { skip: !companyId },
+  );
 
-  const filteredTx = filterType === "all" ? transactions : transactions.filter((t) => t.type === filterType);
+  const rows = (data.data?.content ?? []) as Record<string, unknown>[];
 
-  const handleAddTransaction = () => {
-    if (!newTx.description || !newTx.amount) {
-      toast("Please fill in all fields", "error");
-      return;
-    }
-    const tx: Transaction = {
-      id: transactions.length + 1,
-      date: "Jun 1, 2026",
-      description: newTx.description,
-      category: newTx.category,
-      amount: parseFloat(newTx.amount),
-      type: newTx.type,
-      status: "pending",
-    };
-    setTransactions((prev) => [tx, ...prev]);
-    setShowAddModal(false);
-    setNewTx({ description: "", amount: "", category: "Revenue", type: "income" });
-    toast("Transaction added successfully!", "success");
-  };
+  if (data.loading) return <><DashboardHeader title="Accounting" subtitle="Live transaction data from QuickBooks" /><PageLoader message="Loading transactions…" /></>;
+  if (data.error) return <><DashboardHeader title="Accounting" subtitle="Live transaction data from QuickBooks" /><PageError message={data.error} onRetry={data.refetch} /></>;
 
-  const handleDelete = (id: number) => {
-    setTransactions((prev) => prev.filter((t) => t.id !== id));
-    toast("Transaction deleted", "info");
-  };
-
-  const handleExport = () => {
-    toast("Exporting transactions to CSV...", "success");
-  };
+  // Derive columns from first row keys, capped at 6
+  const cols = rows.length > 0
+    ? Object.keys(rows[0]).filter(k => !["Id", "SyncToken", "MetaData", "Line", "LinkedTxn", "CustomField"].includes(k)).slice(0, 6)
+    : [];
 
   return (
     <div>
-      <DashboardHeader title="Accounting" subtitle="Transaction ledger and month-end management" />
+      <DashboardHeader title="Accounting" subtitle="Live transaction data from QuickBooks" />
+      <div className="p-4 sm:p-6 lg:p-8 space-y-6">
 
-      <div className="p-6 space-y-6">
-        {/* Actions Bar */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Button variant={filterType === "all" ? "primary" : "outline"} size="sm" onClick={() => setFilterType("all")}>All</Button>
-            <Button variant={filterType === "income" ? "primary" : "outline"} size="sm" onClick={() => setFilterType("income")}>Income</Button>
-            <Button variant={filterType === "expense" ? "primary" : "outline"} size="sm" onClick={() => setFilterType("expense")}>Expenses</Button>
+        {!companyId && (
+          <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-700 text-sm">
+            No company linked. Connect a QuickBooks company from the Clients page.
           </div>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={handleExport}><Download className="w-4 h-4" /> Export</Button>
-            <Button variant="primary" size="sm" onClick={() => setShowAddModal(true)}><Plus className="w-4 h-4" /> Add Transaction</Button>
+        )}
+
+        {/* Entity tabs */}
+        <div className="flex items-center gap-1 bg-white border border-navy/8 rounded-xl p-1 flex-wrap">
+          {ENTITY_TABS.map((t) => (
+            <button
+              key={t.slug}
+              onClick={() => setSlug(t.slug)}
+              className={`text-[12px] font-medium px-3 py-1.5 rounded-lg transition-all ${
+                slug === t.slug ? "bg-navy text-white shadow-sm" : "text-navy/50 hover:text-navy hover:bg-navy/5"
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+          <Button variant="ghost" size="sm" className="ml-auto" onClick={() => data.refetch()} disabled={data.loading}>
+            <RefreshCw className={`w-3.5 h-3.5 ${data.loading ? "animate-spin" : ""}`} />
+          </Button>
+        </div>
+
+        {/* Stats */}
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="stat-card p-4">
+            <p className="text-[11px] font-medium text-navy/45 uppercase tracking-wider">Total Records</p>
+            <p className="text-2xl font-bold text-navy mt-1">{data.data?.totalElements ?? "—"}</p>
+          </div>
+          <div className="stat-card p-4">
+            <p className="text-[11px] font-medium text-navy/45 uppercase tracking-wider">This Page</p>
+            <p className="text-2xl font-bold text-navy mt-1">{rows.length}</p>
+          </div>
+          <div className="stat-card p-4">
+            <p className="text-[11px] font-medium text-navy/45 uppercase tracking-wider">Entity</p>
+            <p className="text-[15px] font-bold text-navy mt-1 capitalize">{slug.replace("-", " ")}</p>
           </div>
         </div>
 
-        {/* Transaction Table */}
+        {/* Table */}
         <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="capitalize">{slug.replace("-", " ")}</CardTitle>
+            <Badge variant="default" size="sm">{data.data?.totalElements ?? 0} total</Badge>
+          </CardHeader>
           <CardContent className="p-0">
-            <div className="overflow-x-auto"><table className="w-full text-sm min-w-150">
-              <thead className="bg-gray-50 border-b">
-                <tr>
-                  <th className="text-left px-6 py-3 font-medium text-gray-500">Date</th>
-                  <th className="text-left px-6 py-3 font-medium text-gray-500">Description</th>
-                  <th className="text-left px-6 py-3 font-medium text-gray-500">Category</th>
-                  <th className="text-right px-6 py-3 font-medium text-gray-500">Amount</th>
-                  <th className="text-center px-6 py-3 font-medium text-gray-500">Status</th>
-                  <th className="text-right px-6 py-3 font-medium text-gray-500">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {filteredTx.map((tx) => (
-                  <tr key={tx.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-3 text-gray-500">{tx.date}</td>
-                    <td className="px-6 py-3 font-medium text-gray-900">{tx.description}</td>
-                    <td className="px-6 py-3 text-gray-600">{tx.category}</td>
-                    <td className={`px-6 py-3 text-right font-medium ${tx.type === "income" ? "text-navy" : "text-red-600"}`}>
-                      {tx.type === "income" ? "+" : "-"}${tx.amount.toLocaleString()}
-                    </td>
-                    <td className="px-6 py-3 text-center">
-                      <Badge variant={tx.status === "reconciled" ? "success" : tx.status === "posted" ? "info" : "warning"}>{tx.status}</Badge>
-                    </td>
-                    <td className="px-6 py-3 text-right">
-                      <div className="flex justify-end gap-1">
-                        <Button variant="ghost" size="icon" onClick={() => setViewTx(tx)}><Eye className="w-4 h-4" /></Button>
-                        <Button variant="ghost" size="icon" onClick={() => handleDelete(tx.id)}><Trash2 className="w-4 h-4 text-red-400" /></Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table></div>
-          </CardContent>
-        </Card>
-
-        {/* Month-End Status */}
-        <Card>
-          <CardHeader><CardTitle>Month-End Close Status</CardTitle></CardHeader>
-          <CardContent>
-            <div className="grid md:grid-cols-4 gap-4">
-              {[
-                { task: "Bank Reconciliation", status: "complete" },
-                { task: "AR Aging Review", status: "complete" },
-                { task: "AP Verification", status: "in-progress" },
-                { task: "Journal Entries", status: "pending" },
-              ].map((task, i) => (
-                <div key={i} className="p-3 border rounded-lg text-center">
-                  <Badge variant={task.status === "complete" ? "success" : task.status === "in-progress" ? "warning" : "default"}>{task.status}</Badge>
-                  <p className="text-sm text-gray-700 mt-2">{task.task}</p>
-                </div>
-              ))}
-            </div>
+            {rows.length === 0 ? (
+              <div className="text-center py-12 text-[13px] text-navy/30">
+                {companyId ? "No records found." : "Connect QuickBooks to view data."}
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-navy/[0.02] border-b border-navy/6">
+                    <tr>
+                      {cols.map((c) => (
+                        <th key={c} className="text-left px-5 py-3 text-[11px] font-semibold text-navy/50 uppercase tracking-wider whitespace-nowrap">
+                          {c.replace(/([A-Z])/g, " $1").trim()}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-navy/4">
+                    {rows.map((row, i) => (
+                      <tr key={String(row.Id ?? i)} className="hover:bg-navy/[0.015] transition-colors">
+                        {cols.map((c) => {
+                          const v = row[c];
+                          const isAmt = c.toLowerCase().includes("amount") || c.toLowerCase().includes("balance") || c.toLowerCase().includes("total");
+                          const isDate = c.toLowerCase().includes("date") || c.toLowerCase().includes("time");
+                          return (
+                            <td key={c} className="px-5 py-3 text-[12px] text-navy/70 whitespace-nowrap">
+                              {isAmt ? fmt(v) : isDate ? dateStr(v) : typeof v === "object" ? JSON.stringify(v).slice(0, 40) : String(v ?? "—")}
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
-
-      {/* Add Transaction Modal */}
-      <Modal isOpen={showAddModal} onClose={() => setShowAddModal(false)} title="Add Transaction">
-        <div className="space-y-4">
-          <div>
-            <label className="text-sm font-medium text-gray-700 block mb-1">Description</label>
-            <input type="text" value={newTx.description} onChange={(e) => setNewTx({...newTx, description: e.target.value})} placeholder="Transaction description" className="w-full border rounded-lg px-3 py-2 text-sm" />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="text-sm font-medium text-gray-700 block mb-1">Amount</label>
-              <input type="number" value={newTx.amount} onChange={(e) => setNewTx({...newTx, amount: e.target.value})} placeholder="0.00" className="w-full border rounded-lg px-3 py-2 text-sm" />
-            </div>
-            <div>
-              <label className="text-sm font-medium text-gray-700 block mb-1">Type</label>
-              <select value={newTx.type} onChange={(e) => setNewTx({...newTx, type: e.target.value as "income" | "expense"})} className="w-full border rounded-lg px-3 py-2 text-sm">
-                <option value="income">Income</option>
-                <option value="expense">Expense</option>
-              </select>
-            </div>
-          </div>
-          <div>
-            <label className="text-sm font-medium text-gray-700 block mb-1">Category</label>
-            <select value={newTx.category} onChange={(e) => setNewTx({...newTx, category: e.target.value})} className="w-full border rounded-lg px-3 py-2 text-sm">
-              <option>Revenue</option>
-              <option>Software</option>
-              <option>Facilities</option>
-              <option>Payroll</option>
-              <option>Marketing</option>
-              <option>Travel</option>
-              <option>Other</option>
-            </select>
-          </div>
-          <div className="flex justify-end gap-2 pt-4 border-t">
-            <Button variant="outline" onClick={() => setShowAddModal(false)}>Cancel</Button>
-            <Button variant="primary" onClick={handleAddTransaction}>Add Transaction</Button>
-          </div>
-        </div>
-      </Modal>
-
-      {/* View Transaction Modal */}
-      <Modal isOpen={!!viewTx} onClose={() => setViewTx(null)} title="Transaction Details">
-        {viewTx && (
-          <div className="space-y-3">
-            <div className="grid grid-cols-2 gap-4">
-              <div><p className="text-xs text-gray-500">Description</p><p className="text-sm font-medium">{viewTx.description}</p></div>
-              <div><p className="text-xs text-gray-500">Amount</p><p className={`text-sm font-medium ${viewTx.type === "income" ? "text-navy" : "text-red-600"}`}>{viewTx.type === "income" ? "+" : "-"}${viewTx.amount.toLocaleString()}</p></div>
-              <div><p className="text-xs text-gray-500">Category</p><p className="text-sm font-medium">{viewTx.category}</p></div>
-              <div><p className="text-xs text-gray-500">Date</p><p className="text-sm font-medium">{viewTx.date}</p></div>
-              <div><p className="text-xs text-gray-500">Status</p><Badge variant={viewTx.status === "reconciled" ? "success" : "info"}>{viewTx.status}</Badge></div>
-            </div>
-          </div>
-        )}
-      </Modal>
     </div>
   );
 }

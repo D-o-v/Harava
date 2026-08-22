@@ -135,22 +135,26 @@ export async function inviteCompanyUser(
 
 export async function getInsightSummary(companyId: string): Promise<InsightSummaryResponse> {
   return api<InsightSummaryResponse>(
-    `/api/v1/tenant/companies/${companyId}/insights/summary`
+    `/api/v1/tenant/companies/${companyId}/dashboard/kpis`
   );
 }
 
 export async function getCashflow(companyId: string): Promise<CashflowResponse> {
   return api<CashflowResponse>(
-    `/api/v1/tenant/companies/${companyId}/insights/cashflow`
+    `/api/v1/tenant/companies/${companyId}/dashboard/cash-flow`
   );
 }
 
 export async function getPnl(companyId: string): Promise<PnlResponse> {
-  return api<PnlResponse>(`/api/v1/tenant/companies/${companyId}/insights/pnl`);
+  return api<PnlResponse>(`/api/v1/tenant/companies/${companyId}/dashboard/pnl`);
 }
 
 export async function getReports(companyId: string): Promise<ReportSummaryResponse[]> {
-  return api<ReportSummaryResponse[]>(`/api/v1/tenant/companies/${companyId}/reports`);
+  const slugs = ["profit-loss", "balance-sheet", "cash-flow", "aged-receivables", "aged-payables", "trial-balance"];
+  const results = await Promise.allSettled(
+    slugs.map((slug) => api<ReportSummaryResponse>(`/api/v1/tenant/companies/${companyId}/dashboard/reports/${slug}`))
+  );
+  return results.flatMap((r) => r.status === "fulfilled" ? [r.value] : []);
 }
 
 // ─── QuickBooks (tenant only) ──────────────────────────────────────────────
@@ -159,9 +163,9 @@ export async function getQuickbooksStatus(companyId: string): Promise<Connection
   return api<ConnectionResponse>(`/api/v1/tenant/companies/${companyId}/quickbooks`);
 }
 
-export async function connectQuickbooks(companyId: string): Promise<ConnectionResponse> {
+export async function connectQuickbooks(): Promise<ConnectionResponse> {
   return api<ConnectionResponse>(
-    `/api/v1/tenant/companies/${companyId}/quickbooks/connect`,
+    `/api/v1/tenant/quickbooks/connect`,
     { method: "POST" }
   );
 }
@@ -180,19 +184,22 @@ export async function getPortalProfile(): Promise<PortalProfileResponse> {
 }
 
 export async function getPortalInsightSummary(): Promise<InsightSummaryResponse> {
-  return api<InsightSummaryResponse>("/api/v1/portal/insights/summary");
+  return api<InsightSummaryResponse>("/api/v1/portal/dashboard/kpis");
 }
 
 export async function getPortalCashflow(): Promise<CashflowResponse> {
-  return api<CashflowResponse>("/api/v1/portal/insights/cashflow");
+  return api<CashflowResponse>("/api/v1/portal/dashboard/cash-flow");
 }
 
 export async function getPortalPnl(): Promise<PnlResponse> {
-  return api<PnlResponse>("/api/v1/portal/insights/pnl");
+  return api<PnlResponse>("/api/v1/portal/dashboard/pnl");
 }
 
 export async function getPortalReports(): Promise<ReportSummaryResponse[]> {
-  return api<ReportSummaryResponse[]>("/api/v1/portal/reports");
+  // Portal reports are fetched individually by slug via /api/v1/portal/dashboard/reports/{slug}
+  const slugs = ["profit-loss", "balance-sheet", "cash-flow", "aged-receivables", "aged-payables", "trial-balance"];
+  const results = await Promise.allSettled(slugs.map((slug) => api<ReportSummaryResponse>(`/api/v1/portal/dashboard/reports/${slug}`)));
+  return results.flatMap((r) => r.status === "fulfilled" ? [r.value] : []);
 }
 
 // ─── Staff Invitations (tenant owner/admin) ────────────────────────────────

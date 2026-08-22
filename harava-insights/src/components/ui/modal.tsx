@@ -2,6 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import { useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 
 interface ModalProps {
@@ -44,12 +45,12 @@ export function Modal({ isOpen, onClose, title, description, children, size = "m
     xl: "max-w-4xl",
   };
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-100 flex items-center justify-center p-4">
-      {/* Backdrop */}
+      {/* Backdrop — fixed + high z so it covers the fixed sidebar too */}
       <div
         ref={overlayRef}
-        className="absolute inset-0 bg-navy-900/40 backdrop-blur-sm animate-fade-in"
+        className="fixed inset-0 bg-navy-900/40 backdrop-blur-sm animate-fade-in"
         style={{ animationDuration: "200ms" }}
         onClick={onClose}
       />
@@ -95,6 +96,7 @@ export function Modal({ isOpen, onClose, title, description, children, size = "m
         {/* Content */}
         <div className="px-6 pb-6">{children}</div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

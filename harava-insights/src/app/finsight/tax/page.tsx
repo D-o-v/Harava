@@ -1,97 +1,163 @@
 "use client";
 
-import { useState } from "react";
 import { DashboardHeader } from "@/components/layout/dashboard-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/lib/toast";
-import { Calendar, FileText, CheckCircle, AlertTriangle } from "lucide-react";
+import { useAuth } from "@/lib/auth";
+import { dashboardApi } from "@/lib/api/endpoints";
+import { useApi } from "@/lib/api/hooks";
+import { AlertTriangle, Loader2, RefreshCw } from "lucide-react";
+
+function fmt(n: unknown) {
+  const v = Number(n);
+  if (isNaN(v)) return "—";
+  if (v >= 1_000_000) return `$${(v / 1_000_000).toFixed(1)}M`;
+  if (v >= 1_000) return `$${(v / 1_000).toFixed(1)}K`;
+  return `$${v.toLocaleString()}`;
+}
+
+const REPORT_SLUGS = [
+  { slug: "profit-loss", label: "Profit & Loss" },
+  { slug: "trial-balance", label: "Trial Balance" },
+  { slug: "general-ledger", label: "General Ledger" },
+  { slug: "transaction-list", label: "Transaction List" },
+] as const;
 
 export default function TaxPage() {
-  const { toast } = useToast();
-  const [deadlines, setDeadlines] = useState([
-    { id: 1, title: "Q2 Estimated Tax Payment", due: "Jun 15, 2026", status: "upcoming" as const },
-    { id: 2, title: "Sales Tax Filing - May", due: "Jun 20, 2026", status: "upcoming" as const },
-    { id: 3, title: "Payroll Tax Deposit", due: "Jun 15, 2026", status: "upcoming" as const },
-    { id: 4, title: "Q1 Estimated Tax Payment", due: "Apr 15, 2026", status: "filed" as const },
-    { id: 5, title: "Annual Tax Return", due: "Mar 15, 2026", status: "filed" as const },
-  ]);
+  const { user } = useAuth();
+  const companyId = user?.companyId ?? "";
 
-  const handleFile = (id: number) => {
-    setDeadlines((prev) => prev.map((d) => d.id === id ? { ...d, status: "filed" as const } : d));
-    toast("Filed successfully!", "success");
-  };
+  const kpis = useApi(
+    () => companyId ? dashboardApi.kpis(companyId) : Promise.resolve(null),
+    [companyId], { skip: !companyId },
+  );
+  const pnl = useApi(
+    () => companyId ? dashboardApi.report(companyId, "profit-loss") : Promise.resolve(null),
+    [companyId], { skip: !companyId },
+  );
+
+  const k = kpis.data as Record<string, unknown> | null;
+  const revenue = Number(k?.revenueThisMonth ?? k?.revenue ?? 0);
+  const expenses = Number(k?.expensesThisMonth ?? k?.expenses ?? 0);
+  const estTax = revenue > 0 ? (revenue - expenses) * 0.21 : 0; // rough 21% corp rate
+
+  const insights = [
+    {
+      title: "Estimated Tax Liability",
+      message: `Based on current P&L, estimated tax at 21% corp rate: ${fmt(estTax)}. Consult your tax advisor for exact figures.`,
+    },
+    {
+      title: "Profit & Loss Summary",
+      message: `Revenue: ${fmt(revenue)} · Expenses: ${fmt(expenses)} · Net: ${fmt(revenue - expenses)}`,
+    },
+  ];
 
   return (
     <div>
-      <DashboardHeader title="Tax & Compliance" subtitle="Tax calendar, filings, and compliance monitoring" />
+      <DashboardHeader title="Tax & Compliance" subtitle="Tax insights and financial reports from QuickBooks" />
+      <div className="p-4 sm:p-6 lg:p-8 space-y-6">
 
-      <div className="p-6 space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card><CardContent className="p-4 text-center"><p className="text-2xl font-bold text-amber-600">{deadlines.filter(d => d.status === "upcoming").length}</p><p className="text-xs text-gray-500">Upcoming Deadlines</p></CardContent></Card>
-          <Card><CardContent className="p-4 text-center"><p className="text-2xl font-bold text-navy">{deadlines.filter(d => d.status === "filed").length}</p><p className="text-xs text-gray-500">Filed</p></CardContent></Card>
-          <Card><CardContent className="p-4 text-center"><p className="text-2xl font-bold text-gray-600">$24,800</p><p className="text-xs text-gray-500">Est. Tax Liability (Q2)</p></CardContent></Card>
+        {!companyId && (
+          <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-700 text-sm">
+            No company linked. Connect a QuickBooks company to view tax data.
+          </div>
+        )}
+
+        {/* KPI Cards */}
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="stat-card p-4">
+            <p className="text-[11px] font-medium text-navy/45 uppercase tracking-wider">Revenue (MTD)</p>
+            <p className="text-2xl font-bold text-navy mt-1">{kpis.loading ? "—" : fmt(revenue)}</p>
+          </div>
+          <div className="stat-card p-4">
+            <p className="text-[11px] font-medium text-navy/45 uppercase tracking-wider">Expenses (MTD)</p>
+            <p className="text-2xl font-bold text-navy mt-1">{kpis.loading ? "—" : fmt(expenses)}</p>
+          </div>
+          <div className="stat-card p-4">
+            <p className="text-[11px] font-medium text-navy/45 uppercase tracking-wider">Est. Tax Liability</p>
+            <p className="text-2xl font-bold text-amber-600 mt-1">{kpis.loading ? "—" : fmt(estTax)}</p>
+          </div>
         </div>
 
+        {/* AI Tax Insights */}
         <Card>
-          <CardHeader><CardTitle>Tax Calendar</CardTitle></CardHeader>
-          <CardContent className="p-0">
-            <div className="overflow-x-auto"><table className="w-full text-sm min-w-150">
-              <thead className="bg-gray-50 border-b">
-                <tr>
-                  <th className="text-left px-6 py-3 font-medium text-gray-500">Filing</th>
-                  <th className="text-left px-6 py-3 font-medium text-gray-500">Due Date</th>
-                  <th className="text-center px-6 py-3 font-medium text-gray-500">Status</th>
-                  <th className="text-right px-6 py-3 font-medium text-gray-500">Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {deadlines.map((d) => (
-                  <tr key={d.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-3 font-medium text-gray-900">{d.title}</td>
-                    <td className="px-6 py-3 text-gray-600">{d.due}</td>
-                    <td className="px-6 py-3 text-center">
-                      <Badge variant={d.status === "filed" ? "success" : "warning"}>{d.status}</Badge>
-                    </td>
-                    <td className="px-6 py-3 text-right">
-                      {d.status === "upcoming" ? (
-                        <Button variant="primary" size="sm" onClick={() => handleFile(d.id)}>File Now</Button>
-                      ) : (
-                        <Button variant="ghost" size="sm" onClick={() => toast("Viewing filed document...", "info")}>View</Button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table></div>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle>Tax Insights</CardTitle>
+            <Button variant="ghost" size="sm" onClick={() => kpis.refetch()} disabled={kpis.loading}>
+              <RefreshCw className={`w-3.5 h-3.5 ${kpis.loading ? "animate-spin" : ""}`} />
+            </Button>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {kpis.loading ? (
+              <div className="flex items-center justify-center py-8 text-navy/40 text-sm">
+                <Loader2 className="w-4 h-4 animate-spin mr-2" /> Loading…
+              </div>
+            ) : insights.map((ins, i) => (
+              <div key={i} className="flex items-start gap-3 p-3.5 rounded-xl bg-navy/[0.015] border border-navy/5">
+                <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center shrink-0">
+                  <AlertTriangle className="w-4 h-4 text-amber-500" />
+                </div>
+                <div>
+                  <p className="text-[13px] font-semibold text-navy">{ins.title}</p>
+                  <p className="text-[12px] text-navy/50 mt-0.5 leading-relaxed">{ins.message}</p>
+                </div>
+              </div>
+            ))}
           </CardContent>
         </Card>
 
+        {/* QB Reports */}
         <Card>
-          <CardHeader><CardTitle>AI Tax Insights</CardTitle></CardHeader>
+          <CardHeader><CardTitle>QuickBooks Reports</CardTitle></CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              {[
-                { title: "R&D Tax Credit Opportunity", message: "Based on your software development expenses, you may qualify for ~$12K in R&D credits.", action: "Review" },
-                { title: "Depreciation Optimization", message: "Consider Section 179 deduction for recent equipment purchases totaling $45K.", action: "Calculate" },
-                { title: "State Tax Nexus Alert", message: "Remote employees in 3 new states may create nexus. Review filing obligations.", action: "Assess" },
-              ].map((insight, i) => (
-                <div key={i} className="flex items-start justify-between p-3 rounded-lg bg-gray-50">
-                  <div className="flex items-start gap-3">
-                    <AlertTriangle className="w-5 h-5 text-navy mt-0.5 shrink-0" />
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">{insight.title}</p>
-                      <p className="text-xs text-gray-600 mt-0.5">{insight.message}</p>
-                    </div>
-                  </div>
-                  <Button variant="outline" size="sm" onClick={() => toast(`${insight.action} analysis started...`, "info")}>{insight.action}</Button>
-                </div>
+            <div className="grid sm:grid-cols-2 gap-3">
+              {REPORT_SLUGS.map(({ slug, label }) => (
+                <ReportCard key={slug} companyId={companyId} slug={slug} label={label} />
               ))}
             </div>
           </CardContent>
         </Card>
       </div>
+    </div>
+  );
+}
+
+function ReportCard({ companyId, slug, label }: { companyId: string; slug: string; label: string }) {
+  const report = useApi(
+    () => companyId ? dashboardApi.report(companyId, slug) : Promise.resolve(null),
+    [companyId, slug], { skip: !companyId },
+  );
+
+  const d = report.data as Record<string, unknown> | null;
+  const entries = d ? Object.entries(d).filter(([, v]) => typeof v === "number").slice(0, 3) : [];
+
+  return (
+    <div className="p-4 border border-navy/6 rounded-xl">
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-[13px] font-semibold text-navy">{label}</p>
+        <Button variant="ghost" size="xs" onClick={() => report.refetch()} disabled={report.loading}>
+          <RefreshCw className={`w-3 h-3 ${report.loading ? "animate-spin" : ""}`} />
+        </Button>
+      </div>
+      {report.loading ? (
+        <div className="flex items-center gap-2 text-[12px] text-navy/40">
+          <Loader2 className="w-3 h-3 animate-spin" /> Loading…
+        </div>
+      ) : report.error ? (
+        <p className="text-[11px] text-red-500">{report.error}</p>
+      ) : entries.length > 0 ? (
+        <div className="space-y-1.5">
+          {entries.map(([k, v]) => (
+            <div key={k} className="flex items-center justify-between">
+              <span className="text-[11px] text-navy/50 capitalize">{k.replace(/([A-Z])/g, " $1").trim()}</span>
+              <span className="text-[12px] font-semibold text-navy">{fmt(v)}</span>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="text-[11px] text-navy/30">{companyId ? "No data" : "Connect QuickBooks"}</p>
+      )}
     </div>
   );
 }

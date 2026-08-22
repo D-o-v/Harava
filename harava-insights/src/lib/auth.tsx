@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { tokens, type TokenScope } from "@/lib/api/tokens";
+import { tokens, type TokenScope, decodeJwt } from "@/lib/api/tokens";
 import { accountApi, authApi, platformApi, portalApi, type LoginResponse, type UserProfile } from "@/lib/api/endpoints";
 import { isPlatformHost, resolveTenant } from "@/lib/api/tenant-context";
 
@@ -59,7 +59,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const PUBLIC_ROUTES = ["/", "/auth/login", "/auth/register", "/auth/forgot-password", "/auth/reset-password", "/auth/accept", "/auth/verify"];
+const PUBLIC_ROUTES = ["/", "/auth/login", "/auth/register", "/auth/forgot-password", "/auth/reset-password", "/auth/accept", "/auth/verify", "/finsight/quickbooks/callback"];
 
 function toUser(profile: UserProfile, scope: TokenScope): User {
   const rawRole = (profile.role || "").toLowerCase();
@@ -103,6 +103,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loadMeFor = useCallback(async (scope: TokenScope): Promise<User | null> => {
     try {
+      // Platform admin has no /account/me — build user from JWT directly
+      if (scope === "platform") {
+        const tok = tokens.get("platform");
+        const payload = tok.access ? decodeJwt(tok.access) : null;
+        const u: User = {
+          id: payload?.sub ?? "",
+          email: payload?.email ?? "",
+          firstName: "Platform",
+          lastName: "Admin",
+          role: "super_admin",
+          products: ["admin", "finsight", "accrediai", "proed"],
+          scope: "platform",
+        };
+        setUser(u);
+        return u;
+      }
       let profile: UserProfile;
       if (scope === "portal") profile = await portalApi.me();
       else profile = await accountApi.me();
@@ -135,9 +151,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const finalizeFromLoginResponse = useCallback(
     async (res: LoginResponse, scope: TokenScope): Promise<User | null> => {
-      if (!res.accessToken) return null;
-      tokens.set(scope, res.accessToken, res.refreshToken ?? null);
+      const accessToken = res.accessToken ?? res.session?.tokens?.accessToken;
+      const refreshToken = res.refreshToken ?? res.session?.tokens?.refreshToken ?? null;
+      if (!accessToken) return null;
+      tokens.set(scope, accessToken, refreshToken);
       tokens.setActive(scope);
+      // If the login response already includes the user profile, skip the /me call
+      const profileFromResponse = res.user ?? res.session?.user;
+      if (profileFromResponse) {
+        const u = toUser(profileFromResponse, scope);
+        setUser(u);
+        return u;
+      }
       return loadMeFor(scope);
     },
     [loadMeFor],

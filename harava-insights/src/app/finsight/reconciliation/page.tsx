@@ -1,108 +1,178 @@
 "use client";
 
-import { useState } from "react";
 import { DashboardHeader } from "@/components/layout/dashboard-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/lib/toast";
-import { CheckCircle, RefreshCw, AlertTriangle } from "lucide-react";
+import { useAuth } from "@/lib/auth";
+import { dashboardApi, quickbooksApi } from "@/lib/api/endpoints";
+import { useApi } from "@/lib/api/hooks";
+import { PageLoader, PageError } from "@/components/ui/page-loader";
+import { CheckCircle, RefreshCw, AlertTriangle, Loader2, TrendingUp } from "lucide-react";
+import { TrendChart, ChartCard } from "@/components/ui/charts";
 
-interface Account {
-  id: number;
-  name: string;
-  bookBalance: string;
-  bankBalance: string;
-  difference: string;
-  status: "matched" | "unmatched" | "in-progress";
-  lastReconciled: string;
+function fmt(n: number) {
+  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(n);
 }
 
 export default function ReconciliationPage() {
   const { toast } = useToast();
-  const [accounts, setAccounts] = useState<Account[]>([
-    { id: 1, name: "Operating Account (Chase)", bookBalance: "$245,892", bankBalance: "$245,892", difference: "$0", status: "matched", lastReconciled: "Jun 1, 2026" },
-    { id: 2, name: "Payroll Account (BOA)", bookBalance: "$82,450", bankBalance: "$82,450", difference: "$0", status: "matched", lastReconciled: "May 31, 2026" },
-    { id: 3, name: "Savings Account (Chase)", bookBalance: "$150,000", bankBalance: "$150,000", difference: "$0", status: "matched", lastReconciled: "May 30, 2026" },
-    { id: 4, name: "Credit Card (Amex)", bookBalance: "$12,340", bankBalance: "$13,540", difference: "$1,200", status: "unmatched", lastReconciled: "May 28, 2026" },
-    { id: 5, name: "Petty Cash", bookBalance: "$2,100", bankBalance: "$1,850", difference: "$250", status: "in-progress", lastReconciled: "May 25, 2026" },
-  ]);
+  const { user } = useAuth();
+  const companyId = user?.companyId ?? "";
 
-  const handleReconcile = (id: number) => {
-    setAccounts((prev) =>
-      prev.map((a) => a.id === id ? { ...a, status: "matched" as const, difference: "$0", lastReconciled: "Jun 1, 2026" } : a)
-    );
-    toast("Account reconciled successfully!", "success");
-  };
+  const cashFlow = useApi(
+    () => (companyId ? dashboardApi.cashFlow(companyId, 6) : Promise.resolve(null)),
+    [companyId], { skip: !companyId },
+  );
+  const qbStatus = useApi(
+    () => (companyId ? quickbooksApi.status(companyId) : Promise.resolve(null)),
+    [companyId], { skip: !companyId },
+  );
+  const entities = useApi(
+    () => (companyId ? quickbooksApi.entities(companyId) : Promise.resolve([])),
+    [companyId], { skip: !companyId },
+  );
 
-  const handleAutoReconcile = () => {
-    toast("Running AI auto-reconciliation...", "info");
-    setTimeout(() => {
-      setAccounts((prev) => prev.map((a) => ({ ...a, status: "matched" as const, difference: "$0", lastReconciled: "Jun 1, 2026" })));
-      toast("All accounts reconciled!", "success");
-    }, 1500);
-  };
+  const cfPoints = (cashFlow.data as { points?: { period: string; inflow: number; outflow: number; net: number }[] } | null)?.points ?? [];
+  const qb = qbStatus.data;
+  const entityList = (entities.data as { slug: string; name: string; count: number }[] | null) ?? [];
+
+  if (cashFlow.loading || qbStatus.loading) return <><DashboardHeader title="Reconciliation" subtitle="Bank reconciliation and account matching" /><PageLoader message="Loading reconciliation data…" /></>;
+  if (cashFlow.error) return <><DashboardHeader title="Reconciliation" subtitle="Bank reconciliation and account matching" /><PageError message={cashFlow.error} onRetry={cashFlow.refetch} /></>;
+
+  const syncPct = qb?.totalEntities
+    ? Math.round(((qb.entitiesSynced ?? 0) / qb.totalEntities) * 100)
+    : null;
 
   return (
     <div>
       <DashboardHeader title="Reconciliation" subtitle="Bank reconciliation and account matching" />
 
-      <div className="p-6 space-y-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="text-center">
-              <p className="text-2xl font-bold text-navy">{accounts.filter(a => a.status === "matched").length}</p>
-              <p className="text-xs text-gray-500">Matched</p>
-            </div>
-            <div className="text-center">
-              <p className="text-2xl font-bold text-amber-600">{accounts.filter(a => a.status === "in-progress").length}</p>
-              <p className="text-xs text-gray-500">In Progress</p>
-            </div>
-            <div className="text-center">
-              <p className="text-2xl font-bold text-red-600">{accounts.filter(a => a.status === "unmatched").length}</p>
-              <p className="text-xs text-gray-500">Unmatched</p>
-            </div>
-          </div>
-          <Button variant="primary" size="sm" onClick={handleAutoReconcile}>
-            <RefreshCw className="w-4 h-4" /> Auto-Reconcile All
-          </Button>
+      <div className="p-4 sm:p-6 lg:p-8 space-y-6">
+        {/* QB Sync Status */}
+        <div className="grid sm:grid-cols-3 gap-4">
+          <Card>
+            <CardContent className="p-5">
+              <p className="text-[11px] text-navy/40 uppercase tracking-wider font-medium">QB Connection</p>
+              <div className="flex items-center gap-2 mt-2">
+                <div className={`w-2.5 h-2.5 rounded-full ${qb?.connected ? "bg-emerald-500" : "bg-amber-400"}`} />
+                <p className="text-[15px] font-bold text-navy">{qb?.connected ? "Connected" : "Disconnected"}</p>
+              </div>
+              {qb?.realmId && <p className="text-[11px] text-navy/35 mt-1">Realm: {qb.realmId}</p>}
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-5">
+              <p className="text-[11px] text-navy/40 uppercase tracking-wider font-medium">Last Sync</p>
+              <p className="text-[15px] font-bold text-navy mt-2">
+                {qb?.lastSyncAt ? new Date(qb.lastSyncAt).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "—"}
+              </p>
+              <p className="text-[11px] text-navy/35 mt-1">{qb?.syncState ?? "—"}</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-5">
+              <p className="text-[11px] text-navy/40 uppercase tracking-wider font-medium">Entities Synced</p>
+              <p className="text-[15px] font-bold text-navy mt-2">
+                {qb?.entitiesSynced ?? 0} / {qb?.totalEntities ?? 0}
+              </p>
+              {syncPct != null && (
+                <div className="mt-2">
+                  <div className="h-1.5 bg-navy/8 rounded-full overflow-hidden">
+                    <div className="h-full bg-navy rounded-full transition-all" style={{ width: `${syncPct}%` }} />
+                  </div>
+                  <p className="text-[10px] text-navy/35 mt-1">{syncPct}% complete</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
 
-        <Card>
-          <CardHeader><CardTitle>Account Reconciliation</CardTitle></CardHeader>
-          <CardContent className="p-0">
-            <div className="overflow-x-auto"><table className="w-full text-sm min-w-150">
-              <thead className="bg-gray-50 border-b">
-                <tr>
-                  <th className="text-left px-6 py-3 font-medium text-gray-500">Account</th>
-                  <th className="text-right px-6 py-3 font-medium text-gray-500">Book Balance</th>
-                  <th className="text-right px-6 py-3 font-medium text-gray-500">Bank Balance</th>
-                  <th className="text-right px-6 py-3 font-medium text-gray-500">Difference</th>
-                  <th className="text-center px-6 py-3 font-medium text-gray-500">Status</th>
-                  <th className="text-left px-6 py-3 font-medium text-gray-500">Last Reconciled</th>
-                  <th className="text-right px-6 py-3 font-medium text-gray-500">Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {accounts.map((account) => (
-                  <tr key={account.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-3 font-medium text-gray-900">{account.name}</td>
-                    <td className="px-6 py-3 text-right text-gray-700">{account.bookBalance}</td>
-                    <td className="px-6 py-3 text-right text-gray-700">{account.bankBalance}</td>
-                    <td className={`px-6 py-3 text-right font-medium ${account.difference === "$0" ? "text-navy" : "text-red-600"}`}>{account.difference}</td>
-                    <td className="px-6 py-3 text-center">
-                      <Badge variant={account.status === "matched" ? "success" : account.status === "unmatched" ? "error" : "warning"}>{account.status}</Badge>
-                    </td>
-                    <td className="px-6 py-3 text-gray-500">{account.lastReconciled}</td>
-                    <td className="px-6 py-3 text-right">
-                      {account.status !== "matched" && (
-                        <Button variant="primary" size="sm" onClick={() => handleReconcile(account.id)}>Reconcile</Button>
-                      )}
-                    </td>
-                  </tr>
+        {/* Cash Flow Chart */}
+        <ChartCard
+          title="Cash Flow Reconciliation"
+          subtitle="Inflow vs outflow over 6 months"
+          action={
+            <Button variant="ghost" size="xs" onClick={() => cashFlow.refetch()} disabled={cashFlow.loading}>
+              <RefreshCw className={`w-3.5 h-3.5 ${cashFlow.loading ? "animate-spin" : ""}`} />
+            </Button>
+          }
+        >
+          {cfPoints.length > 0
+              ? <TrendChart
+                  data={cfPoints.map(p => ({ name: p.period, Inflow: p.inflow, Outflow: p.outflow, Net: p.net }))}
+                  dataKeys={[
+                    { key: "Inflow", label: "Inflow", color: "#182954" },
+                    { key: "Outflow", label: "Outflow", color: "#C19B3F" },
+                    { key: "Net", label: "Net", color: "#059669" },
+                  ]}
+                  valuePrefix="$"
+                  height={260}
+                />
+              : <div className="h-64 flex items-center justify-center text-sm text-navy/30">
+                  {companyId ? "No cash flow data available" : "Connect QuickBooks to view data"}
+                </div>
+          }
+        </ChartCard>
+
+        {/* QB Entities */}
+        {entityList.length > 0 && (
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle>QuickBooks Entities</CardTitle>
+              <Badge variant="info" size="sm">{entityList.length} types</Badge>
+            </CardHeader>
+            <CardContent>
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {entityList.map((e) => (
+                  <div key={e.slug} className="flex items-center justify-between p-3.5 border border-navy/5 rounded-xl">
+                    <div>
+                      <p className="text-[13px] font-medium text-navy capitalize">{e.name}</p>
+                      <p className="text-[11px] text-navy/40 mt-0.5">{e.slug}</p>
+                    </div>
+                    <span className="text-[13px] font-bold text-navy">{e.count.toLocaleString()}</span>
+                  </div>
                 ))}
-              </tbody>
-            </table></div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Month-End Checklist */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle>Month-End Close Status</CardTitle>
+            <Button variant="primary" size="sm" onClick={() => toast("Running AI auto-reconciliation…", "info")}>
+              <RefreshCw className="w-3.5 h-3.5" /> Auto-Reconcile
+            </Button>
+          </CardHeader>
+          <CardContent>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              {[
+                { task: "Bank Reconciliation", status: qb?.connected ? "complete" : "pending" },
+                { task: "AR Aging Review", status: "complete" },
+                { task: "AP Verification", status: "in-progress" },
+                { task: "Journal Entries", status: "pending" },
+              ].map((item, i) => (
+                <div key={i} className="p-4 border border-navy/5 rounded-xl text-center">
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center mx-auto mb-2 ${
+                    item.status === "complete" ? "bg-emerald-50" : item.status === "in-progress" ? "bg-amber-50" : "bg-navy/5"
+                  }`}>
+                    {item.status === "complete"
+                      ? <CheckCircle className="w-5 h-5 text-emerald-500" />
+                      : item.status === "in-progress"
+                        ? <TrendingUp className="w-5 h-5 text-amber-500" />
+                        : <AlertTriangle className="w-5 h-5 text-navy/30" />
+                    }
+                  </div>
+                  <Badge variant={item.status === "complete" ? "success" : item.status === "in-progress" ? "warning" : "default"} size="sm">
+                    {item.status}
+                  </Badge>
+                  <p className="text-[12px] text-navy/60 mt-2 font-medium">{item.task}</p>
+                </div>
+              ))}
+            </div>
           </CardContent>
         </Card>
       </div>

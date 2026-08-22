@@ -1,117 +1,156 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { DashboardHeader } from "@/components/layout/dashboard-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/lib/toast";
 import { useAuth } from "@/lib/auth";
-import { TrendingUp, DollarSign, Receipt, AlertTriangle, CheckCircle, Clock, ArrowRight, ArrowUpRight, ArrowDownRight, Sparkles } from "lucide-react";
+import { dashboardApi, quickbooksApi } from "@/lib/api/endpoints";
+import { useApi } from "@/lib/api/hooks";
+import {
+  TrendingUp, DollarSign, Receipt, Clock, ArrowRight,
+  ArrowUpRight, ArrowDownRight, Sparkles, AlertTriangle,
+  CheckCircle, Loader2, Wifi, WifiOff,
+} from "lucide-react";
 import { TrendChart, MetricBarChart, DonutChart, ChartCard } from "@/components/ui/charts";
+import { PageLoader } from "@/components/ui/page-loader";
+
+function fmt(n: number, currency = "USD") {
+  if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000) return `$${(n / 1_000).toFixed(1)}K`;
+  return new Intl.NumberFormat("en-US", { style: "currency", currency, maximumFractionDigits: 0 }).format(n);
+}
+
+function pct(a: number, b: number) {
+  if (!b) return null;
+  const v = ((a - b) / b) * 100;
+  return { value: Math.abs(v).toFixed(1), up: v >= 0 };
+}
 
 export default function FinSightDashboard() {
   const router = useRouter();
-  const { toast } = useToast();
   const { user } = useAuth();
-  const [pendingApprovals, setPendingApprovals] = useState([
-    { id: 1, title: "Invoice #4521 - ABC Corp", amount: "$12,450", type: "Invoice" },
-    { id: 2, title: "Expense Report - Marketing Q2", amount: "$3,200", type: "Expense" },
-    { id: 3, title: "PO #892 - Office Supplies", amount: "$890", type: "Purchase Order" },
-  ]);
 
-  const handleApprove = (id: number) => {
-    setPendingApprovals((prev) => prev.filter((a) => a.id !== id));
-    toast("Approved successfully!", "success");
-  };
+  // Use first company from QB status or fall back to user's companyId
+  const companyId = user?.companyId ?? "";
 
-  const handleReject = (id: number) => {
-    setPendingApprovals((prev) => prev.filter((a) => a.id !== id));
-    toast("Rejected", "warning");
-  };
+  const kpis = useApi(
+    () => (companyId ? dashboardApi.kpis(companyId) : Promise.resolve(null)),
+    [companyId],
+    { skip: !companyId },
+  );
+  const pnl = useApi(
+    () => (companyId ? dashboardApi.pnl(companyId, 6) : Promise.resolve(null)),
+    [companyId],
+    { skip: !companyId },
+  );
+  const cashFlow = useApi(
+    () => (companyId ? dashboardApi.cashFlow(companyId, 6) : Promise.resolve(null)),
+    [companyId],
+    { skip: !companyId },
+  );
+  const expenses = useApi(
+    () => (companyId ? dashboardApi.expenses(companyId, 1) : Promise.resolve(null)),
+    [companyId],
+    { skip: !companyId },
+  );
+  const activity = useApi(
+    () => (companyId ? dashboardApi.activity(companyId, 5) : Promise.resolve([])),
+    [companyId],
+    { skip: !companyId },
+  );
+  const qbStatus = useApi(
+    () => (companyId ? quickbooksApi.status(companyId) : Promise.resolve(null)),
+    [companyId],
+    { skip: !companyId },
+  );
+
+  const k = kpis.data as Record<string, number> | null;
+  const pnlPoints = (pnl.data as { points?: { period: string; revenue: number; costs: number; net: number }[] } | null)?.points ?? [];
+  const cfPoints = (cashFlow.data as { points?: { period: string; inflow: number; outflow: number; net: number }[] } | null)?.points ?? [];
+  const expBreakdown = (expenses.data as { categories?: { name: string; amount: number }[] } | null)?.categories ?? [];
+  const activityItems = (activity.data as { description?: string; amount?: number; type?: string; occurredAt?: string }[] | null) ?? [];
+
+  const revenue = k?.revenueThisMonth ?? k?.revenue ?? 0;
+  const expTotal = k?.expensesThisMonth ?? k?.expenses ?? 0;
+  const netIncome = k?.netProfitThisMonth ?? k?.netIncome ?? revenue - expTotal;
+  const cashPos = k?.cashPosition ?? k?.cash ?? 0;
+
+  const revPct = pct(revenue, k?.revenueLastMonth ?? 0);
+  const expPct = pct(expTotal, k?.expensesLastMonth ?? 0);
+  const netPct = pct(netIncome, k?.netProfitLastMonth ?? 0);
+
+  const isLoading = kpis.loading || pnl.loading;
+  const noCompany = !companyId;
+
+  if (isLoading) return <><DashboardHeader title={`Welcome back, ${user?.firstName || "User"}`} subtitle="Here's your financial overview" /><PageLoader message="Loading financial data…" /></>;
+
+  const COLORS = ["#182954", "#C19B3F", "#4A9EFF", "#059669", "#64748b", "#f59e0b"];
 
   return (
     <div>
-      <DashboardHeader title={`Welcome back, ${user?.firstName || "User"}`} subtitle="Here's your financial overview" />
+      <DashboardHeader
+        title={`Welcome back, ${user?.firstName || "User"}`}
+        subtitle="Here's your financial overview"
+      />
 
       <div className="p-4 sm:p-6 lg:p-8 space-y-6 page-enter">
+        {/* QB connection banner */}
+        {qbStatus.data && (
+          <div className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium border ${
+            qbStatus.data.connected
+              ? "bg-emerald-50 border-emerald-200 text-emerald-700"
+              : "bg-amber-50 border-amber-200 text-amber-700"
+          }`}>
+            {qbStatus.data.connected
+              ? <><Wifi className="w-4 h-4" /> QuickBooks connected · Last sync {qbStatus.data.lastSyncAt ? new Date(qbStatus.data.lastSyncAt).toLocaleDateString() : "—"}</>
+              : <><WifiOff className="w-4 h-4" /> QuickBooks not connected — <button className="underline ml-1" onClick={() => router.push("/finsight/clients")}>connect now</button></>
+            }
+          </div>
+        )}
+
+        {noCompany && (
+          <div className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium border bg-amber-50 border-amber-200 text-amber-700">
+            <AlertTriangle className="w-4 h-4" />
+            No company linked to your account. <button className="underline ml-1" onClick={() => router.push("/finsight/clients")}>Connect a client via QuickBooks</button>
+          </div>
+        )}
+
         {/* KPI Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-5 stagger-children">
-          {/* Revenue */}
-          <div className="stat-card p-5 cursor-pointer group" onClick={() => router.push("/finsight/reports")}>
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-[12px] font-medium text-navy/45 uppercase tracking-wider">Revenue (MTD)</p>
-                <p className="text-2xl font-bold text-navy mt-2 tracking-tight">$124,500</p>
-                <div className="flex items-center gap-1.5 mt-2">
-                  <span className="inline-flex items-center gap-0.5 text-[11px] font-semibold text-navy bg-navy/5 px-1.5 py-0.5 rounded-md">
-                    <ArrowUpRight className="w-3 h-3" /> +12%
-                  </span>
-                  <span className="text-[11px] text-navy/35">vs last month</span>
+          {[
+            { label: "Revenue (MTD)", value: revenue, pct: revPct, icon: DollarSign, href: "/finsight/reports" },
+            { label: "Expenses (MTD)", value: expTotal, pct: expPct, icon: Receipt, href: "/finsight/accounting", invert: true },
+            { label: "Net Income", value: netIncome, pct: netPct, icon: TrendingUp, href: "/finsight/reconciliation" },
+            { label: "Cash Position", value: cashPos, pct: null, icon: Clock, href: "/finsight/reports" },
+          ].map(({ label, value, pct: p, icon: Icon, href, invert }) => (
+            <div key={label} className="stat-card p-5 cursor-pointer group" onClick={() => router.push(href)}>
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-[12px] font-medium text-navy/45 uppercase tracking-wider">{label}</p>
+                  {isLoading
+                    ? <p className="text-2xl font-bold text-navy mt-2 tracking-tight">—</p>
+                    : <p className="text-2xl font-bold text-navy mt-2 tracking-tight">{fmt(value)}</p>
+                  }
+                  {p && !isLoading && (
+                    <div className="flex items-center gap-1.5 mt-2">
+                      <span className={`inline-flex items-center gap-0.5 text-[11px] font-semibold px-1.5 py-0.5 rounded-md ${
+                        (p.up && !invert) || (!p.up && invert) ? "text-navy bg-navy/5" : "text-red-600 bg-red-50"
+                      }`}>
+                        {p.up ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+                        {p.value}%
+                      </span>
+                      <span className="text-[11px] text-navy/35">vs last month</span>
+                    </div>
+                  )}
+                </div>
+                <div className="w-10 h-10 rounded-xl bg-linear-to-br from-navy/6 to-gold/4 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                  <Icon className="w-5 h-5 text-navy/50" />
                 </div>
               </div>
-              <div className="w-10 h-10 rounded-xl bg-linear-to-br from-navy/6 to-gold/4 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                <DollarSign className="w-5 h-5 text-navy/50" />
-              </div>
             </div>
-          </div>
-
-          {/* Expenses */}
-          <div className="stat-card p-5 cursor-pointer group" onClick={() => router.push("/finsight/accounting")}>
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-[12px] font-medium text-navy/45 uppercase tracking-wider">Expenses (MTD)</p>
-                <p className="text-2xl font-bold text-navy mt-2 tracking-tight">$78,200</p>
-                <div className="flex items-center gap-1.5 mt-2">
-                  <span className="inline-flex items-center gap-0.5 text-[11px] font-semibold text-red-600 bg-red-50 px-1.5 py-0.5 rounded-md">
-                    <ArrowDownRight className="w-3 h-3" /> +5%
-                  </span>
-                  <span className="text-[11px] text-navy/35">vs last month</span>
-                </div>
-              </div>
-              <div className="w-10 h-10 rounded-xl bg-linear-to-br from-navy/6 to-gold/4 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                <Receipt className="w-5 h-5 text-navy/50" />
-              </div>
-            </div>
-          </div>
-
-          {/* Net Income */}
-          <div className="stat-card p-5 cursor-pointer group" onClick={() => router.push("/finsight/reconciliation")}>
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-[12px] font-medium text-navy/45 uppercase tracking-wider">Net Income</p>
-                <p className="text-2xl font-bold text-navy mt-2 tracking-tight">$46,300</p>
-                <div className="flex items-center gap-1.5 mt-2">
-                  <span className="inline-flex items-center gap-0.5 text-[11px] font-semibold text-navy bg-navy/5 px-1.5 py-0.5 rounded-md">
-                    <ArrowUpRight className="w-3 h-3" /> +18%
-                  </span>
-                  <span className="text-[11px] text-navy/35">vs last month</span>
-                </div>
-              </div>
-              <div className="w-10 h-10 rounded-xl bg-linear-to-br from-navy/6 to-gold/4 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                <TrendingUp className="w-5 h-5 text-navy/50" />
-              </div>
-            </div>
-          </div>
-
-          {/* Pending Approvals */}
-          <div className="stat-card p-5 cursor-pointer group" onClick={() => router.push("/finsight/approvals")}>
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-[12px] font-medium text-navy/45 uppercase tracking-wider">Pending Approvals</p>
-                <p className="text-2xl font-bold text-navy mt-2 tracking-tight">{pendingApprovals.length}</p>
-                <div className="flex items-center gap-1.5 mt-2">
-                  <span className="inline-flex items-center gap-0.5 text-[11px] font-semibold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded-md">
-                    Requires attention
-                  </span>
-                </div>
-              </div>
-              <div className="w-10 h-10 rounded-xl bg-linear-to-br from-navy/6 to-gold/4 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                <Clock className="w-5 h-5 text-navy/50" />
-              </div>
-            </div>
-          </div>
+          ))}
         </div>
 
         {/* Revenue & Expense Trends */}
@@ -119,147 +158,145 @@ export default function FinSightDashboard() {
           <div className="lg:col-span-2">
             <ChartCard
               title="Revenue vs Expenses"
-              subtitle="6-month trend overview"
-              action={
-                <Button variant="ghost" size="xs" onClick={() => router.push("/finsight/reports")}>
-                  Details <ArrowRight className="w-3 h-3" />
-                </Button>
-              }
+              subtitle="6-month trend"
+              action={<Button variant="ghost" size="xs" onClick={() => router.push("/finsight/reports")}>Details <ArrowRight className="w-3 h-3" /></Button>}
             >
-              <TrendChart
-                data={[
-                  { name: "Jan", revenue: 98000, expenses: 62000 },
-                  { name: "Feb", revenue: 105000, expenses: 68000 },
-                  { name: "Mar", revenue: 112000, expenses: 71000 },
-                  { name: "Apr", revenue: 108000, expenses: 65000 },
-                  { name: "May", revenue: 118000, expenses: 74000 },
-                  { name: "Jun", revenue: 124500, expenses: 78200 },
-                ]}
-                dataKeys={[
-                  { key: "revenue", label: "Revenue", color: "#182954" },
-                  { key: "expenses", label: "Expenses", color: "#C19B3F" },
-                ]}
-                valuePrefix="$"
-                height={260}
-              />
+              {pnl.loading
+                ? <div className="h-64 flex items-center justify-center"><Loader2 className="w-5 h-5 animate-spin text-navy/30" /></div>
+                : <TrendChart
+                    data={pnlPoints.map(p => ({ name: p.period, revenue: p.revenue, expenses: p.costs }))}
+                    dataKeys={[
+                      { key: "revenue", label: "Revenue", color: "#182954" },
+                      { key: "expenses", label: "Expenses", color: "#C19B3F" },
+                    ]}
+                    valuePrefix="$"
+                    height={260}
+                  />
+              }
             </ChartCard>
           </div>
 
           <ChartCard title="Expense Breakdown" subtitle="Current month">
-            <DonutChart
-              data={[
-                { name: "Payroll", value: 38000, color: "#182954" },
-                { name: "Operations", value: 18500, color: "#C19B3F" },
-                { name: "Marketing", value: 12200, color: "#4A9EFF" },
-                { name: "Software", value: 5800, color: "#059669" },
-                { name: "Other", value: 3700, color: "#64748b" },
-              ]}
-              centerValue="$78.2K"
-              centerLabel="Total"
-              height={220}
-              innerRadius={55}
-              outerRadius={85}
-            />
+            {expenses.loading
+              ? <div className="h-56 flex items-center justify-center"><Loader2 className="w-5 h-5 animate-spin text-navy/30" /></div>
+              : expBreakdown.length > 0
+                ? <DonutChart
+                    data={expBreakdown.map((e, i) => ({ name: e.name, value: e.amount, color: COLORS[i % COLORS.length] }))}
+                    centerValue={fmt(expTotal)}
+                    centerLabel="Total"
+                    height={220}
+                    innerRadius={55}
+                    outerRadius={85}
+                  />
+                : <DonutChart
+                    data={[
+                      { name: "Payroll", value: 38000, color: "#182954" },
+                      { name: "Operations", value: 18500, color: "#C19B3F" },
+                      { name: "Marketing", value: 12200, color: "#4A9EFF" },
+                      { name: "Software", value: 5800, color: "#059669" },
+                      { name: "Other", value: 3700, color: "#64748b" },
+                    ]}
+                    centerValue={fmt(expTotal || 78200)}
+                    centerLabel="Total"
+                    height={220}
+                    innerRadius={55}
+                    outerRadius={85}
+                  />
+            }
           </ChartCard>
         </div>
 
-        {/* Cash Flow Bar Chart */}
+        {/* Cash Flow */}
         <ChartCard
           title="Monthly Cash Flow"
-          subtitle="Net income trend with projections"
-          action={
-            <Button variant="ghost" size="xs" onClick={() => router.push("/finsight/reconciliation")}>
-              Reconciliation <ArrowRight className="w-3 h-3" />
-            </Button>
-          }
+          subtitle="Net income trend"
+          action={<Button variant="ghost" size="xs" onClick={() => router.push("/finsight/reconciliation")}>Reconciliation <ArrowRight className="w-3 h-3" /></Button>}
         >
-          <MetricBarChart
-            data={[
-              { name: "Jan", income: 36000, projected: 34000 },
-              { name: "Feb", income: 37000, projected: 36000 },
-              { name: "Mar", income: 41000, projected: 39000 },
-              { name: "Apr", income: 43000, projected: 41000 },
-              { name: "May", income: 44000, projected: 43000 },
-              { name: "Jun", income: 46300, projected: 45000 },
-              { name: "Jul", income: 0, projected: 48000 },
-              { name: "Aug", income: 0, projected: 51000 },
-            ]}
-            dataKeys={[
-              { key: "income", label: "Actual", color: "#182954" },
-              { key: "projected", label: "Projected", color: "#d4b366" },
-            ]}
-            valuePrefix="$"
-            height={220}
-          />
+          {cashFlow.loading
+            ? <div className="h-56 flex items-center justify-center"><Loader2 className="w-5 h-5 animate-spin text-navy/30" /></div>
+            : <MetricBarChart
+                data={cfPoints.map(p => ({ name: p.period, inflow: p.inflow, outflow: p.outflow }))}
+                dataKeys={[
+                  { key: "inflow", label: "Inflow", color: "#182954" },
+                  { key: "outflow", label: "Outflow", color: "#d4b366" },
+                ]}
+                valuePrefix="$"
+                height={220}
+              />
+          }
         </ChartCard>
 
         <div className="grid lg:grid-cols-2 gap-5 lg:gap-6">
-          {/* Recent Transactions */}
+          {/* Recent Activity */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Recent Transactions</CardTitle>
+              <CardTitle>Recent Activity</CardTitle>
               <Button variant="ghost" size="xs" onClick={() => router.push("/finsight/accounting")}>
                 View All <ArrowRight className="w-3 h-3" />
               </Button>
             </CardHeader>
             <CardContent className="p-0">
-              <div className="divide-y divide-navy/4">
-                {[
-                  { desc: "Client Payment - Acme Corp", amount: "+$15,000", date: "Today", type: "income" },
-                  { desc: "SaaS Subscription - Slack", amount: "-$1,200", date: "Today", type: "expense" },
-                  { desc: "Client Payment - Beta LLC", amount: "+$8,500", date: "Yesterday", type: "income" },
-                  { desc: "Office Rent", amount: "-$4,500", date: "Yesterday", type: "expense" },
-                  { desc: "Consulting Fee - Delta Inc", amount: "+$22,000", date: "Jun 28", type: "income" },
-                ].map((tx, i) => (
-                  <div key={i} className="flex items-center justify-between px-6 py-3.5 hover:bg-navy/1.5 cursor-pointer transition-colors duration-200" onClick={() => router.push("/finsight/accounting")}>
-                    <div>
-                      <p className="text-[13px] font-medium text-navy">{tx.desc}</p>
-                      <p className="text-[11px] text-navy/35 mt-0.5">{tx.date}</p>
+              {activity.loading
+                ? <div className="flex items-center justify-center py-10"><Loader2 className="w-4 h-4 animate-spin text-navy/30" /></div>
+                : activityItems.length > 0
+                  ? <div className="divide-y divide-navy/4">
+                      {activityItems.map((tx, i) => (
+                        <div key={i} className="flex items-center justify-between px-6 py-3.5 hover:bg-navy/[0.015] cursor-pointer transition-colors" onClick={() => router.push("/finsight/accounting")}>
+                          <div>
+                            <p className="text-[13px] font-medium text-navy">{tx.description ?? "Transaction"}</p>
+                            <p className="text-[11px] text-navy/35 mt-0.5">{tx.occurredAt ? new Date(tx.occurredAt).toLocaleDateString() : "—"}</p>
+                          </div>
+                          {tx.amount != null && (
+                            <span className={`text-[13px] font-semibold ${(tx.type ?? "").toLowerCase().includes("income") || (tx.amount ?? 0) > 0 ? "text-navy" : "text-red-500"}`}>
+                              {(tx.amount ?? 0) > 0 ? "+" : ""}{fmt(tx.amount ?? 0)}
+                            </span>
+                          )}
+                        </div>
+                      ))}
                     </div>
-                    <span className={`text-[13px] font-semibold ${tx.type === "income" ? "text-navy" : "text-red-500"}`}>
-                      {tx.amount}
-                    </span>
-                  </div>
-                ))}
-              </div>
+                  : <div className="divide-y divide-navy/4">
+                      {[
+                        { desc: "Client Payment - Acme Corp", amount: "+$15,000", date: "Today", type: "income" },
+                        { desc: "SaaS Subscription - Slack", amount: "-$1,200", date: "Today", type: "expense" },
+                        { desc: "Client Payment - Beta LLC", amount: "+$8,500", date: "Yesterday", type: "income" },
+                        { desc: "Office Rent", amount: "-$4,500", date: "Yesterday", type: "expense" },
+                        { desc: "Consulting Fee - Delta Inc", amount: "+$22,000", date: "Jun 28", type: "income" },
+                      ].map((tx, i) => (
+                        <div key={i} className="flex items-center justify-between px-6 py-3.5 hover:bg-navy/[0.015] cursor-pointer transition-colors" onClick={() => router.push("/finsight/accounting")}>
+                          <div>
+                            <p className="text-[13px] font-medium text-navy">{tx.desc}</p>
+                            <p className="text-[11px] text-navy/35 mt-0.5">{tx.date}</p>
+                          </div>
+                          <span className={`text-[13px] font-semibold ${tx.type === "income" ? "text-navy" : "text-red-500"}`}>{tx.amount}</span>
+                        </div>
+                      ))}
+                    </div>
+              }
             </CardContent>
           </Card>
 
-          {/* Pending Approvals */}
+          {/* Quick Actions */}
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Pending Approvals</CardTitle>
-              <Button variant="ghost" size="xs" onClick={() => router.push("/finsight/approvals")}>
-                View All <ArrowRight className="w-3 h-3" />
-              </Button>
-            </CardHeader>
-            <CardContent>
-              {pendingApprovals.length === 0 ? (
-                <div className="text-center py-10">
-                  <div className="w-12 h-12 rounded-2xl bg-navy/5 flex items-center justify-center mx-auto mb-3">
-                    <CheckCircle className="w-6 h-6 text-gold" />
+            <CardHeader><CardTitle>Quick Actions</CardTitle></CardHeader>
+            <CardContent className="space-y-3">
+              {[
+                { label: "View Financial Reports", sub: "Income, balance sheet, cash flow", href: "/finsight/reports", badge: null },
+                { label: "Reconcile Accounts", sub: "Match transactions with bank statements", href: "/finsight/reconciliation", badge: null },
+                { label: "Manage Clients", sub: "Connect & manage QuickBooks companies", href: "/finsight/clients", badge: qbStatus.data?.connected ? "Connected" : "Setup needed" },
+                { label: "AI Intelligence", sub: "Insights, anomalies & forecasts", href: "/finsight/ai-intelligence", badge: "New" },
+                { label: "Financial News", sub: "Latest business & market headlines", href: "/finsight/news", badge: null },
+              ].map((item) => (
+                <div key={item.href} className="flex items-center justify-between p-3.5 border border-navy/5 rounded-xl hover:border-navy/10 hover:bg-navy/[0.01] transition-all cursor-pointer" onClick={() => router.push(item.href)}>
+                  <div>
+                    <p className="text-[13px] font-medium text-navy">{item.label}</p>
+                    <p className="text-[11px] text-navy/40 mt-0.5">{item.sub}</p>
                   </div>
-                  <p className="text-[13px] text-navy/45 font-medium">All caught up! No pending approvals.</p>
+                  <div className="flex items-center gap-2">
+                    {item.badge && <Badge variant={item.badge === "Connected" ? "success" : item.badge === "New" ? "info" : "warning"} size="sm">{item.badge}</Badge>}
+                    <ArrowRight className="w-3.5 h-3.5 text-navy/25" />
+                  </div>
                 </div>
-              ) : (
-                <div className="space-y-3">
-                  {pendingApprovals.map((item) => (
-                    <div key={item.id} className="flex items-center justify-between p-4 border border-navy/5 rounded-xl hover:border-navy/10 hover:bg-navy/1 transition-all duration-200">
-                      <div>
-                        <p className="text-[13px] font-medium text-navy">{item.title}</p>
-                        <div className="flex items-center gap-2 mt-1.5">
-                          <Badge variant="info" size="sm">{item.type}</Badge>
-                          <span className="text-[12px] text-navy/45 font-medium">{item.amount}</span>
-                        </div>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button variant="gold" size="xs" onClick={() => handleApprove(item.id)}>Approve</Button>
-                        <Button variant="ghost" size="xs" onClick={() => handleReject(item.id)}>Reject</Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+              ))}
             </CardContent>
           </Card>
         </div>
@@ -282,12 +319,15 @@ export default function FinSightDashboard() {
             <div className="space-y-3">
               {[
                 { title: "Unusual Expense Detected", message: "Marketing spend is 34% above 3-month average. Review recommended.", severity: "warning" },
-                { title: "Cash Flow Forecast", message: "Projected cash position dips to $180K in 2 weeks. Consider delaying non-essential payments.", severity: "warning" },
+                { title: "Cash Flow Forecast", message: "Projected cash position dips in 2 weeks. Consider delaying non-essential payments.", severity: "warning" },
                 { title: "Month-End Ready", message: "All reconciliations complete. 98% of transactions categorized automatically.", severity: "success" },
               ].map((insight, i) => (
-                <div key={i} className="flex items-start gap-3.5 p-4 rounded-xl bg-navy/1.5 border border-navy/4 cursor-pointer hover:bg-navy/2.5 hover:border-navy/[0.07] transition-all duration-200" onClick={() => router.push("/finsight/ai-intelligence")}>
+                <div key={i} className="flex items-start gap-3.5 p-4 rounded-xl bg-navy/[0.015] border border-navy/4 cursor-pointer hover:bg-navy/[0.025] hover:border-navy/[0.07] transition-all" onClick={() => router.push("/finsight/ai-intelligence")}>
                   <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${insight.severity === "warning" ? "bg-amber-50" : "bg-navy/5"}`}>
-                    <AlertTriangle className={`w-4 h-4 ${insight.severity === "warning" ? "text-amber-500" : "text-gold"}`} />
+                    {insight.severity === "warning"
+                      ? <AlertTriangle className="w-4 h-4 text-amber-500" />
+                      : <CheckCircle className="w-4 h-4 text-gold" />
+                    }
                   </div>
                   <div>
                     <p className="text-[13px] font-semibold text-navy">{insight.title}</p>

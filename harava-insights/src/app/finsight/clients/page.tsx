@@ -11,6 +11,7 @@ import { useToast } from "@/lib/toast";
 import { Building2, Plus, Search, Loader2, ExternalLink, Ban, PlayCircle } from "lucide-react";
 import { companiesApi, quickbooksApi, type Company } from "@/lib/api/endpoints";
 import { useApi, useMutation } from "@/lib/api/hooks";
+import { PageLoader, PageError } from "@/components/ui/page-loader";
 
 export default function FinsightClientsPage() {
   const { toast } = useToast();
@@ -20,7 +21,7 @@ export default function FinsightClientsPage() {
   const [inviteEmail, setInviteEmail] = useState("");
 
   const companies = useApi(() => companiesApi.list(), []);
-  const inviteMut = useMutation((id: string, email: string) => companiesApi.inviteUser(id, email));
+  const inviteMut = useMutation((id: string, email: string) => companiesApi.inviteUser(id, { email }));
   const startQb = useMutation(() => quickbooksApi.startConnect());
   const suspendMut = useMutation((id: string) => companiesApi.suspend(id));
   const activateMut = useMutation((id: string) => companiesApi.activate(id));
@@ -63,6 +64,9 @@ export default function FinsightClientsPage() {
     }
   };
 
+  if (companies.loading) return <><DashboardHeader title="Clients" subtitle="Client companies connected via QuickBooks" /><PageLoader message="Loading clients…" /></>;
+  if (companies.error) return <><DashboardHeader title="Clients" subtitle="Client companies connected via QuickBooks" /><PageError message={companies.error} onRetry={companies.refetch} /></>;
+
   return (
     <div>
       <DashboardHeader title="Clients" subtitle="Client companies connected via QuickBooks" />
@@ -84,12 +88,7 @@ export default function FinsightClientsPage() {
           </Button>
         </div>
 
-        {companies.loading ? (
-          <div className="flex items-center justify-center py-16 text-navy/40 text-sm"><Loader2 className="w-4 h-4 animate-spin mr-2" /> Loading…</div>
-        ) : companies.error ? (
-          <div className="p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm">{companies.error}</div>
-        ) : (
-          <div className="grid gap-4">
+        <div className="grid gap-4">
             {list.map((c) => (
               <Card key={c.id}>
                 <CardContent className="p-5 flex items-start justify-between">
@@ -122,7 +121,6 @@ export default function FinsightClientsPage() {
               </div>
             )}
           </div>
-        )}
       </div>
 
       <Modal isOpen={!!inviteFor} onClose={() => setInviteFor(null)} title={`Invite user to ${inviteFor?.name ?? ""}`}>

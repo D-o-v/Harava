@@ -5,7 +5,10 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { createPortal } from "react-dom";
 import Image from "next/image";
 import Link from "next/link";
-import { Loader2, ArrowRight, CheckCircle, Eye, EyeOff, ShieldCheck, ChevronDown } from "lucide-react";
+import {
+  Loader2, ArrowRight, CheckCircle, Eye, EyeOff,
+  ShieldCheck, ChevronDown, AlertCircle,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { GlobePanel } from "@/components/auth/globe-panel";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
@@ -13,9 +16,7 @@ import { useToast } from "@/lib/toast";
 import { previewInvitation, acceptInvitation, getMe, ApiError } from "@/lib/api";
 import { defaultRouteForRole } from "@/lib/auth";
 
-// ─── Dial codes ──────────────────────────────────────────────────────────────
-// Flag rendered via Unicode regional indicator letters — works Mac, Windows 10+, Android, iOS
-// For Windows <10 fallback we show the ISO code as text alongside
+// ─── Dial codes ───────────────────────────────────────────────────────────────
 
 const DIAL_CODES: { code: string; dial: string; name: string }[] = [
   { code: "NG", dial: "+234", name: "Nigeria" },
@@ -35,52 +36,20 @@ const DIAL_CODES: { code: string; dial: string; name: string }[] = [
   { code: "IN", dial: "+91",  name: "India" },
   { code: "DE", dial: "+49",  name: "Germany" },
   { code: "FR", dial: "+33",  name: "France" },
-  { code: "IT", dial: "+39",  name: "Italy" },
-  { code: "ES", dial: "+34",  name: "Spain" },
-  { code: "NL", dial: "+31",  name: "Netherlands" },
-  { code: "BE", dial: "+32",  name: "Belgium" },
-  { code: "SE", dial: "+46",  name: "Sweden" },
-  { code: "NO", dial: "+47",  name: "Norway" },
-  { code: "DK", dial: "+45",  name: "Denmark" },
-  { code: "FI", dial: "+358", name: "Finland" },
-  { code: "PL", dial: "+48",  name: "Poland" },
-  { code: "PT", dial: "+351", name: "Portugal" },
-  { code: "CH", dial: "+41",  name: "Switzerland" },
-  { code: "AT", dial: "+43",  name: "Austria" },
-  { code: "IE", dial: "+353", name: "Ireland" },
-  { code: "BR", dial: "+55",  name: "Brazil" },
-  { code: "MX", dial: "+52",  name: "Mexico" },
-  { code: "AR", dial: "+54",  name: "Argentina" },
-  { code: "CO", dial: "+57",  name: "Colombia" },
-  { code: "CL", dial: "+56",  name: "Chile" },
-  { code: "PE", dial: "+51",  name: "Peru" },
   { code: "AE", dial: "+971", name: "UAE" },
   { code: "SA", dial: "+966", name: "Saudi Arabia" },
-  { code: "TR", dial: "+90",  name: "Turkey" },
-  { code: "PK", dial: "+92",  name: "Pakistan" },
-  { code: "ID", dial: "+62",  name: "Indonesia" },
-  { code: "PH", dial: "+63",  name: "Philippines" },
-  { code: "VN", dial: "+84",  name: "Vietnam" },
-  { code: "TH", dial: "+66",  name: "Thailand" },
-  { code: "KR", dial: "+82",  name: "South Korea" },
+  { code: "BR", dial: "+55",  name: "Brazil" },
   { code: "JP", dial: "+81",  name: "Japan" },
   { code: "CN", dial: "+86",  name: "China" },
-  { code: "RU", dial: "+7",   name: "Russia" },
-  { code: "UA", dial: "+380", name: "Ukraine" },
-  { code: "ZM", dial: "+260", name: "Zambia" },
-  { code: "ZW", dial: "+263", name: "Zimbabwe" },
 ];
 
-// Convert ISO code to flag emoji — regional indicator letters
 function toFlag(iso: string): string {
-  return iso
-    .toUpperCase()
-    .split("")
-    .map((c) => String.fromCodePoint(0x1f1e6 + c.charCodeAt(0) - 65))
-    .join("");
+  return iso.toUpperCase().split("").map((c) =>
+    String.fromCodePoint(0x1f1e6 + c.charCodeAt(0) - 65)
+  ).join("");
 }
 
-// ─── Dial code picker ────────────────────────────────────────────────────────
+// ─── Dial picker ──────────────────────────────────────────────────────────────
 
 function DialPicker({
   value,
@@ -128,9 +97,8 @@ function DialPicker({
         ref={triggerRef}
         type="button"
         onClick={() => { setOpen((o) => !o); setQ(""); }}
-        className="h-full flex items-center gap-1.5 px-3 border-r border-navy/10 hover:bg-navy/3 transition-colors rounded-l-xl"
+        className="h-full flex items-center gap-1.5 px-3 border-r border-navy/10 hover:bg-navy/[0.03] transition-colors rounded-l-xl"
       >
-        {/* Flag — cross-platform emoji font stack */}
         <span style={{ fontFamily: "'Segoe UI Emoji','Apple Color Emoji','Noto Color Emoji',sans-serif", fontSize: 18, lineHeight: 1 }}>
           {toFlag(value.code)}
         </span>
@@ -161,9 +129,7 @@ function DialPicker({
                 type="button"
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => { onChange(d); setOpen(false); setQ(""); }}
-                className={`w-full text-left px-3 py-2 flex items-center gap-2.5 hover:bg-navy/4 transition-colors ${
-                  d.code === value.code ? "bg-gold/8" : ""
-                }`}
+                className={`w-full text-left px-3 py-2 flex items-center gap-2.5 hover:bg-navy/[0.04] transition-colors ${d.code === value.code ? "bg-gold/8" : ""}`}
               >
                 <span style={{ fontFamily: "'Segoe UI Emoji','Apple Color Emoji','Noto Color Emoji',sans-serif", fontSize: 18, lineHeight: 1, minWidth: 24 }}>
                   {toFlag(d.code)}
@@ -183,16 +149,42 @@ function DialPicker({
   );
 }
 
-// ─── Password rules ──────────────────────────────────────────────────────────
+// ─── Password rules ───────────────────────────────────────────────────────────
 
 const RULES = [
-  { label: "At least 8 characters", test: (p: string) => p.length >= 8 },
-  { label: "One uppercase letter",  test: (p: string) => /[A-Z]/.test(p) },
-  { label: "One lowercase letter",  test: (p: string) => /[a-z]/.test(p) },
-  { label: "One number",            test: (p: string) => /\d/.test(p) },
+  { label: "8+ characters",    test: (p: string) => p.length >= 8 },
+  { label: "Uppercase letter", test: (p: string) => /[A-Z]/.test(p) },
+  { label: "Lowercase letter", test: (p: string) => /[a-z]/.test(p) },
+  { label: "Number",           test: (p: string) => /\d/.test(p) },
 ];
 
-// ─── Page ────────────────────────────────────────────────────────────────────
+// ─── Input component ──────────────────────────────────────────────────────────
+
+function Field({
+  label,
+  error,
+  children,
+}: {
+  label: string;
+  error?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="space-y-1.5">
+      <label className="block text-[12px] font-medium text-navy/55">{label}</label>
+      {children}
+      {error && (
+        <p className="flex items-center gap-1 text-[11px] text-red-500">
+          <AlertCircle className="w-3 h-3 shrink-0" /> {error}
+        </p>
+      )}
+    </div>
+  );
+}
+
+const inputCls = "w-full bg-white border-[1.5px] border-navy/8 rounded-xl px-4 py-2.5 text-[13px] text-navy placeholder:text-navy/25 focus:ring-[3px] focus:ring-gold/8 focus:border-gold outline-none transition-all hover:border-navy/15 shadow-sm";
+
+// ─── Page wrapper ─────────────────────────────────────────────────────────────
 
 export default function AcceptInvitePageWrapper() {
   return (
@@ -205,6 +197,8 @@ export default function AcceptInvitePageWrapper() {
     </Suspense>
   );
 }
+
+// ─── Main page ────────────────────────────────────────────────────────────────
 
 function AcceptInvitePage() {
   const router = useRouter();
@@ -220,7 +214,7 @@ function AcceptInvitePage() {
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
-  const [dialEntry, setDialEntry] = useState(DIAL_CODES[0]); // default Nigeria
+  const [dialEntry, setDialEntry] = useState(DIAL_CODES[0]);
   const [localPhone, setLocalPhone] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -239,14 +233,18 @@ function AcceptInvitePage() {
       return;
     }
     previewInvitation(token)
-      .then((d) => { setOrgName(d.organizationName); setRole(d.role); setInviteEmail(d.email); })
-      .catch((err) => setPreviewError(err instanceof ApiError ? err.message : "This invitation is invalid or has expired."))
+      .then((d) => {
+        setOrgName(d.organizationName);
+        setRole(d.role ?? "member");
+        setInviteEmail(d.email);
+      })
+      .catch((err) =>
+        setPreviewError(err instanceof ApiError ? err.message : "This invitation is invalid or has expired.")
+      )
       .finally(() => setPreviewing(false));
   }, [token]);
 
   const pwValid = RULES.every((r) => r.test(password));
-
-  // Compose E.164: strip leading zeros from local part, prepend dial code
   const fullPhone = dialEntry.dial + localPhone.replace(/^0+/, "").replace(/\s+/g, "");
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -254,25 +252,30 @@ function AcceptInvitePage() {
     setError("");
     setFieldErrors({});
 
-    if (!firstName.trim()) { setFieldErrors({ firstName: "Required" }); return; }
-    if (!lastName.trim())  { setFieldErrors({ lastName: "Required" }); return; }
-    if (!localPhone.trim()) { setFieldErrors({ phoneNumber: "Enter your phone number" }); return; }
-    if (!pwValid) { setFieldErrors({ password: "Password doesn't meet all requirements" }); return; }
-    if (password !== confirmPassword) { setFieldErrors({ confirmPassword: "Passwords do not match" }); return; }
+    const errs: Record<string, string> = {};
+    if (!firstName.trim()) errs.firstName = "Required";
+    if (!lastName.trim()) errs.lastName = "Required";
+    if (!pwValid) errs.password = "Password doesn't meet all requirements";
+    if (password !== confirmPassword) errs.confirmPassword = "Passwords do not match";
+    if (Object.keys(errs).length) { setFieldErrors(errs); return; }
 
     setLoading(true);
     try {
-      await acceptInvitation(token, password, firstName.trim(), lastName.trim(), fullPhone);
+      await acceptInvitation(
+        token, password,
+        firstName.trim(), lastName.trim(),
+        localPhone.trim() ? fullPhone : undefined,
+      );
       try {
         const me = await getMe();
-        const userRole = (me as any).role ?? "OWNER";
+        const userRole = (me as { role?: string }).role ?? "OWNER";
         setDone(true);
         toast("Welcome to Harava! Your account is ready.", "success");
-        setTimeout(() => router.replace(defaultRouteForRole(userRole)), 1200);
+        setTimeout(() => router.replace(defaultRouteForRole(userRole)), 1400);
       } catch {
         setDone(true);
-        toast("Welcome to Harava! Your account is ready.", "success");
-        setTimeout(() => router.replace("/finsight"), 1200);
+        toast("Welcome to Harava!", "success");
+        setTimeout(() => router.replace("/finsight"), 1400);
       }
     } catch (err) {
       if (err instanceof ApiError) {
@@ -288,201 +291,207 @@ function AcceptInvitePage() {
 
   return (
     <div className="min-h-screen flex bg-[#0a0f1a]">
-      <GlobePanel variant="login" />
+      {/* Globe panel — left side on large screens */}
+      <GlobePanel variant="register" />
 
-      <div className="flex-1 flex items-center justify-center p-6 sm:p-8 bg-[#f6f7fa] dark:bg-[#080d1a] relative overflow-y-auto">
+      {/* Right panel */}
+      <div className="flex-1 flex items-center justify-center p-6 sm:p-8 bg-[#f6f7fa] dark:bg-[#080d1a] relative overflow-y-auto min-h-screen">
         <div className="absolute top-4 right-4 z-10"><ThemeToggle /></div>
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(193,155,63,0.03),transparent_60%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(193,155,63,0.04),transparent_60%)] pointer-events-none" />
 
-        <div className="relative w-full max-w-[420px] py-8 animate-fade-in">
+        <div className="relative w-full max-w-[420px] py-10 animate-fade-in">
+
+          {/* Logo — only visible when globe is hidden (mobile) */}
           <Link href="/" className="lg:hidden flex items-center gap-2.5 mb-8">
             <Image src="/logo.png" alt="Harava" width={32} height={32} className="w-8 h-8 rounded-xl object-cover ring-1 ring-navy/6" />
             <span className="text-xl font-bold text-navy tracking-tight">Harava<span className="text-gold">.</span></span>
           </Link>
 
-          {/* Loading */}
+          {/* ── Loading state ── */}
           {previewing && (
-            <div className="flex flex-col items-center justify-center py-20 gap-4">
-              <Loader2 className="w-8 h-8 animate-spin text-gold" />
-              <p className="text-[13px] text-navy/40">Verifying your invitation…</p>
+            <div className="flex flex-col items-center justify-center py-24 gap-4">
+              <div className="w-14 h-14 rounded-2xl bg-gold/8 flex items-center justify-center">
+                <Loader2 className="w-6 h-6 animate-spin text-gold" />
+              </div>
+              <p className="text-[13px] text-navy/40 font-medium">Verifying your invitation…</p>
             </div>
           )}
 
-          {/* Invalid */}
+          {/* ── Invalid token ── */}
           {!previewing && previewError && (
-            <div className="text-center py-12 space-y-4">
-              <div className="w-14 h-14 rounded-2xl bg-red-50 flex items-center justify-center mx-auto">
+            <div className="text-center py-16 space-y-5">
+              <div className="w-16 h-16 rounded-2xl bg-red-50 flex items-center justify-center mx-auto">
                 <ShieldCheck className="w-7 h-7 text-red-400" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold text-navy mb-1">Invitation invalid</h2>
-                <p className="text-[13px] text-navy/50">{previewError}</p>
+                <h2 className="text-[18px] font-bold text-navy mb-2">Invitation invalid</h2>
+                <p className="text-[13px] text-navy/45 leading-relaxed max-w-xs mx-auto">{previewError}</p>
               </div>
-              <Link href="/auth/login" className="inline-block text-[13px] font-medium text-gold-dark hover:text-gold transition-colors">
-                Go to login →
+              <Link href="/auth/login" className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-gold-dark hover:text-gold transition-colors">
+                Go to login <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             </div>
           )}
 
-          {/* Success */}
+          {/* ── Success state ── */}
           {done && (
-            <div className="text-center py-12 space-y-4 animate-fade-in">
-              <div className="w-14 h-14 rounded-2xl bg-emerald-50 flex items-center justify-center mx-auto">
+            <div className="text-center py-16 space-y-5 animate-fade-in">
+              <div className="w-16 h-16 rounded-2xl bg-emerald-50 flex items-center justify-center mx-auto">
                 <CheckCircle className="w-7 h-7 text-emerald-500" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold text-navy mb-1">You're all set!</h2>
-                <p className="text-[13px] text-navy/50">Redirecting you to your dashboard…</p>
+                <h2 className="text-[18px] font-bold text-navy mb-2">You're all set!</h2>
+                <p className="text-[13px] text-navy/45">Redirecting you to your dashboard…</p>
               </div>
               <Loader2 className="w-5 h-5 animate-spin text-gold mx-auto" />
             </div>
           )}
 
-          {/* Form */}
+          {/* ── Form ── */}
           {!previewing && !previewError && !done && (
             <>
-              {/* Invite banner */}
-              <div className="mb-7 p-4 rounded-2xl bg-white border border-navy/6 shadow-sm">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-linear-to-br from-gold/10 to-gold/5 flex items-center justify-center shrink-0">
-                    <CheckCircle className="w-5 h-5 text-gold-dark" />
-                  </div>
-                  <div>
-                    <p className="text-[13px] font-semibold text-navy">You've been invited</p>
-                    <p className="text-[12px] text-navy/50 mt-0.5">
-                      Join <span className="font-medium text-navy">{orgName}</span> as <span className="font-medium text-navy">{role}</span>
-                    </p>
-                    {inviteEmail && <p className="text-[11px] text-navy/35 mt-0.5">{inviteEmail}</p>}
-                  </div>
+              {/* Invite badge */}
+              <div className="mb-7 flex items-center gap-3 p-4 rounded-2xl bg-white border border-navy/6 shadow-sm">
+                <div className="w-10 h-10 rounded-xl bg-linear-to-br from-gold/15 to-gold/5 flex items-center justify-center shrink-0">
+                  <CheckCircle className="w-5 h-5 text-gold-dark" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[12px] font-semibold text-emerald-600 uppercase tracking-wider mb-0.5">Invitation verified</p>
+                  <p className="text-[13px] font-medium text-navy truncate">
+                    Join <span className="text-gold-dark">{orgName || "Harava"}</span> as <span className="capitalize">{(role || "member").toLowerCase()}</span>
+                  </p>
+                  {inviteEmail && <p className="text-[11px] text-navy/35 mt-0.5 truncate">{inviteEmail}</p>}
                 </div>
               </div>
 
-              <h1 className="text-2xl font-bold text-navy mb-1 tracking-tight">Set up your account</h1>
-              <p className="text-[14px] text-navy/40 mb-6">Create a password to get started</p>
+              <h1 className="text-[24px] font-bold text-navy tracking-tight mb-1">Welcome to Harava</h1>
+              <p className="text-[13px] text-navy/40 mb-7">Set a password to activate your account.</p>
 
+              {/* Error banner */}
               {error && (
-                <div className="mb-4 p-3.5 rounded-xl bg-red-50 border border-red-200/60 animate-fade-in">
-                  <p className="text-[12px] font-semibold text-red-700 mb-1">Could not create your account</p>
-                  <p className="text-[13px] text-red-600">{error}</p>
-                  {Object.keys(fieldErrors).length > 0 && (
-                    <ul className="mt-2 space-y-0.5">
-                      {Object.entries(fieldErrors).map(([field, msg]) => (
-                        <li key={field} className="text-[12px] text-red-500 flex items-start gap-1.5">
-                          <span className="mt-0.5 shrink-0">•</span>
-                          <span><span className="font-medium capitalize">{field.replace(/([A-Z])/g, " $1").trim()}</span>: {msg}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
+                <div className="mb-5 p-3.5 rounded-xl bg-red-50 border border-red-200/60 flex items-start gap-2.5 animate-fade-in">
+                  <AlertCircle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-[12px] font-semibold text-red-700 mb-0.5">Could not activate account</p>
+                    <p className="text-[12px] text-red-600">{error}</p>
+                  </div>
                 </div>
               )}
 
               <form onSubmit={handleSubmit} className="space-y-4">
-                {/* Name */}
+                {/* Name row */}
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <label className="block text-[12px] font-medium text-navy/60">First name</label>
+                  <Field label="First name" error={fieldErrors.firstName}>
                     <input
-                      type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)}
+                      type="text" value={firstName}
+                      onChange={(e) => setFirstName(e.target.value)}
                       placeholder="Jane" required
-                      className="w-full bg-white border-[1.5px] border-navy/8 rounded-xl px-4 py-2.5 text-sm text-navy placeholder:text-navy/25 focus:ring-[3px] focus:ring-gold/8 focus:border-gold outline-none transition-all hover:border-navy/15 shadow-sm"
+                      className={inputCls}
                     />
-                    {fieldErrors.firstName && <p className="text-[11px] text-red-600">{fieldErrors.firstName}</p>}
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="block text-[12px] font-medium text-navy/60">Last name</label>
+                  </Field>
+                  <Field label="Last name" error={fieldErrors.lastName}>
                     <input
-                      type="text" value={lastName} onChange={(e) => setLastName(e.target.value)}
+                      type="text" value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
                       placeholder="Doe" required
-                      className="w-full bg-white border-[1.5px] border-navy/8 rounded-xl px-4 py-2.5 text-sm text-navy placeholder:text-navy/25 focus:ring-[3px] focus:ring-gold/8 focus:border-gold outline-none transition-all hover:border-navy/15 shadow-sm"
+                      className={inputCls}
                     />
-                    {fieldErrors.lastName && <p className="text-[11px] text-red-600">{fieldErrors.lastName}</p>}
-                  </div>
+                  </Field>
                 </div>
 
-                {/* Phone with dial picker */}
-                <div className="space-y-1.5">
-                  <label className="block text-[12px] font-medium text-navy/60">Phone number</label>
+                {/* Phone */}
+                <Field label="Phone (optional)" error={fieldErrors.phoneNumber}>
                   <div className={`flex bg-white border-[1.5px] rounded-xl overflow-visible shadow-sm transition-all ${
-                    fieldErrors.phoneNumber ? "border-red-300" : "border-navy/8 hover:border-navy/15 focus-within:border-gold focus-within:ring-[3px] focus-within:ring-gold/8"
+                    fieldErrors.phoneNumber
+                      ? "border-red-300"
+                      : "border-navy/8 hover:border-navy/15 focus-within:border-gold focus-within:ring-[3px] focus-within:ring-gold/8"
                   }`}>
                     <DialPicker value={dialEntry} onChange={setDialEntry} />
                     <input
                       type="tel"
                       value={localPhone}
-                      onChange={(e) => setLocalPhone(e.target.value.replace(/[^\d\s\-()]/g, ""))}
+                      onChange={(e) => setLocalPhone(e.target.value.replace(/[^\d\s\-()+]/g, ""))}
                       placeholder="8012345678"
-                      required
-                      className="flex-1 px-3 py-2.5 text-sm text-navy placeholder:text-navy/25 outline-none bg-transparent"
+                      className="flex-1 px-3 py-2.5 text-[13px] text-navy placeholder:text-navy/25 outline-none bg-transparent"
                     />
                   </div>
-                  {/* Preview of full number */}
                   {localPhone && (
-                    <p className="text-[11px] text-navy/40 pl-1">
-                      Will be sent as <span className="font-mono font-medium text-navy/60">{fullPhone}</span>
+                    <p className="text-[10px] text-navy/35 pl-1 mt-1">
+                      Stored as <span className="font-mono font-medium text-navy/50">{fullPhone}</span>
                     </p>
                   )}
-                  {fieldErrors.phoneNumber && <p className="text-[11px] text-red-600">{fieldErrors.phoneNumber}</p>}
-                </div>
+                </Field>
 
                 {/* Password */}
-                <div className="space-y-1.5">
-                  <label className="block text-[12px] font-medium text-navy/60">Password</label>
+                <Field label="Password" error={fieldErrors.password}>
                   <div className="relative">
                     <input
-                      type={showPw ? "text" : "password"} value={password}
+                      type={showPw ? "text" : "password"}
+                      value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      placeholder="Create a strong password" required
-                      className="w-full bg-white border-[1.5px] border-navy/8 rounded-xl px-4 py-2.5 pr-11 text-sm text-navy placeholder:text-navy/25 focus:ring-[3px] focus:ring-gold/8 focus:border-gold outline-none transition-all hover:border-navy/15 shadow-sm"
+                      placeholder="Create a strong password"
+                      required
+                      className={inputCls + " pr-11"}
                     />
-                    <button type="button" onClick={() => setShowPw((v) => !v)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-navy/30 hover:text-navy/60 transition-colors">
+                    <button
+                      type="button"
+                      onClick={() => setShowPw((v) => !v)}
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-navy/30 hover:text-navy/60 transition-colors"
+                    >
                       {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
                   </div>
+                  {/* Strength indicators */}
                   {password.length > 0 && (
-                    <div className="grid grid-cols-2 gap-1 pt-1">
+                    <div className="grid grid-cols-2 gap-x-3 gap-y-1 pt-2">
                       {RULES.map((r) => (
-                        <div key={r.label} className={`flex items-center gap-1.5 text-[11px] ${r.test(password) ? "text-emerald-600" : "text-navy/35"}`}>
-                          <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${r.test(password) ? "bg-emerald-500" : "bg-navy/15"}`} />
+                        <div key={r.label} className={`flex items-center gap-1.5 text-[11px] transition-colors ${r.test(password) ? "text-emerald-600" : "text-navy/30"}`}>
+                          <div className={`w-1.5 h-1.5 rounded-full shrink-0 transition-colors ${r.test(password) ? "bg-emerald-500" : "bg-navy/15"}`} />
                           {r.label}
                         </div>
                       ))}
                     </div>
                   )}
-                  {fieldErrors.password && <p className="text-[11px] text-red-600">{fieldErrors.password}</p>}
-                </div>
+                </Field>
 
                 {/* Confirm password */}
-                <div className="space-y-1.5">
-                  <label className="block text-[12px] font-medium text-navy/60">Confirm password</label>
+                <Field label="Confirm password" error={fieldErrors.confirmPassword}>
                   <div className="relative">
                     <input
-                      type={showConfirm ? "text" : "password"} value={confirmPassword}
+                      type={showConfirm ? "text" : "password"}
+                      value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
-                      placeholder="Repeat your password" required
-                      className={`w-full bg-white border-[1.5px] rounded-xl px-4 py-2.5 pr-11 text-sm text-navy placeholder:text-navy/25 focus:ring-[3px] focus:ring-gold/8 outline-none transition-all shadow-sm ${
-                        confirmPassword && confirmPassword !== password ? "border-red-300 focus:border-red-400"
-                        : confirmPassword && confirmPassword === password ? "border-emerald-300 focus:border-emerald-400"
-                        : "border-navy/8 hover:border-navy/15 focus:border-gold"
+                      placeholder="Repeat your password"
+                      required
+                      className={`${inputCls} pr-11 ${
+                        confirmPassword && confirmPassword !== password
+                          ? "border-red-300 focus:border-red-400 focus:ring-red-100"
+                          : confirmPassword && confirmPassword === password
+                            ? "border-emerald-300 focus:border-emerald-400 focus:ring-emerald-50"
+                            : ""
                       }`}
                     />
-                    <button type="button" onClick={() => setShowConfirm((v) => !v)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-navy/30 hover:text-navy/60 transition-colors">
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirm((v) => !v)}
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-navy/30 hover:text-navy/60 transition-colors"
+                    >
                       {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
                   </div>
-                  {fieldErrors.confirmPassword && <p className="text-[11px] text-red-600">{fieldErrors.confirmPassword}</p>}
-                </div>
+                </Field>
 
                 <Button variant="primary" size="lg" className="w-full mt-2" type="submit" disabled={loading}>
                   {loading
-                    ? <><Loader2 className="w-4 h-4 animate-spin" /> Creating account…</>
-                    : <>Accept & Continue <ArrowRight className="w-4 h-4" /></>}
+                    ? <><Loader2 className="w-4 h-4 animate-spin" /> Activating account…</>
+                    : <>Activate account <ArrowRight className="w-4 h-4" /></>
+                  }
                 </Button>
               </form>
 
-              <p className="text-center text-[12px] text-navy/30 mt-5">
+              <p className="text-center text-[12px] text-navy/30 mt-6">
                 Already have an account?{" "}
-                <Link href="/auth/login" className="text-gold-dark hover:text-gold font-medium transition-colors">Sign in</Link>
+                <Link href="/auth/login" className="text-gold-dark hover:text-gold font-semibold transition-colors">Sign in</Link>
               </p>
             </>
           )}

@@ -10,6 +10,7 @@ import { GlobePanel } from "@/components/auth/globe-panel";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/lib/toast";
+import { tokens } from "@/lib/api/tokens";
 
 const ENABLE_DEMO = process.env.NEXT_PUBLIC_ENABLE_DEMO_LOGIN === "true";
 
@@ -27,17 +28,14 @@ export default function LoginPage() {
   const { toast } = useToast();
   const router = useRouter();
 
-  const routeAfterLogin = () => {
-    // Prefer stored active scope
-    const target =
-      user?.scope === "platform" ? "/admin"
-      : user?.scope === "portal" ? "/finsight"
-      : "/finsight";
-    router.replace(target);
-  };
+  function routeForScope(scope?: string) {
+    if (scope === "platform") return "/admin";
+    if (scope === "portal") return "/finsight";
+    return "/finsight";
+  }
 
   if (user) {
-    routeAfterLogin();
+    router.replace(routeForScope(user.scope));
     return null;
   }
 
@@ -54,7 +52,8 @@ export default function LoginPage() {
       return;
     }
     toast("Welcome back!", "success");
-    setTimeout(routeAfterLogin, 200);
+    // tokens.getActive() is set synchronously by finalizeFromLoginResponse
+    router.replace(routeForScope(tokens.getActive() ?? undefined));
   };
 
   const handleMfa = async (e: React.FormEvent) => {
@@ -66,7 +65,7 @@ export default function LoginPage() {
     setLoading(false);
     if (!r.success) return setError(r.error);
     toast("Signed in", "success");
-    setTimeout(routeAfterLogin, 200);
+    router.replace(routeForScope(tokens.getActive() ?? undefined));
   };
 
   return (

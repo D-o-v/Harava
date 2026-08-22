@@ -1,90 +1,152 @@
 "use client";
 
-import { useState } from "react";
 import { DashboardHeader } from "@/components/layout/dashboard-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/lib/toast";
-import { Bell, Check, Trash2, CheckCheck } from "lucide-react";
+import { Bell, CheckCheck, Trash2, Loader2, RefreshCw } from "lucide-react";
+import { notificationsApi, type Notification } from "@/lib/api/endpoints";
+import { useApi, useMutation } from "@/lib/api/hooks";
+import { PageLoader } from "@/components/ui/page-loader";
 
-interface Notification {
-  id: number;
-  title: string;
-  message: string;
-  time: string;
-  read: boolean;
-  type: "ai" | "action" | "success" | "warning" | "info";
-}
-
-const INITIAL_NOTIFICATIONS: Notification[] = [
-  { id: 1, title: "New AI Insight Available", message: "FinSight detected unusual spending pattern in Q2 expenses.", time: "5 min ago", read: false, type: "ai" },
-  { id: 2, title: "Approval Required", message: "Invoice #4521 from ABC Corp requires your approval.", time: "30 min ago", read: false, type: "action" },
-  { id: 3, title: "Course Completed", message: "You completed 'Financial Statement Analysis' with a score of 92%.", time: "2 hours ago", read: false, type: "success" },
-  { id: 4, title: "Compliance Deadline", message: "CARF mid-cycle review due in 14 days.", time: "Yesterday", read: true, type: "warning" },
-  { id: 5, title: "System Update", message: "Platform maintenance scheduled for Sunday 2am-4am UTC.", time: "2 days ago", read: true, type: "info" },
-  { id: 6, title: "New Team Member", message: "Lisa Chen joined your organization on ProEd AI.", time: "3 days ago", read: true, type: "info" },
-];
+const TYPE_VARIANT: Record<string, "warning" | "success" | "error" | "info" | "default"> = {
+  warning: "warning",
+  success: "success",
+  error: "error",
+  info: "info",
+};
 
 export function NotificationsView() {
-  const [notifications, setNotifications] = useState<Notification[]>(INITIAL_NOTIFICATIONS);
   const { toast } = useToast();
 
-  const unreadCount = notifications.filter((n) => !n.read).length;
+  const feed = useApi(
+    () => notificationsApi.list({ page: 0, size: 50 }),
+    [],
+    { pollMs: 60_000 },
+  );
+  const unreadCount = useApi(() => notificationsApi.unreadCount(), [], { pollMs: 30_000 });
 
-  const markAllRead = () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-    toast("All notifications marked as read", "success");
+  const markReadMut = useMutation((id: string) => notificationsApi.markRead(id));
+  const markAllMut = useMutation(() => notificationsApi.markAllRead());
+
+  const notifications: Notification[] = feed.data?.content ?? [];
+
+  const handleMarkRead = async (n: Notification) => {
+    if (n.read) return;
+    try {
+      await markReadMut.mutate(n.id);
+      feed.refetch();
+      unreadCount.refetch();
+    } catch {
+      // silent
+    }
   };
 
-  const markRead = (id: number) => {
-    setNotifications((prev) => prev.map((n) => n.id === id ? { ...n, read: true } : n));
+  const handleMarkAll = async () => {
+    try {
+      await markAllMut.mutate();
+      toast("All notifications marked as read", "success");
+      feed.refetch();
+      unreadCount.refetch();
+    } catch (e) {
+      toast(e instanceof Error ? e.message : "Failed", "error");
+    }
   };
 
-  const deleteNotification = (id: number) => {
-    setNotifications((prev) => prev.filter((n) => n.id !== id));
-    toast("Notification dismissed", "info");
-  };
+  const count = unreadCount.data?.count ?? notifications.filter((n) => !n.read).length;
+
+  if (feed.loading) return <><DashboardHeader title="Notifications" subtitle="Stay updated on activity across your products" /><PageLoader message="Loading notifications…" /></>;
 
   return (
     <div>
       <DashboardHeader title="Notifications" subtitle="Stay updated on activity across your products" />
-      <div className="p-4 sm:p-6 w-full max-w-full lg:max-w-5xl space-y-4">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
-          <p className="text-sm text-gray-500">{unreadCount} unread</p>
-          <Button variant="ghost" size="sm" onClick={markAllRead} disabled={unreadCount === 0}>
-            <CheckCheck className="w-4 h-4" /> Mark all read
-          </Button>
+      <div className="p-4 sm:p-6 w-full max-w-full space-y-4">
+
+        {/* Toolbar */}
+        <div className="flex items-center justify-between">
+          <p className="text-[13px] text-navy/50 font-medium">
+            {count > 0 ? <><span className="text-navy font-bold">{count}</span> unread</> : "All caught up"}
+          </p>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="sm" onClick={() => { feed.refetch(); unreadCount.refetch(); }} disabled={feed.loading}>
+              <RefreshCw className={`w-3.5 h-3.5 ${feed.loading ? "animate-spin" : ""}`} />
+            </Button>
+            <Button variant="ghost" size="sm" onClick={handleMarkAll} disabled={count === 0 || markAllMut.loading}>
+              <CheckCheck className="w-3.5 h-3.5" /> Mark all read
+            </Button>
+          </div>
         </div>
 
-        {notifications.length === 0 ? (
+        {/* Error */}
+        {feed.error && (
+          <div className="p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm">{feed.error}</div>
+        )}
+
+        {/* Empty */}
+        {!feed.error && notifications.length === 0 && (
           <Card>
-            <CardContent className="p-8 text-center text-gray-500">
-              <Bell className="w-8 h-8 mx-auto mb-2 text-gray-300" />
-              <p>No notifications</p>
+            <CardContent className="p-12 text-center">
+              <div className="w-14 h-14 rounded-2xl bg-navy/5 flex items-center justify-center mx-auto mb-3">
+                <Bell className="w-6 h-6 text-navy/20" />
+              </div>
+              <p className="text-[13px] text-navy/40 font-medium">No notifications yet</p>
             </CardContent>
           </Card>
-        ) : (
-          notifications.map((n) => (
-            <Card key={n.id} className={!n.read ? "border-l-4 border-l-gold" : ""}>
-              <CardContent className="p-4 flex items-start gap-3">
-                <Bell className={`w-5 h-5 mt-0.5 shrink-0 ${!n.read ? "text-gold" : "text-gray-400"}`} />
-                <div className="flex-1 min-w-0 cursor-pointer" onClick={() => markRead(n.id)}>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className={`text-sm ${!n.read ? "font-semibold text-gray-900" : "text-gray-700"}`}>{n.title}</p>
-                    <Badge variant={n.type === "warning" ? "warning" : n.type === "success" ? "success" : n.type === "action" ? "error" : "info"}>
-                      {n.type}
+        )}
+
+        {/* List */}
+        {notifications.map((n) => (
+          <Card
+            key={n.id}
+            className={`transition-all duration-200 cursor-pointer hover:shadow-sm ${!n.read ? "border-l-[3px] border-l-gold" : ""}`}
+            onClick={() => handleMarkRead(n)}
+          >
+            <CardContent className="p-4 flex items-start gap-3.5">
+              <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 mt-0.5 ${!n.read ? "bg-gold/10" : "bg-navy/5"}`}>
+                <Bell className={`w-4 h-4 ${!n.read ? "text-gold-dark" : "text-navy/30"}`} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex flex-wrap items-center gap-2 mb-0.5">
+                  <p className={`text-[13px] ${!n.read ? "font-semibold text-navy" : "font-medium text-navy/70"}`}>
+                    {n.title}
+                  </p>
+                  {n.category && (
+                    <Badge variant={TYPE_VARIANT[n.category] ?? "default"} size="sm">
+                      {n.category}
                     </Badge>
-                  </div>
-                  <p className="text-sm text-gray-500 mt-0.5 wrap-break-word">{n.message}</p>
-                  <p className="text-xs text-gray-400 mt-1">{n.time}</p>
+                  )}
+                  {!n.read && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-gold shrink-0" />
+                  )}
                 </div>
-                <Button variant="ghost" size="icon" onClick={() => deleteNotification(n.id)}>
-                  <Trash2 className="w-4 h-4 text-gray-400" />
-                </Button>
-              </CardContent>
-            </Card>
-          ))
+                {n.body && (
+                  <p className="text-[12px] text-navy/50 leading-relaxed">{n.body}</p>
+                )}
+                <p className="text-[11px] text-navy/30 mt-1.5">
+                  {new Date(n.createdAt).toLocaleString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                </p>
+              </div>
+              {n.url && (
+                <a
+                  href={n.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  className="text-[11px] text-gold-dark font-medium hover:text-gold shrink-0"
+                >
+                  View →
+                </a>
+              )}
+            </CardContent>
+          </Card>
+        ))}
+
+        {/* Pagination hint */}
+        {feed.data && feed.data.totalElements > 50 && (
+          <p className="text-center text-[11px] text-navy/30">
+            Showing 50 of {feed.data.totalElements} notifications
+          </p>
         )}
       </div>
     </div>

@@ -19,6 +19,15 @@ const ACTIVE_KEY = "harava_active_scope";
 
 const isBrowser = () => typeof window !== "undefined";
 
+export function decodeJwt(token: string): Record<string, unknown> | null {
+  try {
+    const payload = token.split(".")[1];
+    return JSON.parse(atob(payload.replace(/-/g, "+").replace(/_/g, "/")));
+  } catch {
+    return null;
+  }
+}
+
 export const tokens = {
   get(scope: TokenScope) {
     if (!isBrowser()) return { access: null as string | null, refresh: null as string | null };

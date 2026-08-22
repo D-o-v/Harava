@@ -14,6 +14,7 @@ import {
   Brain,
   ShieldCheck,
   Users,
+  Newspaper,
 } from "lucide-react";
 
 const navigation: NavItem[] = [
@@ -28,6 +29,7 @@ const navigation: NavItem[] = [
   { title: "AI Intelligence", href: "/finsight/ai-intelligence", icon: Brain },
   { title: "Approvals", href: "/finsight/approvals", icon: ShieldCheck },
   { title: "Clients", href: "/finsight/clients", icon: Users },
+  { title: "News", href: "/finsight/news", icon: Newspaper },
 ];
 
 export default function FinSightLayout({ children }: { children: React.ReactNode }) {

@@ -7,8 +7,15 @@ import { apiRequest } from "./client";
  * ========================================================= */
 
 export interface LoginResponse {
+  // flat shape (platform login / MFA verify)
   accessToken?: string;
   refreshToken?: string;
+  // nested shape (tenant staff login)
+  session?: {
+    tokens?: { accessToken?: string; refreshToken?: string };
+    user?: UserProfile;
+    tenant?: { id: string; slug: string; name: string };
+  };
   mfaRequired?: boolean;
   mfaToken?: string;
   mfaChannels?: string[];
@@ -141,6 +148,7 @@ export const platformApi = {
       scope: "none",
     }),
   logout: () => apiRequest<void>("/api/v1/platform/auth/logout", { method: "POST" }),
+  getMe: () => apiRequest<UserProfile>("/api/v1/platform/me"),
   listTenants: () => apiRequest<Tenant[]>("/api/v1/platform/tenants"),
   provisionTenant: (payload: {
     organizationName: string;
@@ -168,6 +176,8 @@ export const platformApi = {
 
 export const accountApi = {
   me: () => apiRequest<UserProfile>("/api/v1/account/me"),
+  updateProfile: (payload: { firstName?: string; lastName?: string; phoneNumber?: string }) =>
+    apiRequest<UserProfile>("/api/v1/account/me", { method: "PATCH", body: payload }),
   changePassword: (currentPassword: string, newPassword: string) =>
     apiRequest<void>("/api/v1/account/password/change", {
       method: "POST",
@@ -206,17 +216,14 @@ export interface StaffUser {
 
 export const staffApi = {
   listInvitations: () => apiRequest<Invitation[]>("/api/v1/account/invitations"),
-  invite: (email: string, role: string) =>
-    apiRequest<Invitation>("/api/v1/account/invitations", {
-      method: "POST",
-      body: { email, role },
-    }),
+  invite: (payload: { email: string; role?: string; roleId?: string }) =>
+    apiRequest<Invitation>("/api/v1/account/invitations", { method: "POST", body: payload }),
   resend: (id: string) =>
     apiRequest<void>(`/api/v1/account/invitations/${id}/resend`, { method: "POST" }),
   revoke: (id: string) => apiRequest<void>(`/api/v1/account/invitations/${id}`, { method: "DELETE" }),
   list: () => apiRequest<StaffUser[]>("/api/v1/account/users"),
   get: (id: string) => apiRequest<StaffUser>(`/api/v1/account/users/${id}`),
-  update: (id: string, payload: Partial<StaffUser>) =>
+  update: (id: string, payload: Partial<StaffUser> & { roleId?: string }) =>
     apiRequest<StaffUser>(`/api/v1/account/users/${id}`, { method: "PATCH", body: payload }),
   remove: (id: string) => apiRequest<void>(`/api/v1/account/users/${id}`, { method: "DELETE" }),
 };
@@ -281,10 +288,10 @@ export const companiesApi = {
     apiRequest<void>(`/api/v1/tenant/companies/${id}/activate`, { method: "POST" }),
   listUsers: (id: string) =>
     apiRequest<CompanyUser[]>(`/api/v1/tenant/companies/${id}/users`),
-  inviteUser: (id: string, email: string) =>
+  inviteUser: (id: string, payload: { email: string; roleId?: string }) =>
     apiRequest<Invitation>(`/api/v1/tenant/companies/${id}/users/invite`, {
       method: "POST",
-      body: { email },
+      body: payload,
     }),
 };
 
@@ -477,8 +484,223 @@ export const notificationsApi = {
   markRead: (id: string) =>
     apiRequest<void>(`/api/v1/notifications/${id}/read`, { method: "POST" }),
   markAllRead: () => apiRequest<void>("/api/v1/notifications/read-all", { method: "POST" }),
-  tenantBroadcast: (payload: { title: string; body: string; url?: string }) =>
+  tenantBroadcast: (payload: {
+    audience: "COMPANY" | "ALL_STAFF";
+    companyId?: string;
+    title: string;
+    body: string;
+    url?: string;
+  }) =>
     apiRequest<{ id: string }>("/api/v1/tenant/notifications/broadcast", { method: "POST", body: payload }),
+};
+
+/* =========================================================
+ * Roles (dropdowns)
+ * ========================================================= */
+
+export interface Role {
+  id: string;
+  name: string;
+  description?: string;
+}
+
+export const rolesApi = {
+  staff: () => apiRequest<Role[]>("/api/v1/account/roles/staff"),
+  company: () => apiRequest<Role[]>("/api/v1/account/roles/company"),
+};
+
+/* =========================================================
+ * Platform god-mode (users & admins)
+ * ========================================================= */
+
+export interface PlatformUser {
+  id: string;
+  email: string;
+  firstName?: string;
+  lastName?: string;
+  tenantId?: string;
+  enabled: boolean;
+  roles?: string[];
+  createdAt?: string;
+}
+
+export interface PlatformAdmin {
+  id: string;
+  email: string;
+  name?: string;
+  superAdmin: boolean;
+  enabled: boolean;
+  createdAt?: string;
+}
+
+export const platformGodApi = {
+  listUsers: (params?: { email?: string; tenantId?: string }) =>
+    apiRequest<PlatformUser[]>("/api/v1/platform/users", { query: params }),
+  getUser: (id: string) => apiRequest<PlatformUser>(`/api/v1/platform/users/${id}`),
+  disableUser: (id: string) =>
+    apiRequest<void>(`/api/v1/platform/users/${id}/disable`, { method: "POST", body: {} }),
+  enableUser: (id: string) =>
+    apiRequest<void>(`/api/v1/platform/users/${id}/enable`, { method: "POST", body: {} }),
+  forceLogout: (id: string) =>
+    apiRequest<void>(`/api/v1/platform/users/${id}/force-logout`, { method: "POST", body: {} }),
+  triggerPasswordReset: (id: string) =>
+    apiRequest<void>(`/api/v1/platform/users/${id}/reset-password`, { method: "POST", body: {} }),
+  deleteUser: (id: string) =>
+    apiRequest<void>(`/api/v1/platform/users/${id}`, { method: "DELETE" }),
+  tenantRoles: (tenantId: string) =>
+    apiRequest<Role[]>(`/api/v1/platform/tenants/${tenantId}/roles`),
+  listAdmins: () => apiRequest<PlatformAdmin[]>("/api/v1/platform/admins"),
+  createAdmin: (payload: { email: string; password: string; name?: string; superAdmin?: boolean }) =>
+    apiRequest<PlatformAdmin>("/api/v1/platform/admins", { method: "POST", body: payload }),
+  updateAdmin: (id: string, payload: { name?: string; enabled?: boolean }) =>
+    apiRequest<PlatformAdmin>(`/api/v1/platform/admins/${id}`, { method: "PATCH", body: payload }),
+  deleteAdmin: (id: string) =>
+    apiRequest<void>(`/api/v1/platform/admins/${id}`, { method: "DELETE" }),
+};
+
+/* =========================================================
+ * Payroll
+ * ========================================================= */
+
+export interface PayrollEmployee {
+  id: string;
+  fullName: string;
+  email?: string;
+  jobTitle?: string;
+  bankName?: string;
+  bankAccountNumber?: string;
+  baseSalary: number;
+  currency: string;
+  companyId?: string;
+  active: boolean;
+  createdAt?: string;
+}
+
+export interface PayrollApprovalChain {
+  id: string;
+  scope: "STAFF" | "COMPANY";
+  steps: Array<{
+    id?: string;
+    name?: string;
+    order?: number;
+    userIds?: string[];
+    roleId?: string;
+  }>;
+}
+
+export type PayrollRunStatus =
+  | "DRAFT"
+  | "PENDING_APPROVAL"
+  | "APPROVED"
+  | "REJECTED"
+  | "PAID";
+
+export interface PayrollRun {
+  id: string;
+  label?: string;
+  periodStart: string;
+  periodEnd: string;
+  payDate?: string;
+  currency?: string;
+  status: PayrollRunStatus;
+  companyId?: string;
+  note?: string;
+  totalGross?: number;
+  totalNet?: number;
+  createdAt?: string;
+  lines?: PayrollLine[];
+  approvalSteps?: PayrollApprovalStep[];
+}
+
+export interface PayrollLine {
+  id?: string;
+  employeeId: string;
+  note?: string;
+  grossPay?: number;
+  netPay?: number;
+  components: Array<{
+    kind: "EARNING" | "DEDUCTION";
+    label: string;
+    amount: number;
+  }>;
+}
+
+export interface PayrollApprovalStep {
+  id: string;
+  stepOrder: number;
+  name?: string;
+  status: "PENDING" | "APPROVED" | "REJECTED";
+  approvedBy?: string;
+  comment?: string;
+  actedAt?: string;
+}
+
+export const payrollApi = {
+  // Employees
+  createEmployee: (payload: {
+    fullName: string;
+    email?: string;
+    jobTitle?: string;
+    bankName?: string;
+    bankAccountNumber?: string;
+    baseSalary: number;
+    currency: string;
+    companyId?: string;
+  }) => apiRequest<PayrollEmployee>("/api/v1/tenant/payroll/employees", { method: "POST", body: payload }),
+  listEmployees: (params?: { companyId?: string }) =>
+    apiRequest<PayrollEmployee[]>("/api/v1/tenant/payroll/employees", { query: params }),
+  getEmployee: (id: string) =>
+    apiRequest<PayrollEmployee>(`/api/v1/tenant/payroll/employees/${id}`),
+  updateEmployee: (id: string, payload: Partial<PayrollEmployee>) =>
+    apiRequest<PayrollEmployee>(`/api/v1/tenant/payroll/employees/${id}`, { method: "PATCH", body: payload }),
+  deactivateEmployee: (id: string) =>
+    apiRequest<void>(`/api/v1/tenant/payroll/employees/${id}`, { method: "DELETE" }),
+
+  // Approval chains
+  getApprovalChain: (scope: "STAFF" | "COMPANY") =>
+    apiRequest<PayrollApprovalChain>("/api/v1/tenant/payroll/approval-chains", { query: { scope } }),
+  configureApprovalChain: (
+    scope: "STAFF" | "COMPANY",
+    steps: PayrollApprovalChain["steps"],
+  ) =>
+    apiRequest<PayrollApprovalChain>("/api/v1/tenant/payroll/approval-chains", {
+      method: "PUT",
+      body: { steps },
+      query: { scope },
+    }),
+
+  // Runs
+  createRun: (payload: {
+    label?: string;
+    periodStart: string;
+    periodEnd: string;
+    currency?: string;
+    companyId?: string;
+    payDate?: string;
+  }) => apiRequest<PayrollRun>("/api/v1/tenant/payroll/runs", { method: "POST", body: payload }),
+  listRuns: (params?: { companyId?: string; firmOnly?: boolean }) =>
+    apiRequest<PayrollRun[]>("/api/v1/tenant/payroll/runs", { query: params }),
+  pendingApproval: () =>
+    apiRequest<PayrollRun[]>("/api/v1/tenant/payroll/runs/pending-approval"),
+  getRun: (id: string) => apiRequest<PayrollRun>(`/api/v1/tenant/payroll/runs/${id}`),
+  updateRun: (id: string, payload: { note?: string; payDate?: string }) =>
+    apiRequest<PayrollRun>(`/api/v1/tenant/payroll/runs/${id}`, { method: "PATCH", body: payload }),
+  replaceLines: (id: string, lines: PayrollLine[]) =>
+    apiRequest<PayrollRun>(`/api/v1/tenant/payroll/runs/${id}/lines`, { method: "PUT", body: { lines } }),
+  submit: (id: string) =>
+    apiRequest<PayrollRun>(`/api/v1/tenant/payroll/runs/${id}/submit`, { method: "POST" }),
+  approve: (id: string, comment?: string) =>
+    apiRequest<PayrollRun>(`/api/v1/tenant/payroll/runs/${id}/approve`, { method: "POST", body: { comment } }),
+  reject: (id: string, comment?: string) =>
+    apiRequest<PayrollRun>(`/api/v1/tenant/payroll/runs/${id}/reject`, { method: "POST", body: { comment } }),
+  reopen: (id: string, comment?: string) =>
+    apiRequest<PayrollRun>(`/api/v1/tenant/payroll/runs/${id}/reopen`, { method: "POST", body: { comment } }),
+  markPaid: (id: string) =>
+    apiRequest<PayrollRun>(`/api/v1/tenant/payroll/runs/${id}/pay`, { method: "POST" }),
+  bankFile: (id: string) =>
+    apiRequest<Response>(`/api/v1/tenant/payroll/runs/${id}/bank-file`, { raw: true }),
+  approvalHistory: (id: string) =>
+    apiRequest<PayrollApprovalStep[]>(`/api/v1/tenant/payroll/runs/${id}/approvals`),
 };
 
 /* =========================================================
@@ -501,6 +723,11 @@ export const newsApi = {
   feed: (params?: { category?: string; country?: string; q?: string; companyId?: string; page?: number; size?: number }) =>
     apiRequest<{ content: NewsArticle[]; totalElements: number; totalPages: number } | NewsArticle[]>(
       "/api/v1/news",
+      { query: params as Record<string, string | number | undefined> },
+    ),
+  search: (params: { q: string; category?: string; country?: string; page?: number; size?: number }) =>
+    apiRequest<{ content: NewsArticle[]; totalElements: number; totalPages: number } | NewsArticle[]>(
+      "/api/v1/news/search",
       { query: params as Record<string, string | number | undefined> },
     ),
 };

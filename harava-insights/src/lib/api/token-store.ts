@@ -14,6 +14,7 @@ let tenantId: string | null = null;
 
 export interface JwtPayload {
   sub: string;
+  tid?: string;   // tenant ID — present for tenant users, absent for platform admin
   email: string;
   roles: string[];
   typ: string;
@@ -84,6 +85,13 @@ export function setTokens(tokens: Tokens): void {
   accessToken = tokens.accessToken;
   refreshToken = tokens.refreshToken;
   expiresAt = Date.now() + tokens.expiresIn * 1000;
+  // Auto-extract tenant ID from JWT — only for tenant users (platform admin has no tid)
+  const payload = decodeJwt(tokens.accessToken);
+  if (payload?.tid && !payload.roles.includes("ROLE_PLATFORM_ADMIN")) {
+    tenantId = payload.tid;
+  } else if (payload?.roles.includes("ROLE_PLATFORM_ADMIN")) {
+    tenantId = null; // ensure no stale tenant ID leaks into platform admin session
+  }
 }
 
 export function clearTokens(): void {

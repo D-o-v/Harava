@@ -10,6 +10,7 @@ import { useToast } from "@/lib/toast";
 import { Building2, Plus, Search, Loader2, Ban, PlayCircle } from "lucide-react";
 import { platformApi, referenceApi, type Tenant } from "@/lib/api/endpoints";
 import { useApi, useMutation } from "@/lib/api/hooks";
+import { PageLoader, PageError } from "@/components/ui/page-loader";
 
 export default function AdminClientsPage() {
   const { toast } = useToast();
@@ -53,6 +54,9 @@ export default function AdminClientsPage() {
     }
   };
 
+  if (tenants.loading) return <><DashboardHeader title="Client Management" subtitle="Tenants (accounting firms) using the platform" /><PageLoader message="Loading tenants…" /></>;
+  if (tenants.error) return <><DashboardHeader title="Client Management" subtitle="Tenants (accounting firms) using the platform" /><PageError message={tenants.error} onRetry={tenants.refetch} /></>;
+
   const setStatus = async (t: Tenant, next: "suspend" | "activate") => {
     try {
       if (next === "suspend") await suspendMut.mutate(t.id);
@@ -90,12 +94,7 @@ export default function AdminClientsPage() {
           <Button variant="primary" onClick={() => setAddModal(true)}><Plus className="w-3.5 h-3.5" /> Provision Tenant</Button>
         </div>
 
-        {tenants.loading ? (
-          <div className="flex items-center justify-center py-16 text-navy/40 text-sm"><Loader2 className="w-4 h-4 animate-spin mr-2" /> Loading tenants…</div>
-        ) : tenants.error ? (
-          <div className="p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm">{tenants.error}</div>
-        ) : (
-          <div className="grid gap-4">
+        <div className="grid gap-4">
             {list.map((t) => (
               <Card key={t.id}>
                 <CardContent className="p-5 flex items-start justify-between">
@@ -122,7 +121,6 @@ export default function AdminClientsPage() {
             ))}
             {list.length === 0 && <div className="text-center text-sm text-navy/40 py-12">No tenants match.</div>}
           </div>
-        )}
       </div>
 
       <Modal isOpen={addModal} onClose={() => setAddModal(false)} title="Provision New Tenant">

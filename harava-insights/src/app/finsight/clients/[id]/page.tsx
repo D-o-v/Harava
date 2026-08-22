@@ -151,7 +151,7 @@ const ExpensesTab = ({ companyId }: { companyId: string }) => <JsonCard title="E
 
 function UsersTab({ companyId }: { companyId: string }) {
   const users = useApi(() => companiesApi.listUsers(companyId), [companyId]);
-  const inviteMut = useMutation((email: string) => companiesApi.inviteUser(companyId, email));
+  const inviteMut = useMutation((email: string) => companiesApi.inviteUser(companyId, { email }));
   const [email, setEmail] = useState("");
   const { toast } = useToast();
   return (
@@ -162,6 +162,7 @@ function UsersTab({ companyId }: { companyId: string }) {
           <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="user@company.com" className="flex-1 border rounded-lg px-3 py-2 text-sm" />
           <Button variant="primary" size="sm" onClick={async () => {
             try { await inviteMut.mutate(email); toast("Invitation sent", "success"); setEmail(""); users.refetch(); }
+
             catch (e) { toast(e instanceof Error ? e.message : "Failed", "error"); }
           }} disabled={!email || inviteMut.loading}>Invite</Button>
         </div>
