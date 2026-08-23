@@ -1,0 +1,21 @@
+services:
+  web:
+    build:
+      context: .
+      args:
+        NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-https://api.sandbox-haravainsights.com}
+        NEXT_PUBLIC_ENABLE_DEMO_LOGIN: ${NEXT_PUBLIC_ENABLE_DEMO_LOGIN:-false}
+    image: harava-insights-web:latest
+    container_name: harava-insights-web
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+    ports:
+      - "${WEB_PORT:-3001}:3000"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      start_period: 20s
+      retries: 3

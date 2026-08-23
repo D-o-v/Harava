@@ -1,5 +1,9 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Docker deployment
+
+Create a deployment environment file with `cp .env.example .env`, set `NEXT_PUBLIC_API_BASE_URL` to the reachable backend URL, then run `docker compose up -d --build`. The frontend is exposed on port `3001` by default and reports health at `/api/health`. Because `NEXT_PUBLIC_` values are embedded during the build, rebuild the image after changing them. Keep `.env` and backend credentials out of the image.
+
 ## Getting Started
 
 First, run the development server:

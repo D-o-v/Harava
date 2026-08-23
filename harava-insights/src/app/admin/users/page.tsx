@@ -168,7 +168,7 @@ export default function UsersPage() {
                   <div key={inv.id} className="flex items-center justify-between p-3 border border-navy/5 rounded-xl">
                     <div>
                       <p className="text-[13px] font-medium text-navy">{inv.email}</p>
-                      <p className="text-[11px] text-navy/40 mt-0.5">{inv.role} · Expires {new Date(inv.expiresAt).toLocaleDateString()}</p>
+                      <p className="text-[11px] text-navy/40 mt-0.5">{inv.role} · {inv.expiresAt ? `Expires ${new Date(inv.expiresAt).toLocaleDateString()}` : "No expiry date"}</p>
                     </div>
                     <div className="flex items-center gap-2">
                       <Button variant="ghost" size="xs" onClick={async () => {

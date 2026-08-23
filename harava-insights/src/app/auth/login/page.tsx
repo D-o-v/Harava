@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { Loader2, ArrowRight, ShieldCheck } from "lucide-react";
+import { Loader2, ArrowRight, ShieldCheck, Mail, Smartphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { GlobePanel } from "@/components/auth/globe-panel";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
@@ -21,7 +21,7 @@ export default function LoginPage() {
   const [error, setError] = useState("");
 
   // MFA step
-  const [mfa, setMfa] = useState<{ token: string; channels?: string[] } | null>(null);
+  const [mfa, setMfa] = useState<{ token: string; method?: string; channels?: string[] } | null>(null);
   const [mfaCode, setMfaCode] = useState("");
 
   const { login, verifyMfa, user } = useAuth();
@@ -47,8 +47,7 @@ export default function LoginPage() {
     setLoading(false);
     if (!result.success) return setError(result.error);
     if ("mfa" in result && result.mfa) {
-      setMfa({ token: result.mfaToken, channels: result.channels });
-      toast("Enter the code from your authenticator", "info");
+      setMfa({ token: result.mfaToken, method: result.mfaMethod, channels: result.channels });
       return;
     }
     toast("Welcome back!", "success");
@@ -133,32 +132,50 @@ export default function LoginPage() {
               )}
             </>
           ) : (
-            <>
-              <div className="flex items-center gap-2 text-emerald-600 text-xs font-semibold mb-2"><ShieldCheck className="w-4 h-4" /> Two-factor required</div>
-              <h1 className="text-2xl font-bold text-navy mb-1.5 tracking-tight">Enter your code</h1>
-              <p className="text-navy/40 mb-6 text-[14px]">
-                {mfa.channels?.includes("EMAIL") ? "Check your email" : mfa.channels?.includes("SMS") ? "Check your SMS" : "Open your authenticator app"} and enter the 6-digit code.
-              </p>
-              {error && <div className="mb-4 p-3.5 rounded-xl bg-red-50 border border-red-200/60 text-red-700 text-sm">{error}</div>}
-              <form onSubmit={handleMfa} className="space-y-4">
-                <input
-                  autoFocus
-                  inputMode="numeric"
-                  pattern="[0-9]*"
-                  maxLength={8}
-                  value={mfaCode}
-                  onChange={(e) => setMfaCode(e.target.value.replace(/\D/g, ""))}
-                  placeholder="123456"
-                  className="w-full bg-white border-[1.5px] border-navy/8 rounded-xl px-4 py-3 text-lg tracking-widest font-mono text-navy focus:ring-[3px] focus:ring-gold/8 focus:border-gold outline-none text-center"
-                />
-                <Button size="lg" className="w-full" type="submit" disabled={loading || mfaCode.length < 6}>
-                  {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> Verifying…</> : <>Verify & sign in <ArrowRight className="w-4 h-4" /></>}
-                </Button>
-                <button type="button" onClick={() => { setMfa(null); setMfaCode(""); }} className="text-[13px] text-navy/45 hover:text-navy w-full text-center">
-                  ← Use a different account
-                </button>
-              </form>
-            </>
+            (() => {
+              const method = mfa.method ?? (mfa.channels?.[0] ?? "TOTP");
+              const isEmail = method === "EMAIL";
+              const isSms = method === "SMS";
+              const icon = isEmail ? <Mail className="w-5 h-5" /> : isSms ? <Smartphone className="w-5 h-5" /> : <ShieldCheck className="w-5 h-5" />;
+              const label = isEmail ? "Check your email" : isSms ? "Check your SMS" : "Open your authenticator app";
+              const hint = isEmail ? "We sent a 6-digit code to your email address."
+                : isSms ? "We sent a 6-digit code to your phone number."
+                : "Enter the 6-digit code from your authenticator app.";
+              return (
+                <>
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">{icon}</div>
+                    <div>
+                      <p className="text-[11px] font-semibold text-emerald-600 uppercase tracking-wider">Two-factor authentication</p>
+                      <h1 className="text-xl font-bold text-navy tracking-tight">{label}</h1>
+                    </div>
+                  </div>
+                  <p className="text-navy/45 mb-6 text-[13px]">{hint}</p>
+                  {error && <div className="mb-4 p-3.5 rounded-xl bg-red-50 border border-red-200/60 text-red-700 text-sm">{error}</div>}
+                  <form onSubmit={handleMfa} className="space-y-4">
+                    <div className="space-y-1.5">
+                      <label className="block text-[13px] font-medium text-navy/60">Verification code</label>
+                      <input
+                        autoFocus
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        maxLength={8}
+                        value={mfaCode}
+                        onChange={(e) => setMfaCode(e.target.value.replace(/\D/g, ""))}
+                        placeholder="000000"
+                        className="w-full bg-white border-[1.5px] border-navy/8 rounded-xl px-4 py-3.5 text-2xl tracking-[0.5em] font-mono text-navy focus:ring-[3px] focus:ring-gold/8 focus:border-gold outline-none text-center"
+                      />
+                    </div>
+                    <Button size="lg" className="w-full" type="submit" disabled={loading || mfaCode.length < 6}>
+                      {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> Verifying…</> : <>Verify &amp; sign in <ArrowRight className="w-4 h-4" /></>}
+                    </Button>
+                    <button type="button" onClick={() => { setMfa(null); setMfaCode(""); setError(""); }} className="text-[13px] text-navy/40 hover:text-navy w-full text-center transition-colors">
+                      ← Back to sign in
+                    </button>
+                  </form>
+                </>
+              );
+            })()
           )}
         </div>
       </div>

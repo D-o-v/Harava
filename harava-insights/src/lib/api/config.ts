@@ -5,7 +5,7 @@ const placeholderTenantId = ["your-tenant-id-here", "tenant-id", "placeholder", 
 
 export const apiConfig = {
   /** Base URL for the backend API */
-  baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL || "http://185.113.249.47:8080",
+  baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.sandbox-haravainsights.com",
 
   /** Optional tenant ID sent as X-Tenant-ID for tenant-scoped requests */
   tenantId: placeholderTenantId ? "" : rawTenantId,

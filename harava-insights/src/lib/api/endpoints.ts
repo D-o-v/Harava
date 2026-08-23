@@ -20,6 +20,7 @@ export interface LoginResponse {
   };
   mfaRequired?: boolean;
   mfaToken?: string;
+  mfaMethod?: string;
   mfaChannels?: string[];
   scope?: "STAFF" | "CLIENT" | "PLATFORM";
   user?: UserProfile;
@@ -68,10 +69,10 @@ export const authApi = {
       body: { email },
       scope: "none",
     }),
-  resetPassword: (token: string, password: string) =>
+  resetPassword: (token: string, newPassword: string) =>
     apiRequest<void>("/api/v1/auth/password/reset", {
       method: "POST",
-      body: { token, password },
+      body: { token, newPassword },
       scope: "none",
     }),
   verifyEmail: (token: string) =>
@@ -235,6 +236,8 @@ export const staffApi = {
  * MFA
  * ========================================================= */
 
+type MfaEnableResponse = { method: string; backupCodes?: string[]; message?: string };
+
 export const mfaApi = {
   totpSetup: () =>
     apiRequest<{ secret: string; otpauthUri: string; qrCodeDataUri: string }>(
@@ -242,17 +245,21 @@ export const mfaApi = {
       { method: "POST" },
     ),
   totpEnable: (code: string) =>
-    apiRequest<void>("/api/v1/account/mfa/totp/enable", { method: "POST", body: { code } }),
-  emailEnable: () => apiRequest<void>("/api/v1/account/mfa/email/enable", { method: "POST" }),
-  sendEmailOtp: () => apiRequest<void>("/api/v1/account/mfa/otp/send", { method: "POST" }),
-  smsEnable: (phoneNumber?: string) =>
-    apiRequest<void>("/api/v1/account/mfa/sms/enable", {
-      method: "POST",
-      body: phoneNumber ? { phoneNumber } : undefined,
-    }),
-  sendSmsOtp: () => apiRequest<void>("/api/v1/account/mfa/sms/send", { method: "POST" }),
+    apiRequest<MfaEnableResponse>("/api/v1/account/mfa/totp/enable", { method: "POST", body: { code } }),
+  emailSetup: () =>
+    apiRequest<{ message: string }>("/api/v1/account/mfa/email/setup", { method: "POST" }),
+  emailEnable: (code: string) =>
+    apiRequest<MfaEnableResponse>("/api/v1/account/mfa/email/enable", { method: "POST", body: { code } }),
+  sendEmailOtp: () =>
+    apiRequest<{ message: string }>("/api/v1/account/mfa/otp/send", { method: "POST" }),
+  smsSetup: () =>
+    apiRequest<{ message: string }>("/api/v1/account/mfa/sms/setup", { method: "POST" }),
+  smsEnable: (code: string) =>
+    apiRequest<MfaEnableResponse>("/api/v1/account/mfa/sms/enable", { method: "POST", body: { code } }),
+  sendSmsOtp: () =>
+    apiRequest<{ message: string }>("/api/v1/account/mfa/sms/send", { method: "POST" }),
   disable: (code: string) =>
-    apiRequest<void>("/api/v1/account/mfa/disable", { method: "POST", body: { code } }),
+    apiRequest<{ message: string }>("/api/v1/account/mfa/disable", { method: "POST", body: { code } }),
 };
 
 /* =========================================================

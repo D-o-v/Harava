@@ -19,6 +19,21 @@ export default function QuickBooksCallbackPage() {
     const state = urlParams.get("state");
     const realmId = urlParams.get("realmId");
     const error = urlParams.get("error");
+    const result = urlParams.get("status") || urlParams.get("result");
+    const resultMessage = urlParams.get("message");
+
+    if (result === "success" || result === "connected") {
+      setStatus("success");
+      setMessage(resultMessage || "QuickBooks connected successfully!");
+      setTimeout(() => router.push("/finsight"), 2000);
+      return;
+    }
+
+    if (result === "error" || result === "failed") {
+      setStatus("error");
+      setMessage(resultMessage || "Failed to connect QuickBooks.");
+      return;
+    }
 
     if (error) {
       setStatus("error");

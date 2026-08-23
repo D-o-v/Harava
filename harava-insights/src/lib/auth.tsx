@@ -43,7 +43,7 @@ export function defaultRouteForRole(role: string): string {
 
 type LoginResult =
   | { success: true; mfa?: false }
-  | { success: true; mfa: true; mfaToken: string; channels?: string[] }
+  | { success: true; mfa: true; mfaToken: string; mfaMethod?: string; channels?: string[] }
   | { success: false; error: string };
 
 interface AuthContextType {
@@ -107,9 +107,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (scope === "platform") {
         const tok = tokens.get("platform");
         const payload = tok.access ? decodeJwt(tok.access) : null;
+        const claim = (key: string) => typeof payload?.[key] === "string" ? payload[key] : "";
         const u: User = {
-          id: payload?.sub ?? "",
-          email: payload?.email ?? "",
+          id: claim("sub"),
+          email: claim("email"),
           firstName: "Platform",
           lastName: "Admin",
           role: "super_admin",
@@ -189,7 +190,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           : await authApi.login(email, password);
 
         if (res.mfaRequired && res.mfaToken) {
-          return { success: true, mfa: true, mfaToken: res.mfaToken, channels: res.mfaChannels };
+          return { success: true, mfa: true, mfaToken: res.mfaToken, mfaMethod: res.mfaMethod, channels: res.mfaChannels };
         }
 
         // Scope hint from the server; fall back to host-based guess.
