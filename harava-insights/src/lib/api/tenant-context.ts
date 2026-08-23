@@ -21,6 +21,7 @@ const RESERVED_HOSTS = new Set([
   "localhost",
   "127.0.0.1",
   "lvh.me",
+  "sandbox-haravainsights.com",
   "harava-sandbox.com",
   "harava.com",
   "netlify.app",

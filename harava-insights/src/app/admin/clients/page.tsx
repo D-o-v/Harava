@@ -1,19 +1,23 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { DashboardHeader } from "@/components/layout/dashboard-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { useToast } from "@/lib/toast";
-import { Building2, Plus, Search, Loader2, Ban, PlayCircle } from "lucide-react";
+import { Building2, Plus, Search, Loader2, Ban, PlayCircle, ArrowRight, Users } from "lucide-react";
 import { platformApi, referenceApi, type Tenant } from "@/lib/api/endpoints";
 import { useApi, useMutation } from "@/lib/api/hooks";
 import { PageLoader, PageError } from "@/components/ui/page-loader";
+import { useTenantAdmin } from "@/lib/tenant-admin-context";
 
 export default function AdminClientsPage() {
   const { toast } = useToast();
+  const router = useRouter();
+  const { enterTenant } = useTenantAdmin();
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"all" | "ACTIVE" | "SUSPENDED">("all");
   const [addModal, setAddModal] = useState(false);
@@ -110,6 +114,13 @@ export default function AdminClientsPage() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
+                    <Button
+                      variant="primary"
+                      size="xs"
+                      onClick={() => { enterTenant(t.id, t.organizationName); router.push("/admin/clients/" + t.id); }}
+                    >
+                      <ArrowRight className="w-3 h-3" /> Enter
+                    </Button>
                     {t.status?.toUpperCase() === "ACTIVE" ? (
                       <Button variant="ghost" size="xs" onClick={() => setStatus(t, "suspend")}><Ban className="w-3 h-3 text-amber-500" /> Suspend</Button>
                     ) : (
@@ -142,13 +153,21 @@ export default function AdminClientsPage() {
           <div className="grid grid-cols-3 gap-3">
             <div>
               <label className="text-[12px] font-medium text-navy/60 block mb-1.5">Country</label>
-              <select value={form.countryCode} onChange={(e) => setForm({ ...form, countryCode: e.target.value })} className="w-full border rounded-xl px-3 py-2 text-sm">
+              <select value={form.countryCode} onChange={(e) => {
+                const country = countries.data?.find((item) => item.code === e.target.value);
+                setForm({
+                  ...form,
+                  countryCode: e.target.value,
+                  defaultCurrency: country?.currency ?? form.defaultCurrency,
+                  timezone: country?.timezones?.[0] ?? form.timezone,
+                });
+              }} disabled={countries.loading} className="w-full border rounded-xl px-3 py-2 text-sm disabled:opacity-60">
                 {(countries.data ?? [{ code: "NG", name: "Nigeria" }]).map((c) => <option key={c.code} value={c.code}>{c.name}</option>)}
               </select>
             </div>
             <div>
               <label className="text-[12px] font-medium text-navy/60 block mb-1.5">Currency</label>
-              <select value={form.defaultCurrency} onChange={(e) => setForm({ ...form, defaultCurrency: e.target.value })} className="w-full border rounded-xl px-3 py-2 text-sm">
+              <select value={form.defaultCurrency} onChange={(e) => setForm({ ...form, defaultCurrency: e.target.value })} disabled={currencies.loading} className="w-full border rounded-xl px-3 py-2 text-sm disabled:opacity-60">
                 {(currencies.data ?? [{ code: "NGN", name: "Naira" }]).map((c) => <option key={c.code} value={c.code}>{c.code}</option>)}
               </select>
             </div>
@@ -161,8 +180,10 @@ export default function AdminClientsPage() {
           </div>
           <div>
             <label className="text-[12px] font-medium text-navy/60 block mb-1.5">Timezone</label>
-            <select value={form.timezone} onChange={(e) => setForm({ ...form, timezone: e.target.value })} className="w-full border rounded-xl px-3 py-2 text-sm">
-              {(timezones.data ?? ["Africa/Lagos", "UTC"]).map((tz) => <option key={tz} value={tz}>{tz}</option>)}
+            <select value={form.timezone} onChange={(e) => setForm({ ...form, timezone: e.target.value })} disabled={timezones.loading} className="w-full border rounded-xl px-3 py-2 text-sm disabled:opacity-60">
+              {((countries.data?.find((item) => item.code === form.countryCode)?.timezones?.length
+                ? countries.data.find((item) => item.code === form.countryCode)?.timezones
+                : timezones.data) ?? ["Africa/Lagos", "UTC"]).map((tz) => <option key={tz} value={tz}>{tz}</option>)}
             </select>
           </div>
           <div className="flex justify-end gap-2 pt-2">

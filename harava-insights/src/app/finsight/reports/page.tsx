@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/lib/toast";
 import { useAuth } from "@/lib/auth";
+import { useCompanyContext } from "@/lib/company-context";
 import { dashboardApi } from "@/lib/api/endpoints";
 import { useApi } from "@/lib/api/hooks";
 import { TrendChart, MetricBarChart, ChartCard } from "@/components/ui/charts";
@@ -38,7 +39,8 @@ function fmt(n: unknown) {
 export default function ReportsPage() {
   const { toast } = useToast();
   const { user } = useAuth();
-  const companyId = user?.companyId ?? "";
+  const { selectedCompanyId } = useCompanyContext();
+  const companyId = selectedCompanyId ?? user?.companyId ?? "";
   const [active, setActive] = useState("pnl");
 
   const pnl = useApi(

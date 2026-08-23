@@ -5,9 +5,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
-import { dashboardApi } from "@/lib/api/endpoints";
+import { useCompanyContext } from "@/lib/company-context";
+import { dashboardApi, quickbooksApi } from "@/lib/api/endpoints";
 import { useApi } from "@/lib/api/hooks";
-import { AlertTriangle, Loader2, RefreshCw } from "lucide-react";
+import { AlertTriangle, Loader2, RefreshCw, Wifi, WifiOff } from "lucide-react";
 
 function fmt(n: unknown) {
   const v = Number(n);
@@ -26,7 +27,15 @@ const REPORT_SLUGS = [
 
 export default function TaxPage() {
   const { user } = useAuth();
-  const companyId = user?.companyId ?? "";
+  const { selectedCompanyId, selectedCompanyQuickbooksConnected } = useCompanyContext();
+  const companyId = selectedCompanyId ?? user?.companyId ?? "";
+
+  const qbStatus = useApi(
+    () => companyId ? quickbooksApi.status(companyId) : Promise.resolve(null),
+    [companyId], { skip: !companyId },
+  );
+  const isConnected = qbStatus.data?.connected === true || selectedCompanyQuickbooksConnected === true;
+  const isConfirmedDisconnected = selectedCompanyQuickbooksConnected === false && qbStatus.data?.connected === false;
 
   const kpis = useApi(
     () => companyId ? dashboardApi.kpis(companyId) : Promise.resolve(null),
@@ -59,8 +68,19 @@ export default function TaxPage() {
       <div className="p-4 sm:p-6 lg:p-8 space-y-6">
 
         {!companyId && (
-          <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-700 text-sm">
-            No company linked. Connect a QuickBooks company to view tax data.
+          <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-700 text-sm flex items-center gap-2">
+            <WifiOff className="w-4 h-4 shrink-0" /> No company linked. Go to Clients to connect a QuickBooks company.
+          </div>
+        )}
+        {companyId && isConnected && (
+          <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm flex items-center gap-2">
+            <Wifi className="w-4 h-4" /> QuickBooks connected
+            {qbStatus.data?.lastSyncAt && <span className="text-emerald-600">· Last sync {new Date(qbStatus.data.lastSyncAt).toLocaleDateString()}</span>}
+          </div>
+        )}
+        {companyId && isConfirmedDisconnected && !qbStatus.loading && (
+          <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-700 text-sm flex items-center gap-2">
+            <WifiOff className="w-4 h-4" /> QuickBooks not connected for this company.
           </div>
         )}
 

@@ -49,6 +49,7 @@ export function DashboardSidebar({ navigation, product }: SidebarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
   const [showProductSwitcher, setShowProductSwitcher] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
 
   useEffect(() => {
     const handler = () => setMobileOpen((prev) => !prev);
@@ -63,34 +64,49 @@ export function DashboardSidebar({ navigation, product }: SidebarProps) {
   };
 
   const sidebarContent = (
-    <div className="flex flex-col h-full bg-white dark:bg-[#080d1a]/95 dark:backdrop-blur-xl border-r border-navy/4 dark:border-white/4">
+    <div className={cn("flex flex-col h-full bg-white dark:bg-[#080d1a]/95 dark:backdrop-blur-xl border-r border-navy/4 dark:border-white/4 transition-all duration-300", collapsed ? "w-[60px]" : "w-68")}>
       {/* Logo & Brand */}
-      <div className="px-5 py-5 border-b border-navy/5">
-        <Link href="/" className="flex items-center gap-3 group">
-          <div className="relative">
-            <Image src="/logo.png" alt="Harava" width={36} height={36} className="w-9 h-9 rounded-xl object-cover ring-1 ring-navy/6" />
-            <div className="absolute -inset-1 bg-linear-to-br from-gold/20 to-navy-brand/10 rounded-xl blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-          </div>
-          <div className="flex items-baseline gap-0.5">
-            <span className="font-bold text-navy text-[18px] tracking-tight">Harava</span>
-            <span className="text-gold text-lg font-light">.</span>
-          </div>
-        </Link>
+      <div className={cn("border-b border-navy/5 flex items-center", collapsed ? "px-3 py-5 justify-center" : "px-5 py-5 justify-between")}>
+        {!collapsed && (
+          <Link href="/" className="flex items-center gap-3 group">
+            <div className="relative">
+              <Image src="/logo.png" alt="Harava" width={36} height={36} className="w-9 h-9 rounded-xl object-cover ring-1 ring-navy/6" />
+              <div className="absolute -inset-1 bg-linear-to-br from-gold/20 to-navy-brand/10 rounded-xl blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            </div>
+            <div className="flex items-baseline gap-0.5">
+              <span className="font-bold text-navy text-[18px] tracking-tight">Harava</span>
+              <span className="text-gold text-lg font-light">.</span>
+            </div>
+          </Link>
+        )}
+        {collapsed && (
+          <Link href="/" className="relative group">
+            <Image src="/logo.png" alt="Harava" width={32} height={32} className="w-8 h-8 rounded-xl object-cover ring-1 ring-navy/6" />
+          </Link>
+        )}
+        <button
+          onClick={() => setCollapsed(!collapsed)}
+          className={cn("p-1.5 rounded-lg text-navy/30 hover:bg-navy/5 hover:text-navy/60 transition-all", collapsed && "mt-0")}
+          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+        >
+          <ChevronDown className={cn("w-3.5 h-3.5 transition-transform duration-300", collapsed ? "-rotate-90" : "rotate-90")} />
+        </button>
       </div>
 
       {/* Product Switcher */}
-      <div className="px-4 py-3 border-b border-navy/5 relative">
+      <div className={cn("py-3 border-b border-navy/5 relative", collapsed ? "px-2" : "px-4")}>
         <button
           onClick={() => setShowProductSwitcher(!showProductSwitcher)}
-          className="w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl transition-all duration-300 bg-navy/2 hover:bg-navy/4 border border-navy/5 hover:border-navy/8"
+          className={cn("w-full flex items-center gap-2 rounded-xl transition-all duration-300 bg-navy/2 hover:bg-navy/4 border border-navy/5 hover:border-navy/8", collapsed ? "justify-center p-2" : "justify-between px-3 py-2.5")}
+          title={collapsed ? productConfig[product].name : undefined}
         >
           <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-lg overflow-hidden bg-white dark:bg-white/10 flex items-center justify-center shadow-sm ring-1 ring-navy/6 dark:ring-white/10">
+            <div className="w-7 h-7 rounded-lg overflow-hidden bg-white dark:bg-white/10 flex items-center justify-center shadow-sm ring-1 ring-navy/6 dark:ring-white/10 shrink-0">
               <Image src={productConfig[product].logo} alt={productConfig[product].name} width={28} height={28} className="w-6 h-6 object-contain" />
             </div>
-            <span className="text-sm font-semibold text-navy tracking-tight">{productConfig[product].name}</span>
+            {!collapsed && <span className="text-sm font-semibold text-navy tracking-tight">{productConfig[product].name}</span>}
           </div>
-          <ChevronDown className={cn("w-3.5 h-3.5 text-navy/40 transition-transform duration-300", showProductSwitcher && "rotate-180")} />
+          {!collapsed && <ChevronDown className={cn("w-3.5 h-3.5 text-navy/40 transition-transform duration-300", showProductSwitcher && "rotate-180")} />}
         </button>
 
         {showProductSwitcher && (
@@ -118,11 +134,28 @@ export function DashboardSidebar({ navigation, product }: SidebarProps) {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
+      <nav className={cn("flex-1 overflow-y-auto py-4 space-y-0.5", collapsed ? "px-2" : "px-3")}>
         {navigation.map((item) => {
           const isActive = pathname === item.href || (item.href !== `/${product}` && pathname.startsWith(item.href));
           const isExpanded = expandedItems.includes(item.title);
           const Icon = item.icon;
+
+          if (collapsed) {
+            return (
+              <Link
+                key={item.title}
+                href={item.href}
+                title={item.title}
+                onClick={() => setMobileOpen(false)}
+                className={cn(
+                  "flex items-center justify-center w-full p-2.5 rounded-xl transition-all duration-200",
+                  isActive ? "bg-gold/10 text-gold" : "text-navy/35 hover:bg-navy/5 hover:text-navy/60"
+                )}
+              >
+                <Icon className="w-4.5 h-4.5" />
+              </Link>
+            );
+          }
 
           return (
             <div key={item.title}>
@@ -183,53 +216,60 @@ export function DashboardSidebar({ navigation, product }: SidebarProps) {
       </nav>
 
       {/* Bottom Actions */}
-      <div className="px-3 py-3 border-t border-navy/5 space-y-0.5">
+      <div className={cn("py-3 border-t border-navy/5 space-y-0.5", collapsed ? "px-2" : "px-3")}>
         <Link
           href={`/${product}/ai-chat`}
           onClick={() => setMobileOpen(false)}
-          className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[13px] text-gold-dark/70 hover:bg-gold/5 hover:text-gold-dark transition-all duration-200 group"
+          title="AI Assistant"
+          className={cn("flex items-center rounded-xl text-[13px] text-gold-dark/70 hover:bg-gold/5 hover:text-gold-dark transition-all duration-200 group", collapsed ? "justify-center p-2.5" : "gap-2.5 px-3 py-2.5")}
         >
-          <div className="w-7 h-7 rounded-lg bg-linear-to-br from-gold/10 to-gold/5 flex items-center justify-center group-hover:from-gold/15 group-hover:to-gold/10 transition-all">
+          <div className="w-7 h-7 rounded-lg bg-linear-to-br from-gold/10 to-gold/5 flex items-center justify-center group-hover:from-gold/15 group-hover:to-gold/10 transition-all shrink-0">
             <Sparkles className="w-3.5 h-3.5 text-gold" />
           </div>
-          <span className="font-medium">AI Assistant</span>
+          {!collapsed && <span className="font-medium">AI Assistant</span>}
         </Link>
         <Link
           href={`/${product}/notifications`}
           onClick={() => setMobileOpen(false)}
-          className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[13px] text-navy/55 hover:bg-navy/3 hover:text-navy/75 transition-all duration-200"
+          title="Notifications"
+          className={cn("flex items-center rounded-xl text-[13px] text-navy/55 hover:bg-navy/3 hover:text-navy/75 transition-all duration-200", collapsed ? "justify-center p-2.5" : "gap-2.5 px-3 py-2.5")}
         >
-          <Bell className="w-4.5 h-4.5 text-navy/35" />
-          <span className="font-medium">Notifications</span>
+          <Bell className="w-4.5 h-4.5 text-navy/35 shrink-0" />
+          {!collapsed && <span className="font-medium">Notifications</span>}
         </Link>
         <Link
           href={`/${product}/profile`}
           onClick={() => setMobileOpen(false)}
-          className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[13px] text-navy/55 hover:bg-navy/3 hover:text-navy/75 transition-all duration-200"
+          title="Profile"
+          className={cn("flex items-center rounded-xl text-[13px] text-navy/55 hover:bg-navy/3 hover:text-navy/75 transition-all duration-200", collapsed ? "justify-center p-2.5" : "gap-2.5 px-3 py-2.5")}
         >
-          <User className="w-4.5 h-4.5 text-navy/35" />
-          <span className="font-medium">Profile</span>
+          <User className="w-4.5 h-4.5 text-navy/35 shrink-0" />
+          {!collapsed && <span className="font-medium">Profile</span>}
         </Link>
         <button
           onClick={logout}
-          className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[13px] text-red-400 hover:bg-red-50 hover:text-red-600 transition-all duration-200"
+          title="Sign Out"
+          className={cn("w-full flex items-center rounded-xl text-[13px] text-red-400 hover:bg-red-50 hover:text-red-600 transition-all duration-200", collapsed ? "justify-center p-2.5" : "gap-2.5 px-3 py-2.5")}
         >
-          <LogOut className="w-4.5 h-4.5" />
-          <span className="font-medium">Sign Out</span>
+          <LogOut className="w-4.5 h-4.5 shrink-0" />
+          {!collapsed && <span className="font-medium">Sign Out</span>}
         </button>
       </div>
 
       {/* User Card */}
       {user && (
-        <div className="px-4 py-4 border-t border-navy/5">
-          <div className="flex items-center gap-3 p-2.5 rounded-xl bg-linear-to-r from-navy/2 to-gold/2">
-            <div className="w-9 h-9 rounded-xl bg-linear-to-br from-navy-brand to-navy-brand-light flex items-center justify-center text-white text-[11px] font-bold shadow-sm ring-2 ring-white dark:ring-white/10">
+        <div className={cn("border-t border-navy/5", collapsed ? "px-2 py-3" : "px-4 py-4")}>
+          <div className={cn("flex items-center p-2.5 rounded-xl bg-linear-to-r from-navy/2 to-gold/2", collapsed ? "justify-center" : "gap-3")}>
+            <div className="w-9 h-9 rounded-xl bg-linear-to-br from-navy-brand to-navy-brand-light flex items-center justify-center text-white text-[11px] font-bold shadow-sm ring-2 ring-white dark:ring-white/10 shrink-0"
+              title={collapsed ? `${user.firstName} ${user.lastName}` : undefined}>
               {user.firstName[0]}{user.lastName[0]}
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-[13px] font-semibold text-navy truncate">{user.firstName} {user.lastName}</p>
-              <p className="text-[11px] text-navy/40 truncate">{ROLE_LABELS[user.role]}</p>
-            </div>
+            {!collapsed && (
+              <div className="flex-1 min-w-0">
+                <p className="text-[13px] font-semibold text-navy truncate">{user.firstName} {user.lastName}</p>
+                <p className="text-[11px] text-navy/40 truncate">{ROLE_LABELS[user.role]}</p>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -246,7 +286,8 @@ export function DashboardSidebar({ navigation, product }: SidebarProps) {
       )}
       <aside
         className={cn(
-          "fixed lg:static inset-y-0 left-0 z-40 w-68 bg-white dark:bg-[#080d1a]/95 dark:backdrop-blur-xl border-r border-navy/5 dark:border-white/4 transform transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] lg:transform-none shadow-(--shadow-xl) lg:shadow-none",
+          "fixed lg:sticky lg:top-0 lg:h-screen lg:shrink-0 inset-y-0 left-0 z-40 bg-white dark:bg-[#080d1a]/95 dark:backdrop-blur-xl border-r border-navy/5 dark:border-white/4 transform transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] lg:transform-none shadow-(--shadow-xl) lg:shadow-none",
+          collapsed ? "w-[60px]" : "w-68",
           mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         )}
       >

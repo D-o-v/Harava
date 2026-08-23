@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { apiRequest } from "@/lib/api/client";
 
 export default function QuickBooksCallbackPage() {
   const router = useRouter();
@@ -15,17 +14,18 @@ export default function QuickBooksCallbackPage() {
     const decoded = decodeURIComponent(raw.replace(/&amp;/g, "&"));
     const urlParams = new URLSearchParams(decoded.startsWith("?") ? decoded.slice(1) : decoded);
 
-    const code = urlParams.get("code");
-    const state = urlParams.get("state");
-    const realmId = urlParams.get("realmId");
-    const error = urlParams.get("error");
-    const result = urlParams.get("status") || urlParams.get("result");
+    const result = urlParams.get("status") || urlParams.get("result") || (urlParams.get("success") === "true" ? "success" : null);
     const resultMessage = urlParams.get("message");
 
     if (result === "success" || result === "connected") {
       setStatus("success");
       setMessage(resultMessage || "QuickBooks connected successfully!");
-      setTimeout(() => router.push("/finsight"), 2000);
+      if (window.opener && !window.opener.closed) {
+        window.opener.postMessage({ type: "harava:quickbooks-connected" }, window.location.origin);
+        setTimeout(() => window.close(), 600);
+      } else {
+        setTimeout(() => router.push("/finsight/clients"), 2000);
+      }
       return;
     }
 
@@ -35,31 +35,14 @@ export default function QuickBooksCallbackPage() {
       return;
     }
 
-    if (error) {
+    if (urlParams.get("error")) {
       setStatus("error");
       setMessage("QuickBooks authorization was denied.");
       return;
     }
 
-    if (!code || !realmId) {
-      setStatus("error");
-      setMessage("Invalid callback — missing code or realmId.");
-      return;
-    }
-
-    apiRequest("/api/v1/quickbooks/callback", {
-      method: "POST",
-      body: { code, state, realmId },
-    })
-      .then(() => {
-        setStatus("success");
-        setMessage("QuickBooks connected successfully!");
-        setTimeout(() => router.push("/finsight"), 2000);
-      })
-      .catch((err: Error) => {
-        setStatus("error");
-        setMessage(err.message || "Failed to complete QuickBooks connection.");
-      });
+    setStatus("error");
+    setMessage("QuickBooks connection did not complete.");
   }, [router]);
 
   return (
@@ -90,8 +73,8 @@ export default function QuickBooksCallbackPage() {
               </svg>
             </div>
             <p className="text-gray-800 font-medium">{message}</p>
-            <button onClick={() => router.push("/finsight")} className="text-sm text-navy underline">
-              Back to dashboard
+            <button onClick={() => router.push("/finsight/clients")} className="text-sm text-navy underline">
+              Back to clients
             </button>
           </>
         )}

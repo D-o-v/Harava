@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { useToast } from "@/lib/toast";
+import { useAuth } from "@/lib/auth";
+import { useCompanyContext } from "@/lib/company-context";
 import { payrollApi, type PayrollRun, type PayrollEmployee } from "@/lib/api/endpoints";
 import { useApi, useMutation } from "@/lib/api/hooks";
 import { DollarSign, Users, Calendar, Plus, Loader2, RefreshCw, CheckCircle, XCircle, Play, Download } from "lucide-react";
@@ -27,14 +29,24 @@ function fmt(n: number | undefined) {
 
 export default function PayrollPage() {
   const { toast } = useToast();
+  const { user } = useAuth();
+  const { selectedCompanyId } = useCompanyContext();
+  const companyId = selectedCompanyId ?? user?.companyId ?? undefined;
   const [createModal, setCreateModal] = useState(false);
+  const [employeeModal, setEmployeeModal] = useState(false);
   const [form, setForm] = useState({ label: "", periodStart: "", periodEnd: "", currency: "NGN" });
+  const [employeeForm, setEmployeeForm] = useState({ fullName: "", email: "", jobTitle: "", bankName: "", bankAccountNumber: "", baseSalary: "", currency: "NGN" });
 
-  const runs = useApi(() => payrollApi.listRuns(), []);
+  const runs = useApi(() => payrollApi.listRuns(companyId ? { companyId } : {}), [companyId]);
   const pending = useApi(() => payrollApi.pendingApproval(), []);
-  const employees = useApi(() => payrollApi.listEmployees(), []);
+  const employees = useApi(() => payrollApi.listEmployees(companyId ? { companyId } : {}), [companyId]);
 
-  const createMut = useMutation(() => payrollApi.createRun(form));
+  const createMut = useMutation(() => payrollApi.createRun({ ...form, ...(companyId ? { companyId } : {}) }));
+  const createEmployeeMut = useMutation(() => payrollApi.createEmployee({
+    ...employeeForm,
+    baseSalary: Number(employeeForm.baseSalary),
+    ...(companyId ? { companyId } : {}),
+  }));
   const submitMut = useMutation((id: string) => payrollApi.submit(id));
   const approveMut = useMutation((id: string) => payrollApi.approve(id));
   const rejectMut = useMutation((id: string) => payrollApi.reject(id, "Rejected via portal"));
@@ -50,6 +62,19 @@ export default function PayrollPage() {
       runs.refetch();
     } catch (e) {
       toast(e instanceof Error ? e.message : "Failed", "error");
+    }
+  };
+
+  const handleCreateEmployee = async () => {
+    if (!employeeForm.fullName || !employeeForm.baseSalary || Number(employeeForm.baseSalary) <= 0) return;
+    try {
+      await createEmployeeMut.mutate();
+      toast("Employee added to payroll", "success");
+      setEmployeeModal(false);
+      setEmployeeForm({ fullName: "", email: "", jobTitle: "", bankName: "", bankAccountNumber: "", baseSalary: "", currency: "NGN" });
+      employees.refetch();
+    } catch (e) {
+      toast(e instanceof Error ? e.message : "Could not add employee", "error");
     }
   };
 
@@ -82,6 +107,11 @@ export default function PayrollPage() {
     <div>
       <DashboardHeader title="Payroll" subtitle="Manage payroll runs and employee compensation" />
       <div className="p-4 sm:p-6 lg:p-8 space-y-6">
+        {companyId && (
+          <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-[12px] font-medium">
+            <div className="w-2 h-2 rounded-full bg-emerald-500" /> Showing payroll for company {companyId.slice(0, 8)}…
+          </div>
+        )}
 
         {/* KPIs */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -213,7 +243,12 @@ export default function PayrollPage() {
 
         {/* Employees */}
         <Card>
-          <CardHeader><CardTitle>Employees ({empList.length})</CardTitle></CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between gap-3">
+            <CardTitle>Employees ({empList.length})</CardTitle>
+            <Button variant="primary" size="sm" onClick={() => setEmployeeModal(true)}>
+              <Plus className="w-3.5 h-3.5" /> Add employee
+            </Button>
+          </CardHeader>
           <CardContent className="p-0">
             <div className="overflow-x-auto">
                 <table className="w-full text-sm">
@@ -273,6 +308,48 @@ export default function PayrollPage() {
             <Button variant="ghost" onClick={() => setCreateModal(false)}>Cancel</Button>
             <Button variant="primary" onClick={handleCreate} disabled={createMut.loading || !form.periodStart || !form.periodEnd}>
               {createMut.loading ? <><Loader2 className="w-4 h-4 animate-spin" /> Creating…</> : "Create Run"}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal isOpen={employeeModal} onClose={() => setEmployeeModal(false)} title="Add Employee">
+        <div className="space-y-4">
+          <p className="text-[12px] text-navy/45">This employee will be added to the currently selected company&apos;s payroll.</p>
+          <div className="grid sm:grid-cols-2 gap-3">
+            <div className="sm:col-span-2">
+              <label className="text-[12px] font-medium text-navy/60 block mb-1.5">Full name</label>
+              <input value={employeeForm.fullName} onChange={(e) => setEmployeeForm({ ...employeeForm, fullName: e.target.value })} placeholder="Ada Obi" className="w-full border border-navy/10 rounded-xl px-3 py-2.5 text-sm" />
+            </div>
+            <div>
+              <label className="text-[12px] font-medium text-navy/60 block mb-1.5">Email</label>
+              <input type="email" value={employeeForm.email} onChange={(e) => setEmployeeForm({ ...employeeForm, email: e.target.value })} placeholder="ada@company.com" className="w-full border border-navy/10 rounded-xl px-3 py-2.5 text-sm" />
+            </div>
+            <div>
+              <label className="text-[12px] font-medium text-navy/60 block mb-1.5">Job title</label>
+              <input value={employeeForm.jobTitle} onChange={(e) => setEmployeeForm({ ...employeeForm, jobTitle: e.target.value })} placeholder="Payroll Officer" className="w-full border border-navy/10 rounded-xl px-3 py-2.5 text-sm" />
+            </div>
+            <div>
+              <label className="text-[12px] font-medium text-navy/60 block mb-1.5">Base salary</label>
+              <input type="number" min="0" value={employeeForm.baseSalary} onChange={(e) => setEmployeeForm({ ...employeeForm, baseSalary: e.target.value })} placeholder="400000" className="w-full border border-navy/10 rounded-xl px-3 py-2.5 text-sm" />
+            </div>
+            <div>
+              <label className="text-[12px] font-medium text-navy/60 block mb-1.5">Currency</label>
+              <input value={employeeForm.currency} onChange={(e) => setEmployeeForm({ ...employeeForm, currency: e.target.value.toUpperCase() })} maxLength={3} placeholder="NGN" className="w-full border border-navy/10 rounded-xl px-3 py-2.5 text-sm" />
+            </div>
+            <div>
+              <label className="text-[12px] font-medium text-navy/60 block mb-1.5">Bank name</label>
+              <input value={employeeForm.bankName} onChange={(e) => setEmployeeForm({ ...employeeForm, bankName: e.target.value })} placeholder="Access Bank" className="w-full border border-navy/10 rounded-xl px-3 py-2.5 text-sm" />
+            </div>
+            <div>
+              <label className="text-[12px] font-medium text-navy/60 block mb-1.5">Account number</label>
+              <input value={employeeForm.bankAccountNumber} onChange={(e) => setEmployeeForm({ ...employeeForm, bankAccountNumber: e.target.value })} placeholder="0123456789" className="w-full border border-navy/10 rounded-xl px-3 py-2.5 text-sm" />
+            </div>
+          </div>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="ghost" onClick={() => setEmployeeModal(false)}>Cancel</Button>
+            <Button variant="primary" onClick={handleCreateEmployee} disabled={createEmployeeMut.loading || !employeeForm.fullName || !employeeForm.baseSalary}>
+              {createEmployeeMut.loading ? <><Loader2 className="w-4 h-4 animate-spin" /> Adding…</> : "Add employee"}
             </Button>
           </div>
         </div>

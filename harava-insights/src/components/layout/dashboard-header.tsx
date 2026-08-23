@@ -27,7 +27,7 @@ export function DashboardHeader({ title, subtitle }: DashboardHeaderProps) {
     : "finsight";
 
   return (
-    <header className="sticky top-0 z-30 h-16 border-b border-navy/5 dark:border-white/4 bg-white/80 dark:bg-[#080d1a]/80 backdrop-blur-xl flex items-center justify-between px-4 sm:px-6 gap-3">
+    <header className="sticky top-[var(--dashboard-header-offset,0px)] z-30 h-16 border-b border-navy/5 dark:border-white/4 bg-white/80 dark:bg-[#080d1a]/80 backdrop-blur-xl flex items-center justify-between px-4 sm:px-6 gap-3">
       {/* Left: Hamburger + Title */}
       <div className="flex items-center gap-3 min-w-0 flex-1">
         <button

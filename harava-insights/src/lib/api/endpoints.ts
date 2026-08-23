@@ -17,6 +17,9 @@ export interface LoginResponse {
     tokens?: { accessToken?: string; refreshToken?: string };
     user?: UserProfile;
     tenant?: { id: string; slug: string; name: string };
+    company?: { id: string; name: string } | null;
+    roles?: string[];
+    permissions?: string[];
   };
   mfaRequired?: boolean;
   mfaToken?: string;
@@ -24,6 +27,9 @@ export interface LoginResponse {
   mfaChannels?: string[];
   scope?: "STAFF" | "CLIENT" | "PLATFORM";
   user?: UserProfile;
+  roles?: string[];
+  permissions?: string[];
+  company?: { id: string; name: string } | null;
 }
 
 export interface UserProfile {
@@ -180,6 +186,8 @@ export const platformApi = {
 
 export const accountApi = {
   me: () => apiRequest<UserProfile>("/api/v1/account/me"),
+  permissions: () =>
+    apiRequest<{ roles: string[]; permissions: string[] }>("/api/v1/account/permissions"),
   updateProfile: (payload: { firstName?: string; lastName?: string; phoneNumber?: string }) =>
     apiRequest<UserProfile>("/api/v1/account/me", { method: "PATCH", body: payload }),
   changePassword: (currentPassword: string, newPassword: string) =>

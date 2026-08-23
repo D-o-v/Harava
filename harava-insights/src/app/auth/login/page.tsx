@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { Loader2, ArrowRight, ShieldCheck, Mail, Smartphone } from "lucide-react";
+import { Loader2, ArrowRight, ShieldCheck, Mail, Smartphone, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { GlobePanel } from "@/components/auth/globe-panel";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
@@ -17,6 +17,7 @@ const ENABLE_DEMO = process.env.NEXT_PUBLIC_ENABLE_DEMO_LOGIN === "true";
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -99,8 +100,18 @@ export default function LoginPage() {
                 </div>
                 <div className="space-y-1.5">
                   <label className="block text-[13px] font-medium text-navy/60">Password</label>
-                  <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required
-                    className="w-full bg-white border-[1.5px] border-navy/8 rounded-xl px-4 py-3 text-sm text-navy focus:ring-[3px] focus:ring-gold/8 focus:border-gold outline-none" />
+                  <div className="relative">
+                    <input type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required
+                      className="w-full bg-white border-[1.5px] border-navy/8 rounded-xl px-4 py-3 pr-11 text-sm text-navy focus:ring-[3px] focus:ring-gold/8 focus:border-gold outline-none" />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((visible) => !visible)}
+                      aria-label={showPassword ? "Hide password" : "Show password"}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-navy/35 hover:text-navy focus:outline-none focus:ring-2 focus:ring-gold/30"
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
                 </div>
                 <div className="flex items-center justify-between">
                   <label className="flex items-center gap-2 cursor-pointer">

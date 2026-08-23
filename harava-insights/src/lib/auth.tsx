@@ -48,12 +48,14 @@ type LoginResult =
 
 interface AuthContextType {
   user: User | null;
+  permissions: Set<string>;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<LoginResult>;
   verifyMfa: (mfaToken: string, code: string) => Promise<LoginResult>;
   finalizeFromLoginResponse: (res: LoginResponse, scope: TokenScope) => Promise<User | null>;
   logout: () => void;
   hasAccess: (product: string) => boolean;
+  can: (permission: string) => boolean;
   refreshMe: () => Promise<void>;
 }
 
@@ -63,6 +65,8 @@ const PUBLIC_ROUTES = ["/", "/auth/login", "/auth/register", "/auth/forgot-passw
 
 function toUser(profile: UserProfile, scope: TokenScope): User {
   const rawRole = (profile.role || profile.roles?.[0] || "").toLowerCase();
+  const allRoles = (profile.roles ?? (profile.role ? [profile.role] : [])).map(r => r.toLowerCase());
+  const hasRole = (s: string) => allRoles.some(r => r.includes(s)) || rawRole.includes(s);
   let role: UserRole = "learner";
   let products: string[] = [];
   if (scope === "platform") {
@@ -72,13 +76,13 @@ function toUser(profile: UserProfile, scope: TokenScope): User {
     role = "corporate_admin";
     products = ["finsight"];
   } else {
-    if (rawRole.includes("owner") || rawRole.includes("super")) role = "super_admin";
-    else if (rawRole.includes("admin")) role = "corporate_admin";
-    else if (rawRole.includes("consult")) role = "consultant";
-    else if (rawRole.includes("account")) role = "accountant";
+    if (hasRole("owner") || hasRole("super") || hasRole("platform")) role = "super_admin";
+    else if (hasRole("admin")) role = "corporate_admin";
+    else if (hasRole("consult")) role = "consultant";
+    else if (hasRole("account")) role = "accountant";
     else role = "accountant";
+    // Tenant staff always only get finsight — they are NOT platform admins
     products = ["finsight"];
-    if (role === "super_admin") products = ["admin", "finsight", "accrediai", "proed"];
   }
   return {
     id: profile.id,
@@ -95,15 +99,24 @@ function toUser(profile: UserProfile, scope: TokenScope): User {
   };
 }
 
+// Platform admin gets all permissions by default
+const PLATFORM_PERMISSIONS = new Set([
+  "company.read","company.manage","insights.view","quickbooks.read","quickbooks.manage",
+  "staff.read","staff.invite","staff.manage","company_user.read","company_user.invite",
+  "company_user.manage","broadcast.send","audit.view","payroll.read","payroll.manage",
+  "payroll.approve","payroll.pay","payroll.config",
+  "portal.dashboard.view","portal.reports.view","portal.transactions.view",
+]);
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [permissions, setPermissions] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
   const pathname = usePathname();
 
   const loadMeFor = useCallback(async (scope: TokenScope): Promise<User | null> => {
     try {
-      // Platform admin has no /account/me — build user from JWT directly
       if (scope === "platform") {
         const tok = tokens.get("platform");
         const payload = tok.access ? decodeJwt(tok.access) : null;
@@ -118,6 +131,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           scope: "platform",
         };
         setUser(u);
+        setPermissions(PLATFORM_PERMISSIONS);
         return u;
       }
       let profile: UserProfile;
@@ -125,13 +139,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       else profile = await accountApi.me();
       const u = toUser(profile, scope);
       setUser(u);
+      // Fetch permissions from server
+      try {
+        const permsData = await accountApi.permissions();
+        setPermissions(new Set(permsData.permissions ?? []));
+      } catch {
+        setPermissions(new Set());
+      }
       return u;
     } catch {
       return null;
     }
   }, []);
 
-  // Bootstrap from any stored active scope.
   useEffect(() => {
     (async () => {
       const active = tokens.getActive();
@@ -143,7 +163,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     })();
   }, [loadMeFor]);
 
-  // Auth guard.
   useEffect(() => {
     if (isLoading) return;
     const isPublic = PUBLIC_ROUTES.some((r) => pathname === r || pathname.startsWith(r + "/"));
@@ -157,11 +176,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!accessToken) return null;
       tokens.set(scope, accessToken, refreshToken);
       tokens.setActive(scope);
-      // If the login response already includes the user profile, skip the /me call
+      // Extract permissions from login response if present
+      const permsFromResponse = res.permissions ?? res.session?.permissions;
+      if (permsFromResponse) setPermissions(new Set(permsFromResponse));
       const profileFromResponse = res.user ?? res.session?.user;
       if (profileFromResponse) {
         const u = toUser(profileFromResponse, scope);
         setUser(u);
+        // If no permissions in response, fetch them
+        if (!permsFromResponse && scope !== "platform") {
+          try {
+            const permsData = await accountApi.permissions();
+            setPermissions(new Set(permsData.permissions ?? []));
+          } catch { /* ignore */ }
+        }
+        if (scope === "platform") setPermissions(PLATFORM_PERMISSIONS);
         return u;
       }
       return loadMeFor(scope);
@@ -172,36 +201,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = useCallback<AuthContextType["login"]>(
     async (email, password) => {
       try {
-        // Scope is derived from the host, never the UI:
-        //   subdomain present → tenant login (staff or client)
-        //   no subdomain      → platform-admin login
         const platform = isPlatformHost();
         if (!platform) {
-          // Ensure the tenantId is resolved before we hit /auth/login so
-          // the client can attach X-Tenant-ID automatically.
           const resolved = await resolveTenant();
-          if (!resolved) {
-            return { success: false, error: "Unknown workspace subdomain" };
-          }
+          if (!resolved) return { success: false, error: "Unknown workspace subdomain" };
         }
-
         const res = platform
           ? await platformApi.login(email, password)
           : await authApi.login(email, password);
-
         if (res.mfaRequired && res.mfaToken) {
           return { success: true, mfa: true, mfaToken: res.mfaToken, mfaMethod: res.mfaMethod, channels: res.mfaChannels };
         }
-
-        // Scope hint from the server; fall back to host-based guess.
         const scope: TokenScope = platform
           ? "platform"
-          : res.scope === "PLATFORM"
-            ? "platform"
-            : res.scope === "CLIENT"
-              ? "portal"
-              : "staff";
-
+          : res.scope === "PLATFORM" ? "platform"
+          : res.scope === "CLIENT" ? "portal"
+          : "staff";
         const u = await finalizeFromLoginResponse(res, scope);
         if (!u) return { success: false, error: "Session could not be loaded" };
         return { success: true };
@@ -234,19 +249,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         if (active === "platform") await platformApi.logout();
         else if (active) await authApi.logout();
-      } catch {
-        // ignore
-      }
+      } catch { /* ignore */ }
     })();
     tokens.clearAll();
     setUser(null);
+    setPermissions(new Set());
     router.replace("/auth/login");
   }, [router]);
 
   const hasAccess = (product: string) => {
     if (!user) return false;
-    if (user.role === "super_admin") return true;
+    // Platform admin sees all products
+    if (user.scope === "platform") return true;
+    // Tenant staff only see finsight
     return user.products.includes(product);
+  };
+
+  const can = (permission: string) => {
+    if (!user) return false;
+    if (user.scope === "platform") return true;
+    // Tenant owners and admins get full access within their tenant
+    if (user.scope === "staff" && (user.role === "super_admin" || user.role === "corporate_admin")) return true;
+    return permissions.has(permission);
   };
 
   const refreshMe = useCallback(async () => {
@@ -255,7 +279,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [loadMeFor]);
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, verifyMfa, finalizeFromLoginResponse, logout, hasAccess, refreshMe }}>
+    <AuthContext.Provider value={{ user, permissions, isLoading, login, verifyMfa, finalizeFromLoginResponse, logout, hasAccess, can, refreshMe }}>
       {children}
     </AuthContext.Provider>
   );

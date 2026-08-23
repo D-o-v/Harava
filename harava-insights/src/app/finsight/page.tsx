@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
+import { useCompanyContext } from "@/lib/company-context";
 import { dashboardApi, quickbooksApi } from "@/lib/api/endpoints";
 import { useApi } from "@/lib/api/hooks";
 import {
@@ -31,9 +32,8 @@ function pct(a: number, b: number) {
 export default function FinSightDashboard() {
   const router = useRouter();
   const { user } = useAuth();
-
-  // Use first company from QB status or fall back to user's companyId
-  const companyId = user?.companyId ?? "";
+  const { selectedCompanyId, selectedCompanyQuickbooksConnected } = useCompanyContext();
+  const companyId = selectedCompanyId ?? user?.companyId ?? "";
 
   const kpis = useApi(
     () => (companyId ? dashboardApi.kpis(companyId) : Promise.resolve(null)),
@@ -84,6 +84,16 @@ export default function FinSightDashboard() {
   const isLoading = kpis.loading || pnl.loading;
   const noCompany = !companyId;
 
+  // Platform admin with no company selected → send to clients picker
+  if (!isLoading && noCompany && user?.scope === "platform") {
+    router.replace("/finsight/clients");
+    return null;
+  }
+  const qbRaw = qbStatus.data as Record<string, unknown> | null;
+  const isQbConnected = qbRaw?.connected === true || String(qbRaw?.status).toUpperCase() === "CONNECTED" || selectedCompanyQuickbooksConnected === true;
+  const isConfirmedDisconnected = selectedCompanyQuickbooksConnected === false && !isQbConnected;
+  const qbLastSync = (qbRaw?.lastSyncAt ?? qbRaw?.lastSyncedAt) as string | undefined;
+
   if (isLoading) return <><DashboardHeader title={`Welcome back, ${user?.firstName || "User"}`} subtitle="Here's your financial overview" /><PageLoader message="Loading financial data…" /></>;
 
   const COLORS = ["#182954", "#C19B3F", "#4A9EFF", "#059669", "#64748b", "#f59e0b"];
@@ -97,23 +107,23 @@ export default function FinSightDashboard() {
 
       <div className="p-4 sm:p-6 lg:p-8 space-y-6 page-enter">
         {/* QB connection banner */}
-        {qbStatus.data && (
+        {qbStatus.data && (isQbConnected || isConfirmedDisconnected) && (
           <div className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium border ${
-            qbStatus.data.connected
+            isQbConnected
               ? "bg-emerald-50 border-emerald-200 text-emerald-700"
               : "bg-amber-50 border-amber-200 text-amber-700"
           }`}>
-            {qbStatus.data.connected
-              ? <><Wifi className="w-4 h-4" /> QuickBooks connected · Last sync {qbStatus.data.lastSyncAt ? new Date(qbStatus.data.lastSyncAt).toLocaleDateString() : "—"}</>
+            {isQbConnected
+              ? <><Wifi className="w-4 h-4" /> QuickBooks connected{qbLastSync ? ` · Last sync ${new Date(qbLastSync).toLocaleDateString()}` : ""}</>
               : <><WifiOff className="w-4 h-4" /> QuickBooks not connected — <button className="underline ml-1" onClick={() => router.push("/finsight/clients")}>connect now</button></>
             }
           </div>
         )}
 
-        {noCompany && (
-          <div className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium border bg-amber-50 border-amber-200 text-amber-700">
-            <AlertTriangle className="w-4 h-4" />
-            No company linked to your account. <button className="underline ml-1" onClick={() => router.push("/finsight/clients")}>Connect a client via QuickBooks</button>
+        {noCompany && user?.scope !== "platform" && (
+          <div className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium border bg-navy/4 border-navy/8 text-navy/60">
+            <AlertTriangle className="w-4 h-4 text-gold" />
+            No client selected. <button className="underline ml-1 font-semibold text-navy" onClick={() => router.push("/finsight/clients")}>Go to Clients to select a company</button>
           </div>
         )}
 
@@ -282,7 +292,7 @@ export default function FinSightDashboard() {
               {[
                 { label: "View Financial Reports", sub: "Income, balance sheet, cash flow", href: "/finsight/reports", badge: null },
                 { label: "Reconcile Accounts", sub: "Match transactions with bank statements", href: "/finsight/reconciliation", badge: null },
-                { label: "Manage Clients", sub: "Connect & manage QuickBooks companies", href: "/finsight/clients", badge: qbStatus.data?.connected ? "Connected" : "Setup needed" },
+                { label: "Manage Clients", sub: "Connect & manage QuickBooks companies", href: "/finsight/clients", badge: isQbConnected ? "Connected" : isConfirmedDisconnected ? "Setup needed" : "Checking connection" },
                 { label: "AI Intelligence", sub: "Insights, anomalies & forecasts", href: "/finsight/ai-intelligence", badge: "New" },
                 { label: "Financial News", sub: "Latest business & market headlines", href: "/finsight/news", badge: null },
               ].map((item) => (

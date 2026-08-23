@@ -30,7 +30,7 @@ export default function AccrediAILayout({ children }: { children: React.ReactNod
   return (
     <div className="flex h-screen overflow-hidden">
       <DashboardSidebar navigation={navigation} product="accrediai" />
-      <main className="relative flex-1 overflow-y-auto bg-background bg-premium-mesh">
+      <main className="relative min-w-0 flex-1 overflow-y-auto bg-background bg-premium-mesh">
         <LogoBackground product="accrediai" />
         <div className="relative z-10">{children}</div>
       </main>

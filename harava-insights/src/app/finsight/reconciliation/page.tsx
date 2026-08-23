@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/lib/toast";
 import { useAuth } from "@/lib/auth";
+import { useCompanyContext } from "@/lib/company-context";
 import { dashboardApi, quickbooksApi } from "@/lib/api/endpoints";
 import { useApi } from "@/lib/api/hooks";
 import { PageLoader, PageError } from "@/components/ui/page-loader";
@@ -19,7 +20,8 @@ function fmt(n: number) {
 export default function ReconciliationPage() {
   const { toast } = useToast();
   const { user } = useAuth();
-  const companyId = user?.companyId ?? "";
+  const { selectedCompanyId, selectedCompanyQuickbooksConnected } = useCompanyContext();
+  const companyId = selectedCompanyId ?? user?.companyId ?? "";
 
   const cashFlow = useApi(
     () => (companyId ? dashboardApi.cashFlow(companyId, 6) : Promise.resolve(null)),
@@ -36,6 +38,7 @@ export default function ReconciliationPage() {
 
   const cfPoints = (cashFlow.data as { points?: { period: string; inflow: number; outflow: number; net: number }[] } | null)?.points ?? [];
   const qb = qbStatus.data;
+  const isQbConnected = qb?.connected === true || selectedCompanyQuickbooksConnected === true;
   const entityList = (entities.data as { slug: string; name: string; count: number }[] | null) ?? [];
 
   if (cashFlow.loading || qbStatus.loading) return <><DashboardHeader title="Reconciliation" subtitle="Bank reconciliation and account matching" /><PageLoader message="Loading reconciliation data…" /></>;
@@ -56,8 +59,8 @@ export default function ReconciliationPage() {
             <CardContent className="p-5">
               <p className="text-[11px] text-navy/40 uppercase tracking-wider font-medium">QB Connection</p>
               <div className="flex items-center gap-2 mt-2">
-                <div className={`w-2.5 h-2.5 rounded-full ${qb?.connected ? "bg-emerald-500" : "bg-amber-400"}`} />
-                <p className="text-[15px] font-bold text-navy">{qb?.connected ? "Connected" : "Disconnected"}</p>
+                <div className={`w-2.5 h-2.5 rounded-full ${isQbConnected ? "bg-emerald-500" : "bg-amber-400"}`} />
+                <p className="text-[15px] font-bold text-navy">{isQbConnected ? "Connected" : "Disconnected"}</p>
               </div>
               {qb?.realmId && <p className="text-[11px] text-navy/35 mt-1">Realm: {qb.realmId}</p>}
             </CardContent>
@@ -150,7 +153,7 @@ export default function ReconciliationPage() {
           <CardContent>
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
               {[
-                { task: "Bank Reconciliation", status: qb?.connected ? "complete" : "pending" },
+                { task: "Bank Reconciliation", status: isQbConnected ? "complete" : "pending" },
                 { task: "AR Aging Review", status: "complete" },
                 { task: "AP Verification", status: "in-progress" },
                 { task: "Journal Entries", status: "pending" },
