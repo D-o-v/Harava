@@ -127,14 +127,14 @@ export default function ReconciliationPage() {
               <Badge variant="info" size="sm">{entityList.length} types</Badge>
             </CardHeader>
             <CardContent>
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
                 {entityList.map((e) => (
-                  <div key={e.slug} className="flex items-center justify-between p-3.5 border border-navy/5 rounded-xl">
+                  <div key={e.slug} className="flex items-center justify-between gap-2 px-3 py-2 border border-navy/5 rounded-lg">
                     <div>
-                      <p className="text-[13px] font-medium text-navy capitalize">{e.name}</p>
-                      <p className="text-[11px] text-navy/40 mt-0.5">{e.slug}</p>
+                      <p className="text-[11px] font-medium text-navy capitalize truncate">{e.name}</p>
+                      <p className="text-[10px] text-navy/40 mt-0.5">{e.slug}</p>
                     </div>
-                    <span className="text-[13px] font-bold text-navy">{e.count.toLocaleString()}</span>
+                    <span className="text-[12px] font-bold text-navy">{e.count.toLocaleString()}</span>
                   </div>
                 ))}
               </div>

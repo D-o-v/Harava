@@ -6,6 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/lib/toast";
+import { useAuth } from "@/lib/auth";
+import { PERMISSIONS } from "@/lib/permissions";
 import {
   Loader2, ArrowLeft, Link2, Unlink, RefreshCw,
   LayoutDashboard, TrendingUp, Waves, Scale, ArrowDownLeft,
@@ -49,6 +51,7 @@ export default function CompanyDetailPage({ params }: { params: Promise<{ id: st
   const { id } = use(params);
   const [tab, setTab] = useState<TabKey>("overview");
   const { toast } = useToast();
+  const { can } = useAuth();
 
   const company = useApi(() => companiesApi.get(id), [id]);
   const qbStatus = useApi(() => quickbooksApi.status(id), [id]);
@@ -88,7 +91,12 @@ export default function CompanyDetailPage({ params }: { params: Promise<{ id: st
           {/* Sidebar nav */}
           <aside className="w-52 shrink-0">
             <nav className="bg-white border border-navy/6 rounded-2xl p-2 space-y-0.5 sticky top-6">
-              {SIDEBAR_ITEMS.map(({ key, label, icon: Icon }) => (
+              {SIDEBAR_ITEMS.filter(({ key }) => {
+                if (key === "quickbooks") return can(PERMISSIONS.QUICKBOOKS_READ);
+                if (key === "users") return can(PERMISSIONS.COMPANY_USER_READ);
+                if (key === "payroll") return can(PERMISSIONS.PAYROLL_READ);
+                return can(PERMISSIONS.INSIGHTS_VIEW);
+              }).map(({ key, label, icon: Icon }) => (
                 <button
                   key={key}
                   onClick={() => setTab(key)}
@@ -133,6 +141,7 @@ export default function CompanyDetailPage({ params }: { params: Promise<{ id: st
                           <p className="text-[12px] text-navy/50">Last synced: {new Date(qbStatus.data.lastSyncAt).toLocaleString()}</p>
                         )}
                         <div className="flex gap-2">
+                          {can(PERMISSIONS.QUICKBOOKS_MANAGE) && <>
                           <Button variant="outline" size="sm" onClick={async () => {
                             try { const r = await reconnectMut.mutate(); if ((r as {authorizationUrl?:string}).authorizationUrl) window.open((r as {authorizationUrl:string}).authorizationUrl,"_blank"); }
                             catch (e) { toast(e instanceof Error ? e.message : "Failed", "error"); }
@@ -141,6 +150,7 @@ export default function CompanyDetailPage({ params }: { params: Promise<{ id: st
                             try { await disconnectMut.mutate(); toast("Disconnected", "success"); qbStatus.refetch(); }
                             catch (e) { toast(e instanceof Error ? e.message : "Failed", "error"); }
                           }}><Unlink className="w-3 h-3 text-red-500" /> Disconnect</Button>
+                          </>}
                           <Button variant="ghost" size="sm" onClick={() => qbStatus.refetch()}><Link2 className="w-3 h-3" /> Refresh</Button>
                         </div>
                       </>
@@ -590,18 +600,19 @@ function UsersTab({ companyId }: { companyId: string }) {
   const inviteMut = useMutation((email: string) => companiesApi.inviteUser(companyId, { email }));
   const [email, setEmail] = useState("");
   const { toast } = useToast();
+  const { can } = useAuth();
   return (
     <Card>
       <CardHeader><CardTitle>Company Users</CardTitle></CardHeader>
       <CardContent className="space-y-3">
-        <div className="flex gap-2">
+        {can(PERMISSIONS.COMPANY_USER_INVITE) && <div className="flex gap-2">
           <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="user@company.com" className="flex-1 border rounded-lg px-3 py-2 text-sm" />
           <Button variant="primary" size="sm" onClick={async () => {
             try { await inviteMut.mutate(email); toast("Invitation sent", "success"); setEmail(""); users.refetch(); }
 
             catch (e) { toast(e instanceof Error ? e.message : "Failed", "error"); }
           }} disabled={!email || inviteMut.loading}>Invite</Button>
-        </div>
+        </div>}
         {users.loading ? <Loader2 className="w-4 h-4 animate-spin" /> : (
           <table className="w-full text-sm">
             <tbody className="divide-y">
@@ -626,6 +637,7 @@ const STATUS_VARIANT: Record<string, "default" | "warning" | "success" | "error"
 
 function PayrollTab({ companyId }: { companyId: string }) {
   const { toast } = useToast();
+  const { can } = useAuth();
   const [createModal, setCreateModal] = useState(false);
   const [form, setForm] = useState({ label: "", periodStart: "", periodEnd: "", currency: "USD" });
 
@@ -669,9 +681,9 @@ function PayrollTab({ companyId }: { companyId: string }) {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Payroll Runs</CardTitle>
-          <Button variant="primary" size="sm" onClick={() => setCreateModal(true)}>
+          {can(PERMISSIONS.PAYROLL_MANAGE) && <Button variant="primary" size="sm" onClick={() => setCreateModal(true)}>
             <Plus className="w-3.5 h-3.5" /> New Run
-          </Button>
+          </Button>}
         </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
@@ -696,9 +708,9 @@ function PayrollTab({ companyId }: { companyId: string }) {
                     <td className="px-4 py-3 text-center"><Badge variant={STATUS_VARIANT[r.status] ?? "default"} size="sm">{r.status}</Badge></td>
                     <td className="px-4 py-3 text-right">
                       <div className="flex items-center justify-end gap-1">
-                        {r.status === "DRAFT" && <Button variant="ghost" size="xs" onClick={() => act(() => submitMut.mutate(r.id), "Submitted")}><Play className="w-3 h-3" /> Submit</Button>}
-                        {r.status === "PENDING_APPROVAL" && <Button variant="primary" size="xs" onClick={() => act(() => approveMut.mutate(r.id), "Approved")}><CheckCircle className="w-3 h-3" /> Approve</Button>}
-                        {r.status === "APPROVED" && <Button variant="primary" size="xs" onClick={() => act(() => payMut.mutate(r.id), "Marked paid")}><CheckCircle className="w-3 h-3" /> Mark Paid</Button>}
+                        {can(PERMISSIONS.PAYROLL_MANAGE) && r.status === "DRAFT" && <Button variant="ghost" size="xs" onClick={() => act(() => submitMut.mutate(r.id), "Submitted")}><Play className="w-3 h-3" /> Submit</Button>}
+                        {can(PERMISSIONS.PAYROLL_APPROVE) && r.status === "PENDING_APPROVAL" && <Button variant="primary" size="xs" onClick={() => act(() => approveMut.mutate(r.id), "Approved")}><CheckCircle className="w-3 h-3" /> Approve</Button>}
+                        {can(PERMISSIONS.PAYROLL_PAY) && r.status === "APPROVED" && <Button variant="primary" size="xs" onClick={() => act(() => payMut.mutate(r.id), "Marked paid")}><CheckCircle className="w-3 h-3" /> Mark Paid</Button>}
                       </div>
                     </td>
                   </tr>
@@ -714,9 +726,9 @@ function PayrollTab({ companyId }: { companyId: string }) {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Employees ({empList.length})</CardTitle>
-          <Button variant="primary" size="sm" onClick={() => setAddEmpModal(true)}>
+          {can(PERMISSIONS.PAYROLL_MANAGE) && <Button variant="primary" size="sm" onClick={() => setAddEmpModal(true)}>
             <Plus className="w-3.5 h-3.5" /> Add Employee
-          </Button>
+          </Button>}
         </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto">

@@ -10,6 +10,7 @@ import { useToast } from "@/lib/toast";
 import { useCompanyContext } from "@/lib/company-context";
 import { useAuth } from "@/lib/auth";
 import { PERMISSIONS } from "@/lib/permissions";
+import { Can } from "@/components/auth/permission-guard";
 import { Building2, Plus, Search, Loader2, Ban, PlayCircle, Wifi, WifiOff, Users, ArrowRight, RefreshCw, LayoutGrid, List, AlertTriangle } from "lucide-react";
 import { companiesApi, quickbooksApi, type Company } from "@/lib/api/endpoints";
 import { useApi, useMutation } from "@/lib/api/hooks";
@@ -165,9 +166,11 @@ export default function FinsightClientsPage() {
             <Button variant="ghost" size="sm" onClick={() => companies.refetch()} disabled={companies.loading}>
               <RefreshCw className={`w-3.5 h-3.5 ${companies.loading ? "animate-spin" : ""}`} />
             </Button>
-            <Button variant="primary" onClick={connectQuickBooks} disabled={startQb.loading}>
-              {startQb.loading ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Starting…</> : <><Plus className="w-3.5 h-3.5" /> Connect QuickBooks</>}
-            </Button>
+            <Can permission={PERMISSIONS.QUICKBOOKS_MANAGE}>
+              <Button variant="primary" onClick={connectQuickBooks} disabled={startQb.loading}>
+                {startQb.loading ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Starting…</> : <><Plus className="w-3.5 h-3.5" /> Connect QuickBooks</>}
+              </Button>
+            </Can>
           </div>
         </div>
 
@@ -218,19 +221,19 @@ export default function FinsightClientsPage() {
 
                   {/* Actions */}
                   <div className="flex items-center gap-2 pt-3 border-t border-navy/5">
-                    <button
+                    {can(PERMISSIONS.COMPANY_USER_INVITE) && <button
                       className="flex-1 flex items-center justify-center gap-1.5 text-[12px] font-medium text-navy/60 hover:text-navy py-1.5 rounded-lg hover:bg-navy/4 transition-all"
                       onClick={(e) => { e.stopPropagation(); setInviteFor(c); setInviteEmail(""); }}
                     >
                       <Users className="w-3.5 h-3.5" /> Invite
-                    </button>
+                    </button>}
                     <button
                       className="flex-1 flex items-center justify-center gap-1.5 text-[12px] font-medium text-navy bg-navy/5 hover:bg-navy/8 py-1.5 rounded-lg transition-all"
                       onClick={(e) => { e.stopPropagation(); setSelectedCompanyId(c.id, c.name, c.quickbooksConnected); router.push(`/finsight/clients/${c.id}`); }}
                     >
                       Open <ArrowRight className="w-3.5 h-3.5" />
                     </button>
-                    {isActive ? (
+                    {can(PERMISSIONS.COMPANY_MANAGE) && (isActive ? (
                       <button
                         className="p-1.5 rounded-lg hover:bg-amber-50 text-amber-500 transition-all"
                         onClick={(e) => { e.stopPropagation(); setStatus(c, "suspend"); }}
@@ -246,7 +249,7 @@ export default function FinsightClientsPage() {
                       >
                         <PlayCircle className="w-3.5 h-3.5" />
                       </button>
-                    )}
+                    ))}
                   </div>
                 </div>
               </div>
@@ -261,9 +264,7 @@ export default function FinsightClientsPage() {
               </div>
               <p className="text-[14px] font-semibold text-navy/50">No companies yet</p>
               <p className="text-[12px] text-navy/35 mt-1 mb-4">Connect a QuickBooks account to get started</p>
-              <Button variant="primary" onClick={connectQuickBooks} disabled={startQb.loading}>
-                <Plus className="w-3.5 h-3.5" /> Connect QuickBooks
-              </Button>
+              <Can permission={PERMISSIONS.QUICKBOOKS_MANAGE}><Button variant="primary" onClick={connectQuickBooks} disabled={startQb.loading}><Plus className="w-3.5 h-3.5" /> Connect QuickBooks</Button></Can>
             </div>
           )}
         </div>

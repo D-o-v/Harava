@@ -8,6 +8,7 @@ interface CompanyContextType {
   selectedCompanyId: string | null;
   selectedCompanyName: string | null;
   selectedCompanyQuickbooksConnected: boolean | null;
+  isCompanyContextReady: boolean;
   setSelectedCompanyId: (id: string | null, name?: string, quickbooksConnected?: boolean) => void;
 }
 
@@ -15,6 +16,7 @@ const CompanyContext = createContext<CompanyContextType>({
   selectedCompanyId: null,
   selectedCompanyName: null,
   selectedCompanyQuickbooksConnected: null,
+  isCompanyContextReady: false,
   setSelectedCompanyId: () => {},
 });
 
@@ -26,6 +28,7 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
   const [selectedCompanyId, setSelectedCompanyIdState] = useState<string | null>(null);
   const [selectedCompanyName, setSelectedCompanyNameState] = useState<string | null>(null);
   const [selectedCompanyQuickbooksConnected, setSelectedCompanyQuickbooksConnected] = useState<boolean | null>(null);
+  const [isCompanyContextReady, setIsCompanyContextReady] = useState(false);
 
   useEffect(() => {
     const stored = sessionStorage.getItem(STORAGE_KEY);
@@ -35,6 +38,7 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
       setSelectedCompanyIdState(stored);
       setSelectedCompanyNameState(storedName);
       setSelectedCompanyQuickbooksConnected(storedQuickbooksConnected === null ? null : storedQuickbooksConnected === "true");
+      setIsCompanyContextReady(true);
       return;
     }
     // Tenant workspaces always need an active company for financial pages.
@@ -53,7 +57,9 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
           sessionStorage.setItem(STORAGE_NAME_KEY, company.name);
           sessionStorage.setItem(STORAGE_QB_KEY, String(Boolean(company.quickbooksConnected)));
         }
-      }).catch(() => {});
+      }).catch(() => {}).finally(() => setIsCompanyContextReady(true));
+    } else {
+      setIsCompanyContextReady(true);
     }
   }, []);
 
@@ -91,7 +97,7 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <CompanyContext.Provider value={{ selectedCompanyId, selectedCompanyName, selectedCompanyQuickbooksConnected, setSelectedCompanyId }}>
+    <CompanyContext.Provider value={{ selectedCompanyId, selectedCompanyName, selectedCompanyQuickbooksConnected, isCompanyContextReady, setSelectedCompanyId }}>
       {children}
     </CompanyContext.Provider>
   );

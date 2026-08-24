@@ -32,7 +32,7 @@ function pct(a: number, b: number) {
 export default function FinSightDashboard() {
   const router = useRouter();
   const { user } = useAuth();
-  const { selectedCompanyId, selectedCompanyQuickbooksConnected } = useCompanyContext();
+  const { selectedCompanyId, selectedCompanyQuickbooksConnected, isCompanyContextReady } = useCompanyContext();
   const companyId = selectedCompanyId ?? user?.companyId ?? "";
 
   const kpis = useApi(
@@ -67,15 +67,19 @@ export default function FinSightDashboard() {
   );
 
   const k = kpis.data as Record<string, number> | null;
-  const pnlPoints = (pnl.data as { points?: { period: string; revenue: number; costs: number; net: number }[] } | null)?.points ?? [];
-  const cfPoints = (cashFlow.data as { points?: { period: string; inflow: number; outflow: number; net: number }[] } | null)?.points ?? [];
-  const expBreakdown = (expenses.data as { categories?: { name: string; amount: number }[] } | null)?.categories ?? [];
-  const activityItems = (activity.data as { description?: string; amount?: number; type?: string; occurredAt?: string }[] | null) ?? [];
+  const pnlData = pnl.data as { trend?: { period: string; revenue: number; expenses: number; net: number }[]; currency?: string } | null;
+  const cashFlowData = cashFlow.data as { trend?: { period: string; inflow: number; outflow: number; net: number }[]; currency?: string } | null;
+  const expensesData = expenses.data as { byCategory?: { name: string; amount: number }[]; currency?: string } | null;
+  const pnlPoints = pnlData?.trend ?? [];
+  const cfPoints = cashFlowData?.trend ?? [];
+  const expBreakdown = expensesData?.byCategory ?? [];
+  const activityItems = (activity.data as { type?: string; reference?: string | null; party?: string | null; amount?: number; date?: string }[] | null) ?? [];
+  const currency = (k?.currency as string | undefined) ?? pnlData?.currency ?? cashFlowData?.currency ?? expensesData?.currency ?? "USD";
 
   const revenue = k?.revenueThisMonth ?? k?.revenue ?? 0;
   const expTotal = k?.expensesThisMonth ?? k?.expenses ?? 0;
   const netIncome = k?.netProfitThisMonth ?? k?.netIncome ?? revenue - expTotal;
-  const cashPos = k?.cashPosition ?? k?.cash ?? 0;
+  const cashPos = k?.cashOnHand ?? k?.cashPosition ?? k?.cash ?? 0;
 
   const revPct = pct(revenue, k?.revenueLastMonth ?? 0);
   const expPct = pct(expTotal, k?.expensesLastMonth ?? 0);
@@ -85,7 +89,7 @@ export default function FinSightDashboard() {
   const noCompany = !companyId;
 
   // Platform admin with no company selected → send to clients picker
-  if (!isLoading && noCompany && user?.scope === "platform") {
+  if (isCompanyContextReady && !isLoading && noCompany && user?.scope === "platform") {
     router.replace("/finsight/clients");
     return null;
   }
@@ -141,7 +145,7 @@ export default function FinSightDashboard() {
                   <p className="text-[12px] font-medium text-navy/45 uppercase tracking-wider">{label}</p>
                   {isLoading
                     ? <p className="text-2xl font-bold text-navy mt-2 tracking-tight">—</p>
-                    : <p className="text-2xl font-bold text-navy mt-2 tracking-tight">{fmt(value)}</p>
+                    : <p className="text-2xl font-bold text-navy mt-2 tracking-tight">{fmt(value, currency)}</p>
                   }
                   {p && !isLoading && (
                     <div className="flex items-center gap-1.5 mt-2">
@@ -174,7 +178,7 @@ export default function FinSightDashboard() {
               {pnl.loading
                 ? <div className="h-64 flex items-center justify-center"><Loader2 className="w-5 h-5 animate-spin text-navy/30" /></div>
                 : <TrendChart
-                    data={pnlPoints.map(p => ({ name: p.period, revenue: p.revenue, expenses: p.costs }))}
+                    data={pnlPoints.map(p => ({ name: p.period, revenue: p.revenue, expenses: p.expenses }))}
                     dataKeys={[
                       { key: "revenue", label: "Revenue", color: "#182954" },
                       { key: "expenses", label: "Expenses", color: "#C19B3F" },
@@ -192,26 +196,13 @@ export default function FinSightDashboard() {
               : expBreakdown.length > 0
                 ? <DonutChart
                     data={expBreakdown.map((e, i) => ({ name: e.name, value: e.amount, color: COLORS[i % COLORS.length] }))}
-                    centerValue={fmt(expTotal)}
+                    centerValue={fmt(expTotal, currency)}
                     centerLabel="Total"
                     height={220}
                     innerRadius={55}
                     outerRadius={85}
                   />
-                : <DonutChart
-                    data={[
-                      { name: "Payroll", value: 38000, color: "#182954" },
-                      { name: "Operations", value: 18500, color: "#C19B3F" },
-                      { name: "Marketing", value: 12200, color: "#4A9EFF" },
-                      { name: "Software", value: 5800, color: "#059669" },
-                      { name: "Other", value: 3700, color: "#64748b" },
-                    ]}
-                    centerValue={fmt(expTotal || 78200)}
-                    centerLabel="Total"
-                    height={220}
-                    innerRadius={55}
-                    outerRadius={85}
-                  />
+                : <div className="h-56 flex items-center justify-center text-sm text-navy/30">No expense data available</div>
             }
           </ChartCard>
         </div>
@@ -253,34 +244,18 @@ export default function FinSightDashboard() {
                       {activityItems.map((tx, i) => (
                         <div key={i} className="flex items-center justify-between px-6 py-3.5 hover:bg-navy/[0.015] cursor-pointer transition-colors" onClick={() => router.push("/finsight/accounting")}>
                           <div>
-                            <p className="text-[13px] font-medium text-navy">{tx.description ?? "Transaction"}</p>
-                            <p className="text-[11px] text-navy/35 mt-0.5">{tx.occurredAt ? new Date(tx.occurredAt).toLocaleDateString() : "—"}</p>
+                            <p className="text-[13px] font-medium text-navy">{tx.party ?? tx.type ?? "Transaction"}{tx.reference ? ` · #${tx.reference}` : ""}</p>
+                            <p className="text-[11px] text-navy/35 mt-0.5">{tx.date ? new Date(tx.date).toLocaleDateString() : "—"}</p>
                           </div>
                           {tx.amount != null && (
-                            <span className={`text-[13px] font-semibold ${(tx.type ?? "").toLowerCase().includes("income") || (tx.amount ?? 0) > 0 ? "text-navy" : "text-red-500"}`}>
-                              {(tx.amount ?? 0) > 0 ? "+" : ""}{fmt(tx.amount ?? 0)}
+                            <span className={`text-[13px] font-semibold ${(tx.type ?? "").toLowerCase().includes("invoice") || (tx.type ?? "").toLowerCase().includes("receipt") ? "text-navy" : "text-red-500"}`}>
+                              {tx.type === "Invoice" || tx.type === "Sales Receipt" ? "+" : "-"}{fmt(Math.abs(tx.amount ?? 0), currency)}
                             </span>
                           )}
                         </div>
                       ))}
                     </div>
-                  : <div className="divide-y divide-navy/4">
-                      {[
-                        { desc: "Client Payment - Acme Corp", amount: "+$15,000", date: "Today", type: "income" },
-                        { desc: "SaaS Subscription - Slack", amount: "-$1,200", date: "Today", type: "expense" },
-                        { desc: "Client Payment - Beta LLC", amount: "+$8,500", date: "Yesterday", type: "income" },
-                        { desc: "Office Rent", amount: "-$4,500", date: "Yesterday", type: "expense" },
-                        { desc: "Consulting Fee - Delta Inc", amount: "+$22,000", date: "Jun 28", type: "income" },
-                      ].map((tx, i) => (
-                        <div key={i} className="flex items-center justify-between px-6 py-3.5 hover:bg-navy/[0.015] cursor-pointer transition-colors" onClick={() => router.push("/finsight/accounting")}>
-                          <div>
-                            <p className="text-[13px] font-medium text-navy">{tx.desc}</p>
-                            <p className="text-[11px] text-navy/35 mt-0.5">{tx.date}</p>
-                          </div>
-                          <span className={`text-[13px] font-semibold ${tx.type === "income" ? "text-navy" : "text-red-500"}`}>{tx.amount}</span>
-                        </div>
-                      ))}
-                    </div>
+                  : <div className="py-10 text-center text-sm text-navy/30">No activity available</div>
               }
             </CardContent>
           </Card>

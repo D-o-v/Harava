@@ -8,6 +8,8 @@ import { useToast } from "@/lib/toast";
 import { payrollApi } from "@/lib/api/endpoints";
 import { useApi, useMutation } from "@/lib/api/hooks";
 import { PageLoader, PageError } from "@/components/ui/page-loader";
+import { useAuth } from "@/lib/auth";
+import { PERMISSIONS } from "@/lib/permissions";
 import { CheckCircle, XCircle, Clock, Loader2, RefreshCw } from "lucide-react";
 
 const STATUS_VARIANT: Record<string, "default" | "warning" | "success" | "error"> = {
@@ -16,6 +18,7 @@ const STATUS_VARIANT: Record<string, "default" | "warning" | "success" | "error"
 
 export default function ApprovalsPage() {
   const { toast } = useToast();
+  const { can } = useAuth();
 
   const pending = useApi(() => payrollApi.pendingApproval(), [], { pollMs: 30_000 });
   const allRuns = useApi(() => payrollApi.listRuns(), []);
@@ -88,14 +91,14 @@ export default function ApprovalsPage() {
                         <td className="px-4 py-3 text-[12px] text-navy/60">{r.periodStart} → {r.periodEnd}</td>
                         <td className="px-4 py-3 text-center"><Badge variant={STATUS_VARIANT[r.status] ?? "default"} size="sm">{r.status}</Badge></td>
                         <td className="px-4 py-3 text-right">
-                          <div className="flex items-center justify-end gap-2">
+                          {can(PERMISSIONS.PAYROLL_APPROVE) && <div className="flex items-center justify-end gap-2">
                             <Button variant="primary" size="xs" onClick={() => act(() => approveMut.mutate(r.id), "Approved")}>
                               <CheckCircle className="w-3 h-3" /> Approve
                             </Button>
                             <Button variant="ghost" size="xs" onClick={() => act(() => rejectMut.mutate(r.id), "Rejected")}>
                               <XCircle className="w-3 h-3 text-red-500" /> Reject
                             </Button>
-                          </div>
+                          </div>}
                         </td>
                       </tr>
                     ))}

@@ -106,10 +106,10 @@ export default function ReportsPage() {
     );
 
     if (active === "pnl") {
-      const points = (d.points as { period: string; revenue: number; costs: number; net: number }[]) ?? [];
+      const points = (d.trend as { period: string; revenue: number; expenses: number; net: number }[]) ?? [];
       return (
         <TrendChart
-          data={points.map(p => ({ name: p.period, Revenue: p.revenue, Expenses: p.costs, Net: p.net }))}
+          data={points.map(p => ({ name: p.period, Revenue: p.revenue, Expenses: p.expenses, Net: p.net }))}
           dataKeys={[
             { key: "Revenue", label: "Revenue", color: "#182954" },
             { key: "Expenses", label: "Expenses", color: "#C19B3F" },
@@ -121,7 +121,7 @@ export default function ReportsPage() {
       );
     }
     if (active === "cash-flow") {
-      const points = (d.points as { period: string; inflow: number; outflow: number; net: number }[]) ?? [];
+      const points = (d.trend as { period: string; inflow: number; outflow: number; net: number }[]) ?? [];
       return (
         <MetricBarChart
           data={points.map(p => ({ name: p.period, Inflow: p.inflow, Outflow: p.outflow }))}
@@ -135,10 +135,10 @@ export default function ReportsPage() {
       );
     }
     if (active === "sales") {
-      const points = (d.points as { period: string; amount: number }[]) ?? [];
+      const points = (d.trend as { period: string; amount?: number; revenue?: number }[]) ?? [];
       return (
         <MetricBarChart
-          data={points.map(p => ({ name: p.period, Sales: p.amount }))}
+          data={points.map(p => ({ name: p.period, Sales: p.amount ?? p.revenue ?? 0 }))}
           dataKeys={[{ key: "Sales", label: "Sales", color: "#182954" }]}
           valuePrefix="$"
           height={280}
@@ -171,26 +171,27 @@ export default function ReportsPage() {
 
       <div className="p-4 sm:p-6 lg:p-8 space-y-6">
         {/* Report type selector */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        <div className="flex flex-col lg:flex-row gap-5 items-start">
+          <aside className="w-full lg:w-56 shrink-0 bg-white border border-navy/6 rounded-xl p-2">
+            <p className="px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-navy/35">Reports</p>
+            <nav className="space-y-0.5">
           {REPORT_TYPES.map(({ slug, title, desc, icon: Icon }) => (
             <button
               key={slug}
               onClick={() => setActive(slug)}
-              className={`p-4 rounded-xl border text-left transition-all ${
-                active === slug
-                  ? "border-navy bg-navy text-white shadow-md"
-                  : "border-navy/8 bg-white hover:border-navy/20 hover:shadow-sm"
+              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-left transition-colors ${
+                active === slug ? "bg-navy text-white" : "text-navy/60 hover:bg-navy/[0.03] hover:text-navy"
               }`}
             >
-              <Icon className={`w-4 h-4 mb-2 ${active === slug ? "text-gold" : "text-navy/40"}`} />
-              <p className={`text-[12px] font-semibold leading-tight ${active === slug ? "text-white" : "text-navy"}`}>{title}</p>
-              <p className={`text-[10px] mt-0.5 leading-tight ${active === slug ? "text-white/60" : "text-navy/40"}`}>{desc}</p>
+              <Icon className={`w-3.5 h-3.5 ${active === slug ? "text-gold" : "text-navy/35"}`} />
+              <span className="text-[12px] font-medium">{title}</span>
             </button>
           ))}
-        </div>
+            </nav>
+          </aside>
 
-        {/* Active report */}
-        <ChartCard
+          <div className="min-w-0 flex-1 w-full">
+          <ChartCard
           title={REPORT_TYPES.find(r => r.slug === active)?.title ?? "Report"}
           subtitle={companyId ? "Live data from QuickBooks" : "Connect QuickBooks to see live data"}
           action={
@@ -203,9 +204,11 @@ export default function ReportsPage() {
               </Button>
             </div>
           }
-        >
-          {renderChart()}
-        </ChartCard>
+          >
+            {renderChart()}
+          </ChartCard>
+          </div>
+        </div>
 
         {/* Summary KPIs for PnL */}
         {active === "pnl" && d && (

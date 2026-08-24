@@ -41,6 +41,16 @@ export function defaultRouteForRole(role: string): string {
   return "/finsight";
 }
 
+function scopeFromSession(res: LoginResponse): TokenScope {
+  if (res.scope === "PLATFORM") return "platform";
+  // Company is the backend's canonical signal for a portal session.  Keep the
+  // explicit scope check as a compatibility fallback for older API responses.
+  if (res.scope === "CLIENT" || res.company || res.session?.company || res.user?.companyId || res.session?.user?.companyId) {
+    return "portal";
+  }
+  return "staff";
+}
+
 type LoginResult =
   | { success: true; mfa?: false }
   | { success: true; mfa: true; mfaToken: string; mfaMethod?: string; channels?: string[] }
@@ -212,11 +222,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (res.mfaRequired && res.mfaToken) {
           return { success: true, mfa: true, mfaToken: res.mfaToken, mfaMethod: res.mfaMethod, channels: res.mfaChannels };
         }
-        const scope: TokenScope = platform
-          ? "platform"
-          : res.scope === "PLATFORM" ? "platform"
-          : res.scope === "CLIENT" ? "portal"
-          : "staff";
+        const scope: TokenScope = platform ? "platform" : scopeFromSession(res);
         const u = await finalizeFromLoginResponse(res, scope);
         if (!u) return { success: false, error: "Session could not be loaded" };
         return { success: true };
@@ -231,8 +237,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     async (mfaToken, code) => {
       try {
         const res = await authApi.mfaVerify(mfaToken, code);
-        const scope: TokenScope =
-          res.scope === "PLATFORM" ? "platform" : res.scope === "CLIENT" ? "portal" : "staff";
+        const scope = scopeFromSession(res);
         const u = await finalizeFromLoginResponse(res, scope);
         if (!u) return { success: false, error: "Session could not be loaded" };
         return { success: true };
@@ -268,8 +273,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const can = (permission: string) => {
     if (!user) return false;
     if (user.scope === "platform") return true;
-    // Tenant owners and admins get full access within their tenant
-    if (user.scope === "staff" && (user.role === "super_admin" || user.role === "corporate_admin")) return true;
     return permissions.has(permission);
   };
 

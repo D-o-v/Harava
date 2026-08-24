@@ -8,10 +8,12 @@ import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { useToast } from "@/lib/toast";
 import { useAuth } from "@/lib/auth";
+import { Can } from "@/components/auth/permission-guard";
+import { PERMISSIONS } from "@/lib/permissions";
 import { useCompanyContext } from "@/lib/company-context";
 import { payrollApi, type PayrollRun, type PayrollEmployee } from "@/lib/api/endpoints";
 import { useApi, useMutation } from "@/lib/api/hooks";
-import { DollarSign, Users, Calendar, Plus, Loader2, RefreshCw, CheckCircle, XCircle, Play, Download } from "lucide-react";
+import { DollarSign, Users, Calendar, Plus, Loader2, RefreshCw, CheckCircle, XCircle, Play, Download, Pencil, Trash2 } from "lucide-react";
 import { PageLoader, PageError } from "@/components/ui/page-loader";
 
 const STATUS_VARIANT: Record<string, "default" | "warning" | "success" | "error" | "info"> = {
@@ -29,11 +31,13 @@ function fmt(n: number | undefined) {
 
 export default function PayrollPage() {
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, can } = useAuth();
   const { selectedCompanyId } = useCompanyContext();
   const companyId = selectedCompanyId ?? user?.companyId ?? undefined;
   const [createModal, setCreateModal] = useState(false);
   const [employeeModal, setEmployeeModal] = useState(false);
+  const [editingEmployee, setEditingEmployee] = useState<PayrollEmployee | null>(null);
+  const [editingRun, setEditingRun] = useState<PayrollRun | null>(null);
   const [form, setForm] = useState({ label: "", periodStart: "", periodEnd: "", currency: "NGN" });
   const [employeeForm, setEmployeeForm] = useState({ fullName: "", email: "", jobTitle: "", bankName: "", bankAccountNumber: "", baseSalary: "", currency: "NGN" });
 
@@ -47,6 +51,12 @@ export default function PayrollPage() {
     baseSalary: Number(employeeForm.baseSalary),
     ...(companyId ? { companyId } : {}),
   }));
+  const updateEmployeeMut = useMutation((id: string) => payrollApi.updateEmployee(id, {
+    ...employeeForm,
+    baseSalary: Number(employeeForm.baseSalary),
+  }));
+  const deactivateEmployeeMut = useMutation((id: string) => payrollApi.deactivateEmployee(id));
+  const updateRunMut = useMutation((id: string, payload: { note?: string; payDate?: string }) => payrollApi.updateRun(id, payload));
   const submitMut = useMutation((id: string) => payrollApi.submit(id));
   const approveMut = useMutation((id: string) => payrollApi.approve(id));
   const rejectMut = useMutation((id: string) => payrollApi.reject(id, "Rejected via portal"));
@@ -65,17 +75,26 @@ export default function PayrollPage() {
     }
   };
 
-  const handleCreateEmployee = async () => {
-    if (!employeeForm.fullName || !employeeForm.baseSalary || Number(employeeForm.baseSalary) <= 0) return;
+  const openEmployeeEditor = (employee: PayrollEmployee) => {
+    setEditingEmployee(employee);
+    setEmployeeForm({
+      fullName: employee.fullName, email: employee.email ?? "", jobTitle: employee.jobTitle ?? "",
+      bankName: employee.bankName ?? "", bankAccountNumber: employee.bankAccountNumber ?? "",
+      baseSalary: String(employee.baseSalary ?? ""), currency: employee.currency ?? "NGN",
+    });
+    setEmployeeModal(true);
+  };
+
+  const saveEmployee = async () => {
     try {
-      await createEmployeeMut.mutate();
-      toast("Employee added to payroll", "success");
+      if (editingEmployee) await updateEmployeeMut.mutate(editingEmployee.id);
+      else await createEmployeeMut.mutate();
+      setEditingEmployee(null);
       setEmployeeModal(false);
       setEmployeeForm({ fullName: "", email: "", jobTitle: "", bankName: "", bankAccountNumber: "", baseSalary: "", currency: "NGN" });
       employees.refetch();
-    } catch (e) {
-      toast(e instanceof Error ? e.message : "Could not add employee", "error");
-    }
+      toast(editingEmployee ? "Employee updated" : "Employee added to payroll", "success");
+    } catch (e) { toast(e instanceof Error ? e.message : "Could not save employee", "error"); }
   };
 
   const action = async (fn: () => Promise<unknown>, msg: string) => {
@@ -152,9 +171,7 @@ export default function PayrollPage() {
             <Button variant="ghost" size="sm" onClick={() => { runs.refetch(); pending.refetch(); }} disabled={runs.loading}>
               <RefreshCw className={`w-3.5 h-3.5 ${runs.loading ? "animate-spin" : ""}`} />
             </Button>
-            <Button variant="primary" onClick={() => setCreateModal(true)}>
-              <Plus className="w-3.5 h-3.5" /> New Run
-            </Button>
+            <Can permission={PERMISSIONS.PAYROLL_MANAGE}><Button variant="primary" onClick={() => setCreateModal(true)}><Plus className="w-3.5 h-3.5" /> New Run</Button></Can>
           </div>
         </div>
 
@@ -170,14 +187,14 @@ export default function PayrollPage() {
                       <p className="text-[13px] font-semibold text-navy">{r.label || `Run ${r.id.slice(0, 8)}`}</p>
                       <p className="text-[11px] text-navy/45">{r.periodStart} → {r.periodEnd}</p>
                     </div>
-                    <div className="flex items-center gap-2">
+                    {can(PERMISSIONS.PAYROLL_APPROVE) && <div className="flex items-center gap-2">
                       <Button variant="primary" size="xs" onClick={() => action(() => approveMut.mutate(r.id), "Approved")}>
                         <CheckCircle className="w-3 h-3" /> Approve
                       </Button>
                       <Button variant="ghost" size="xs" onClick={() => action(() => rejectMut.mutate(r.id), "Rejected")}>
                         <XCircle className="w-3 h-3 text-red-500" /> Reject
                       </Button>
-                    </div>
+                    </div>}
                   </div>
                 ))}
               </div>
@@ -213,17 +230,15 @@ export default function PayrollPage() {
                         </td>
                         <td className="px-4 py-3 text-right">
                           <div className="flex items-center justify-end gap-1">
-                            {r.status === "DRAFT" && (
-                              <Button variant="ghost" size="xs" onClick={() => action(() => submitMut.mutate(r.id), "Submitted for approval")}>
-                                <Play className="w-3 h-3" /> Submit
-                              </Button>
+                            {can(PERMISSIONS.PAYROLL_MANAGE) && r.status === "DRAFT" && (
+                              <><Button variant="ghost" size="xs" onClick={() => setEditingRun(r)}><Pencil className="w-3 h-3" /> Edit</Button><Button variant="ghost" size="xs" onClick={() => action(() => submitMut.mutate(r.id), "Submitted for approval")}><Play className="w-3 h-3" /> Submit</Button></>
                             )}
-                            {r.status === "APPROVED" && (
+                            {can(PERMISSIONS.PAYROLL_PAY) && r.status === "APPROVED" && (
                               <Button variant="primary" size="xs" onClick={() => action(() => payMut.mutate(r.id), "Marked as paid")}>
                                 <CheckCircle className="w-3 h-3" /> Mark Paid
                               </Button>
                             )}
-                            {(r.status === "APPROVED" || r.status === "PAID") && (
+                            {can(PERMISSIONS.PAYROLL_PAY) && (r.status === "APPROVED" || r.status === "PAID") && (
                               <Button variant="ghost" size="xs" onClick={() => downloadBankFile(r.id)}>
                                 <Download className="w-3 h-3" />
                               </Button>
@@ -245,9 +260,7 @@ export default function PayrollPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between gap-3">
             <CardTitle>Employees ({empList.length})</CardTitle>
-            <Button variant="primary" size="sm" onClick={() => setEmployeeModal(true)}>
-              <Plus className="w-3.5 h-3.5" /> Add employee
-            </Button>
+            <Can permission={PERMISSIONS.PAYROLL_MANAGE}><Button variant="primary" size="sm" onClick={() => setEmployeeModal(true)}><Plus className="w-3.5 h-3.5" /> Add employee</Button></Can>
           </CardHeader>
           <CardContent className="p-0">
             <div className="overflow-x-auto">
@@ -258,6 +271,7 @@ export default function PayrollPage() {
                       <th className="text-left px-4 py-3 text-[11px] font-semibold text-navy/50 uppercase tracking-wider">Title</th>
                       <th className="text-right px-4 py-3 text-[11px] font-semibold text-navy/50 uppercase tracking-wider">Base Salary</th>
                       <th className="text-center px-4 py-3 text-[11px] font-semibold text-navy/50 uppercase tracking-wider">Status</th>
+                      {can(PERMISSIONS.PAYROLL_MANAGE) && <th className="text-right px-4 py-3 text-[11px] font-semibold text-navy/50 uppercase tracking-wider">Actions</th>}
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-navy/4">
@@ -272,10 +286,11 @@ export default function PayrollPage() {
                         <td className="px-4 py-3 text-center">
                           <Badge variant={e.active ? "success" : "error"} size="sm">{e.active ? "Active" : "Inactive"}</Badge>
                         </td>
+                        {can(PERMISSIONS.PAYROLL_MANAGE) && <td className="px-4 py-3 text-right"><div className="flex justify-end gap-1"><Button variant="ghost" size="xs" onClick={() => openEmployeeEditor(e)}><Pencil className="w-3 h-3" /> Edit</Button>{e.active && <Button variant="ghost" size="xs" onClick={() => action(() => deactivateEmployeeMut.mutate(e.id), "Employee deactivated")}><Trash2 className="w-3 h-3 text-red-500" /> Deactivate</Button>}</div></td>}
                       </tr>
                     ))}
                     {empList.length === 0 && (
-                      <tr><td colSpan={4} className="text-center py-10 text-[13px] text-navy/30">No employees found</td></tr>
+                      <tr><td colSpan={can(PERMISSIONS.PAYROLL_MANAGE) ? 5 : 4} className="text-center py-10 text-[13px] text-navy/30">No employees found</td></tr>
                     )}
                   </tbody>
                 </table>
@@ -313,7 +328,7 @@ export default function PayrollPage() {
         </div>
       </Modal>
 
-      <Modal isOpen={employeeModal} onClose={() => setEmployeeModal(false)} title="Add Employee">
+      <Modal isOpen={employeeModal} onClose={() => { setEmployeeModal(false); setEditingEmployee(null); }} title={editingEmployee ? "Edit Employee" : "Add Employee"}>
         <div className="space-y-4">
           <p className="text-[12px] text-navy/45">This employee will be added to the currently selected company&apos;s payroll.</p>
           <div className="grid sm:grid-cols-2 gap-3">
@@ -347,12 +362,16 @@ export default function PayrollPage() {
             </div>
           </div>
           <div className="flex justify-end gap-2 pt-2">
-            <Button variant="ghost" onClick={() => setEmployeeModal(false)}>Cancel</Button>
-            <Button variant="primary" onClick={handleCreateEmployee} disabled={createEmployeeMut.loading || !employeeForm.fullName || !employeeForm.baseSalary}>
-              {createEmployeeMut.loading ? <><Loader2 className="w-4 h-4 animate-spin" /> Adding…</> : "Add employee"}
+            <Button variant="ghost" onClick={() => { setEmployeeModal(false); setEditingEmployee(null); }}>Cancel</Button>
+            <Button variant="primary" onClick={saveEmployee} disabled={createEmployeeMut.loading || updateEmployeeMut.loading || !employeeForm.fullName || !employeeForm.baseSalary}>
+              {(createEmployeeMut.loading || updateEmployeeMut.loading) ? <><Loader2 className="w-4 h-4 animate-spin" /> Saving…</> : editingEmployee ? "Save changes" : "Add employee"}
             </Button>
           </div>
         </div>
+      </Modal>
+
+      <Modal isOpen={!!editingRun} onClose={() => setEditingRun(null)} title="Edit Payroll Run">
+        {editingRun && <div className="space-y-4"><div><label className="text-[12px] font-medium text-navy/60 block mb-1.5">Pay date</label><input type="date" value={editingRun.payDate ?? ""} onChange={(e) => setEditingRun({ ...editingRun, payDate: e.target.value })} className="w-full border border-navy/10 rounded-xl px-3 py-2.5 text-sm" /></div><div><label className="text-[12px] font-medium text-navy/60 block mb-1.5">Note</label><textarea value={editingRun.note ?? ""} onChange={(e) => setEditingRun({ ...editingRun, note: e.target.value })} className="w-full border border-navy/10 rounded-xl px-3 py-2.5 text-sm" rows={3} /></div><div className="flex justify-end gap-2"><Button variant="ghost" onClick={() => setEditingRun(null)}>Cancel</Button><Button variant="primary" disabled={updateRunMut.loading} onClick={() => action(() => updateRunMut.mutate(editingRun.id, { note: editingRun.note, payDate: editingRun.payDate }), "Payroll run updated").then(() => setEditingRun(null))}>Save changes</Button></div></div>}
       </Modal>
     </div>
   );
