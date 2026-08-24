@@ -15,6 +15,7 @@ import { payrollApi, type PayrollRun, type PayrollEmployee } from "@/lib/api/end
 import { useApi, useMutation } from "@/lib/api/hooks";
 import { DollarSign, Users, Calendar, Plus, Loader2, RefreshCw, CheckCircle, XCircle, Play, Download, Pencil, Trash2 } from "lucide-react";
 import { PageLoader, PageError } from "@/components/ui/page-loader";
+import { formatMoney } from "@/lib/currency";
 
 const STATUS_VARIANT: Record<string, "default" | "warning" | "success" | "error" | "info"> = {
   DRAFT: "default",
@@ -23,11 +24,6 @@ const STATUS_VARIANT: Record<string, "default" | "warning" | "success" | "error"
   REJECTED: "error",
   PAID: "success",
 };
-
-function fmt(n: number | undefined) {
-  if (n == null) return "—";
-  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(n);
-}
 
 export default function PayrollPage() {
   const { toast } = useToast();
@@ -223,8 +219,8 @@ export default function PayrollPage() {
                       <tr key={r.id} className="hover:bg-navy/[0.015] transition-colors">
                         <td className="px-5 py-3 text-[13px] font-medium text-navy">{r.label || `Run ${r.id.slice(0, 8)}`}</td>
                         <td className="px-4 py-3 text-[12px] text-navy/60">{r.periodStart} → {r.periodEnd}</td>
-                        <td className="px-4 py-3 text-right text-[13px] font-medium text-navy">{fmt(r.totalGross)}</td>
-                        <td className="px-4 py-3 text-right text-[13px] font-medium text-navy">{fmt(r.totalNet)}</td>
+                        <td className="px-4 py-3 text-right text-[13px] font-medium text-navy">{formatMoney(r.totalGross, r.currency, 0)}</td>
+                        <td className="px-4 py-3 text-right text-[13px] font-medium text-navy">{formatMoney(r.totalNet, r.currency, 0)}</td>
                         <td className="px-4 py-3 text-center">
                           <Badge variant={STATUS_VARIANT[r.status] ?? "default"} size="sm">{r.status}</Badge>
                         </td>
@@ -282,7 +278,7 @@ export default function PayrollPage() {
                           <p className="text-[11px] text-navy/40">{e.email}</p>
                         </td>
                         <td className="px-4 py-3 text-[12px] text-navy/60">{e.jobTitle || "—"}</td>
-                        <td className="px-4 py-3 text-right text-[13px] font-medium text-navy">{fmt(e.baseSalary)}</td>
+                        <td className="px-4 py-3 text-right text-[13px] font-medium text-navy">{formatMoney(e.baseSalary, e.currency, 0)}</td>
                         <td className="px-4 py-3 text-center">
                           <Badge variant={e.active ? "success" : "error"} size="sm">{e.active ? "Active" : "Inactive"}</Badge>
                         </td>

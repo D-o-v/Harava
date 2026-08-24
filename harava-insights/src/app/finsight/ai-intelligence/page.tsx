@@ -11,14 +11,7 @@ import { dashboardApi } from "@/lib/api/endpoints";
 import { useApi } from "@/lib/api/hooks";
 import { Sparkles, TrendingUp, AlertTriangle, Send, Loader2, RefreshCw } from "lucide-react";
 import { PageLoader } from "@/components/ui/page-loader";
-
-function fmt(n: unknown) {
-  const v = Number(n);
-  if (isNaN(v)) return "—";
-  if (v >= 1_000_000) return `$${(v / 1_000_000).toFixed(1)}M`;
-  if (v >= 1_000) return `$${(v / 1_000).toFixed(1)}K`;
-  return `$${v.toLocaleString()}`;
-}
+import { formatMoney } from "@/lib/currency";
 
 export default function AiIntelligencePage() {
   const { user } = useAuth();
@@ -47,6 +40,7 @@ export default function AiIntelligencePage() {
   if (kpis.loading && !kpis.data) return <><DashboardHeader title="AI Intelligence" subtitle="AI-powered financial analytics and anomaly detection" /><PageLoader message="Loading intelligence data…" /></>;
 
   const k = kpis.data as Record<string, unknown> | null;
+  const currency = typeof k?.currency === "string" ? k.currency : undefined;
   const r = receivables.data as Record<string, unknown> | null;
   const p = payables.data as Record<string, unknown> | null;
   const acts = (activity.data as Record<string, unknown>[] | null) ?? [];
@@ -58,15 +52,15 @@ export default function AiIntelligencePage() {
     const expenses = Number(k.expensesThisMonth ?? k.expenses ?? 0);
     const margin = revenue > 0 ? ((revenue - expenses) / revenue) * 100 : null;
     if (margin !== null && margin < 15) insights.push({ title: "Low Profit Margin", message: `Current margin is ${margin.toFixed(1)}% — below the 15% benchmark. Review expense categories.`, severity: "warning" });
-    if (margin !== null && margin >= 15) insights.push({ title: "Healthy Margin", message: `Profit margin is ${margin.toFixed(1)}% — on track. Revenue: ${fmt(revenue)}, Expenses: ${fmt(expenses)}.`, severity: "info" });
+    if (margin !== null && margin >= 15) insights.push({ title: "Healthy Margin", message: `Profit margin is ${margin.toFixed(1)}% — on track. Revenue: ${formatMoney(revenue, currency)}, Expenses: ${formatMoney(expenses, currency)}.`, severity: "info" });
   }
   if (r) {
     const overdue = Number(r.overdueAmount ?? r.over90 ?? 0);
-    if (overdue > 0) insights.push({ title: "Overdue Receivables", message: `${fmt(overdue)} in overdue invoices. DSO: ${r.dso ?? "—"} days. Follow up recommended.`, severity: "warning" });
+    if (overdue > 0) insights.push({ title: "Overdue Receivables", message: `${formatMoney(overdue, currency)} in overdue invoices. DSO: ${r.dso ?? "—"} days. Follow up recommended.`, severity: "warning" });
   }
   if (p) {
     const due = Number(p.dueThisWeek ?? p.currentAmount ?? 0);
-    if (due > 0) insights.push({ title: "Payables Due Soon", message: `${fmt(due)} in bills due this week. DPO: ${p.dpo ?? "—"} days.`, severity: "info" });
+    if (due > 0) insights.push({ title: "Payables Due Soon", message: `${formatMoney(due, currency)} in bills due this week. DPO: ${p.dpo ?? "—"} days.`, severity: "info" });
   }
   if (insights.length === 0 && !kpis.loading) {
     insights.push({ title: "No Anomalies Detected", message: "All financial metrics are within normal ranges.", severity: "info" });
@@ -74,16 +68,16 @@ export default function AiIntelligencePage() {
 
   // Build predictions from KPI data
   const predictions = k ? [
-    { metric: "Revenue (MTD)", value: fmt(k.revenueThisMonth ?? k.revenue), label: "Current" },
-    { metric: "Expenses (MTD)", value: fmt(k.expensesThisMonth ?? k.expenses), label: "Current" },
-    { metric: "Cash Position", value: fmt(k.cashPosition ?? k.cash), label: "Current" },
-    { metric: "Net Profit", value: fmt(k.netProfitThisMonth ?? k.netIncome), label: "Current" },
+    { metric: "Revenue (MTD)", value: formatMoney(k.revenueThisMonth ?? k.revenue, currency), label: "Current" },
+    { metric: "Expenses (MTD)", value: formatMoney(k.expensesThisMonth ?? k.expenses, currency), label: "Current" },
+    { metric: "Cash Position", value: formatMoney(k.cashPosition ?? k.cash, currency), label: "Current" },
+    { metric: "Net Profit", value: formatMoney(k.netProfitThisMonth ?? k.netIncome, currency), label: "Current" },
   ] : [];
 
   const handleAsk = () => {
     if (!query.trim()) return;
     const context = k
-      ? `Revenue: ${fmt(k.revenueThisMonth ?? k.revenue)}, Expenses: ${fmt(k.expensesThisMonth ?? k.expenses)}, Cash: ${fmt(k.cashPosition ?? k.cash)}.`
+      ? `Revenue: ${formatMoney(k.revenueThisMonth ?? k.revenue, currency)}, Expenses: ${formatMoney(k.expensesThisMonth ?? k.expenses, currency)}, Cash: ${formatMoney(k.cashPosition ?? k.cash, currency)}.`
       : "No financial data loaded yet.";
     setResponses((prev) => [...prev, {
       q: query,
@@ -208,7 +202,7 @@ export default function AiIntelligencePage() {
                       </p>
                     </div>
                     {a.amount != null && (
-                      <span className="text-[13px] font-semibold text-navy">{fmt(a.amount)}</span>
+                      <span className="text-[13px] font-semibold text-navy">{formatMoney(a.amount, currency)}</span>
                     )}
                   </div>
                 ))}

@@ -306,7 +306,7 @@ export const companiesApi = {
     apiRequest<void>(`/api/v1/tenant/companies/${id}/activate`, { method: "POST" }),
   listUsers: (id: string) =>
     apiRequest<CompanyUser[]>(`/api/v1/tenant/companies/${id}/users`),
-  inviteUser: (id: string, payload: { email: string; roleId?: string }) =>
+  inviteUser: (id: string, payload: { email: string; roleId: string }) =>
     apiRequest<Invitation>(`/api/v1/tenant/companies/${id}/users/invite`, {
       method: "POST",
       body: payload,
@@ -349,7 +349,7 @@ export const quickbooksApi = {
       `/api/v1/tenant/companies/${companyId}/quickbooks/entities`,
     ),
   list: <T = Record<string, unknown>>(companyId: string, slug: string, page = 0, size = 50) =>
-    apiRequest<{ content: T[]; totalElements: number; totalPages: number }>(
+    apiRequest<{ items?: T[]; content?: T[]; total: number; totalElements?: number; page: number; size: number }>(
       `/api/v1/tenant/companies/${companyId}/quickbooks/${slug}`,
       { query: { page, size } },
     ),

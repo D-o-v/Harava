@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useState } from "react";
+import { use, useEffect, useState } from "react";
 import { DashboardHeader } from "@/components/layout/dashboard-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,9 +15,10 @@ import {
   Zap, Users, Wallet, CheckCircle, XCircle, Play, Download, Plus,
 } from "lucide-react";
 import Link from "next/link";
-import { companiesApi, dashboardApi, quickbooksApi, payrollApi, type PayrollEmployee, type PayrollRun } from "@/lib/api/endpoints";
+import { companiesApi, dashboardApi, payrollApi, quickbooksApi, rolesApi, type PayrollEmployee, type PayrollRun } from "@/lib/api/endpoints";
 import { useApi, useMutation } from "@/lib/api/hooks";
 import { TrendChart, MetricBarChart, DonutChart, ChartCard, MetricLineChart } from "@/components/ui/charts";
+import { formatMoney } from "@/lib/currency";
 
 const SIDEBAR_ITEMS = [
   { key: "overview", label: "Overview", icon: LayoutDashboard },
@@ -39,12 +40,9 @@ const QB_ENTITIES = [
   "sales-receipts","credit-memos","estimates","purchase-orders","deposits","transfers","journal-entries",
 ];
 
-function fmt(n: unknown, currency = "USD") {
+function fmt(n: unknown, currency?: string) {
   const v = Number(n);
-  if (isNaN(v)) return "—";
-  if (v >= 1_000_000) return `$${(v / 1_000_000).toFixed(1)}M`;
-  if (v >= 1_000) return `$${(v / 1_000).toFixed(1)}K`;
-  return new Intl.NumberFormat("en-US", { style: "currency", currency, maximumFractionDigits: 0 }).format(v);
+  return formatMoney(v, currency, 0);
 }
 
 export default function CompanyDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -239,7 +237,7 @@ function PnlTab({ companyId, currency = "USD" }: { companyId: string; currency?:
               <TrendChart
                 data={trend.map(p => ({ name: String(p.period), revenue: Number(p.revenue), expenses: Number(p.expenses) }))}
                 dataKeys={[{ key: "revenue", label: "Revenue", color: "#182954" }, { key: "expenses", label: "Expenses", color: "#C19B3F" }]}
-                valuePrefix="$" height={260}
+                valuePrefix={currency ? `${currency} ` : ""} height={260}
               />
             </ChartCard>
           )}
@@ -288,7 +286,7 @@ function CashFlowTab({ companyId, currency = "USD" }: { companyId: string; curre
               <MetricBarChart
                 data={trend.map(p => ({ name: String(p.period), inflow: Number(p.inflow), outflow: Number(p.outflow) }))}
                 dataKeys={[{ key: "inflow", label: "Inflow", color: "#182954" }, { key: "outflow", label: "Outflow", color: "#C19B3F" }]}
-                valuePrefix="$" height={260}
+                valuePrefix={currency ? `${currency} ` : ""} height={260}
               />
             </ChartCard>
           )}
@@ -381,7 +379,7 @@ function ArTab({ companyId, currency = "USD" }: { companyId: string; currency?: 
                   { name: "90d+", amount: Number(aging.days90plus) },
                 ]}
                 dataKeys={[{ key: "amount", label: "Amount", color: "#C19B3F" }]}
-                valuePrefix="$" height={220} showLegend={false}
+                valuePrefix={currency ? `${currency} ` : ""} height={220} showLegend={false}
               />
             </ChartCard>
           )}
@@ -431,7 +429,7 @@ function ApTab({ companyId, currency = "USD" }: { companyId: string; currency?: 
                   { name: "90d+", amount: Number(aging.days90plus) },
                 ]}
                 dataKeys={[{ key: "amount", label: "Amount", color: "#182954" }]}
-                valuePrefix="$" height={220} showLegend={false}
+                valuePrefix={currency ? `${currency} ` : ""} height={220} showLegend={false}
               />
             </ChartCard>
           )}
@@ -477,7 +475,7 @@ function SalesTab({ companyId, currency = "USD" }: { companyId: string; currency
               <TrendChart
                 data={revTrend.map(p => ({ name: String(p.period), revenue: Number(p.revenue) }))}
                 dataKeys={[{ key: "revenue", label: "Revenue", color: "#182954" }]}
-                valuePrefix="$" height={240}
+                valuePrefix={currency ? `${currency} ` : ""} height={240}
               />
             </ChartCard>
           )}
@@ -539,7 +537,7 @@ function ExpensesTab({ companyId, currency = "USD" }: { companyId: string; curre
               <MetricBarChart
                 data={trend.map(p => ({ name: String(p.period), expenses: Number(p.expenses) }))}
                 dataKeys={[{ key: "expenses", label: "Expenses", color: "#C19B3F" }]}
-                valuePrefix="$" height={240} showLegend={false}
+                valuePrefix={currency ? `${currency} ` : ""} height={240} showLegend={false}
               />
             </ChartCard>
           )}
@@ -597,22 +595,35 @@ function ExpensesTab({ companyId, currency = "USD" }: { companyId: string; curre
 
 function UsersTab({ companyId }: { companyId: string }) {
   const users = useApi(() => companiesApi.listUsers(companyId), [companyId]);
-  const inviteMut = useMutation((email: string) => companiesApi.inviteUser(companyId, { email }));
+  const companyRoles = useApi(() => rolesApi.company(), []);
+  const inviteMut = useMutation((email: string, roleId: string) => companiesApi.inviteUser(companyId, { email, roleId }));
   const [email, setEmail] = useState("");
+  const [roleId, setRoleId] = useState("");
   const { toast } = useToast();
   const { can } = useAuth();
+
+  useEffect(() => {
+    if (!roleId && companyRoles.data?.[0]?.id) setRoleId(companyRoles.data[0].id);
+  }, [companyRoles.data, roleId]);
+
   return (
     <Card>
       <CardHeader><CardTitle>Company Users</CardTitle></CardHeader>
       <CardContent className="space-y-3">
-        {can(PERMISSIONS.COMPANY_USER_INVITE) && <div className="flex gap-2">
+        {can(PERMISSIONS.COMPANY_USER_INVITE) && <div className="flex flex-col sm:flex-row gap-2">
           <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="user@company.com" className="flex-1 border rounded-lg px-3 py-2 text-sm" />
+          <select value={roleId} onChange={(e) => setRoleId(e.target.value)} className="border rounded-lg px-3 py-2 text-sm bg-white sm:w-48" disabled={companyRoles.loading || !companyRoles.data?.length}>
+            <option value="">{companyRoles.loading ? "Loading roles…" : "Select role"}</option>
+            {(companyRoles.data ?? []).map((role) => <option key={role.id} value={role.id}>{role.name}</option>)}
+          </select>
           <Button variant="primary" size="sm" onClick={async () => {
-            try { await inviteMut.mutate(email); toast("Invitation sent", "success"); setEmail(""); users.refetch(); }
+            if (!email || !roleId) return;
+            try { await inviteMut.mutate(email, roleId); toast("Invitation sent", "success"); setEmail(""); setRoleId(""); users.refetch(); }
 
             catch (e) { toast(e instanceof Error ? e.message : "Failed", "error"); }
-          }} disabled={!email || inviteMut.loading}>Invite</Button>
+          }} disabled={!email || !roleId || inviteMut.loading}>Invite</Button>
         </div>}
+        {!companyRoles.loading && !companyRoles.data?.length && <p className="text-[11px] text-red-500">No company roles are available.</p>}
         {users.loading ? <Loader2 className="w-4 h-4 animate-spin" /> : (
           <table className="w-full text-sm">
             <tbody className="divide-y">
@@ -639,12 +650,12 @@ function PayrollTab({ companyId }: { companyId: string }) {
   const { toast } = useToast();
   const { can } = useAuth();
   const [createModal, setCreateModal] = useState(false);
-  const [form, setForm] = useState({ label: "", periodStart: "", periodEnd: "", currency: "USD" });
+  const [form, setForm] = useState({ label: "", periodStart: "", periodEnd: "", currency: "" });
 
   const runs = useApi(() => payrollApi.listRuns({ companyId }), [companyId]);
   const employees = useApi(() => payrollApi.listEmployees({ companyId }), [companyId]);
   const [addEmpModal, setAddEmpModal] = useState(false);
-  const [empForm, setEmpForm] = useState({ fullName: "", email: "", jobTitle: "", baseSalary: "", currency: "USD" });
+  const [empForm, setEmpForm] = useState({ fullName: "", email: "", jobTitle: "", baseSalary: "", currency: "" });
 
   const createRunMut = useMutation(() => payrollApi.createRun({ ...form, companyId, periodStart: form.periodStart, periodEnd: form.periodEnd }));
   const createEmpMut = useMutation(() => payrollApi.createEmployee({ ...empForm, baseSalary: Number(empForm.baseSalary), companyId }));
@@ -703,8 +714,8 @@ function PayrollTab({ companyId }: { companyId: string }) {
                   <tr key={r.id} className="hover:bg-navy/[0.015]">
                     <td className="px-5 py-3 text-[13px] font-medium text-navy">{r.label || `Run ${r.id.slice(0,8)}`}</td>
                     <td className="px-4 py-3 text-[12px] text-navy/60">{r.periodStart} → {r.periodEnd}</td>
-                    <td className="px-4 py-3 text-right text-[13px] font-medium text-navy">{r.totalGross != null ? fmt(r.totalGross) : "—"}</td>
-                    <td className="px-4 py-3 text-right text-[13px] font-medium text-navy">{r.totalNet != null ? fmt(r.totalNet) : "—"}</td>
+                    <td className="px-4 py-3 text-right text-[13px] font-medium text-navy">{r.totalGross != null ? fmt(r.totalGross, r.currency) : "—"}</td>
+                    <td className="px-4 py-3 text-right text-[13px] font-medium text-navy">{r.totalNet != null ? fmt(r.totalNet, r.currency) : "—"}</td>
                     <td className="px-4 py-3 text-center"><Badge variant={STATUS_VARIANT[r.status] ?? "default"} size="sm">{r.status}</Badge></td>
                     <td className="px-4 py-3 text-right">
                       <div className="flex items-center justify-end gap-1">
@@ -749,7 +760,7 @@ function PayrollTab({ companyId }: { companyId: string }) {
                       <p className="text-[11px] text-navy/40">{e.email}</p>
                     </td>
                     <td className="px-4 py-3 text-[12px] text-navy/60">{e.jobTitle || "—"}</td>
-                    <td className="px-4 py-3 text-right text-[13px] font-medium text-navy">{fmt(e.baseSalary)} {e.currency}</td>
+                    <td className="px-4 py-3 text-right text-[13px] font-medium text-navy">{fmt(e.baseSalary, e.currency)}</td>
                     <td className="px-4 py-3 text-center"><Badge variant={e.active ? "success" : "error"} size="sm">{e.active ? "Active" : "Inactive"}</Badge></td>
                   </tr>
                 ))}

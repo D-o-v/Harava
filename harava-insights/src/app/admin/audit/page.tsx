@@ -10,13 +10,16 @@ import { Search, Download, Loader2, RefreshCw } from "lucide-react";
 import { accountApi } from "@/lib/api/endpoints";
 import { useApi } from "@/lib/api/hooks";
 import { PageLoader, PageError } from "@/components/ui/page-loader";
+import { useTenantAdmin } from "@/lib/tenant-admin-context";
 
 export default function AuditLogPage() {
   const { toast } = useToast();
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(0);
+  const { activeTenantId, isReady } = useTenantAdmin();
+  const canLoadAudit = isReady && !!activeTenantId;
 
-  const audit = useApi(() => accountApi.audit({ page, size: 20 }), [page]);
+  const audit = useApi(() => accountApi.audit({ page, size: 20 }), [page, canLoadAudit], { skip: !canLoadAudit });
 
   const events = audit.data?.content ?? [];
   const total = audit.data?.totalElements ?? 0;
@@ -28,7 +31,7 @@ export default function AuditLogPage() {
     return JSON.stringify(e).toLowerCase().includes(s);
   }) as Array<Record<string, unknown>>;
 
-  if (audit.loading) return <><DashboardHeader title="Audit Log" subtitle="Complete activity trail for compliance and security" /><PageLoader message="Loading audit log…" /></>;
+  if (!canLoadAudit || audit.loading) return <><DashboardHeader title="Audit Log" subtitle="Complete activity trail for compliance and security" /><PageLoader message="Opening tenant audit log…" /></>;
   if (audit.error) return <><DashboardHeader title="Audit Log" subtitle="Complete activity trail for compliance and security" /><PageError message={audit.error} onRetry={audit.refetch} /></>;
 
   return (

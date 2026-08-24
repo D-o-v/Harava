@@ -123,11 +123,12 @@ export async function getCompanyUsers(companyId: string): Promise<CompanyUserRes
 
 export async function inviteCompanyUser(
   companyId: string,
-  email: string
+  email: string,
+  roleId: string,
 ): Promise<InvitationResponse> {
   return api<InvitationResponse>(
     `/api/v1/tenant/companies/${companyId}/users/invite`,
-    { method: "POST", body: { email } }
+    { method: "POST", body: { email, roleId } }
   );
 }
 

@@ -17,10 +17,9 @@ import {
 import { TrendChart, MetricBarChart, DonutChart, ChartCard } from "@/components/ui/charts";
 import { PageLoader } from "@/components/ui/page-loader";
 
-function fmt(n: number, currency = "USD") {
-  if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(1)}M`;
-  if (n >= 1_000) return `$${(n / 1_000).toFixed(1)}K`;
-  return new Intl.NumberFormat("en-US", { style: "currency", currency, maximumFractionDigits: 0 }).format(n);
+function fmt(n: number, currency?: string) {
+  if (!currency) return new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 }).format(n);
+  return new Intl.NumberFormat(undefined, { style: "currency", currency, maximumFractionDigits: 0, notation: "compact" }).format(n);
 }
 
 function pct(a: number, b: number) {
@@ -74,7 +73,7 @@ export default function FinSightDashboard() {
   const cfPoints = cashFlowData?.trend ?? [];
   const expBreakdown = expensesData?.byCategory ?? [];
   const activityItems = (activity.data as { type?: string; reference?: string | null; party?: string | null; amount?: number; date?: string }[] | null) ?? [];
-  const currency = (k?.currency as string | undefined) ?? pnlData?.currency ?? cashFlowData?.currency ?? expensesData?.currency ?? "USD";
+  const currency = (k?.currency as string | undefined) ?? pnlData?.currency ?? cashFlowData?.currency ?? expensesData?.currency;
 
   const revenue = k?.revenueThisMonth ?? k?.revenue ?? 0;
   const expTotal = k?.expensesThisMonth ?? k?.expenses ?? 0;
@@ -136,7 +135,7 @@ export default function FinSightDashboard() {
           {[
             { label: "Revenue (MTD)", value: revenue, pct: revPct, icon: DollarSign, href: "/finsight/reports" },
             { label: "Expenses (MTD)", value: expTotal, pct: expPct, icon: Receipt, href: "/finsight/accounting", invert: true },
-            { label: "Net Income", value: netIncome, pct: netPct, icon: TrendingUp, href: "/finsight/reconciliation" },
+            { label: "Net Income", value: netIncome, pct: netPct, icon: TrendingUp, href: "/finsight/reports" },
             { label: "Cash Position", value: cashPos, pct: null, icon: Clock, href: "/finsight/reports" },
           ].map(({ label, value, pct: p, icon: Icon, href, invert }) => (
             <div key={label} className="stat-card p-5 cursor-pointer group" onClick={() => router.push(href)}>
@@ -183,7 +182,7 @@ export default function FinSightDashboard() {
                       { key: "revenue", label: "Revenue", color: "#182954" },
                       { key: "expenses", label: "Expenses", color: "#C19B3F" },
                     ]}
-                    valuePrefix="$"
+                    valuePrefix={currency ? `${currency} ` : ""}
                     height={260}
                   />
               }
@@ -211,7 +210,7 @@ export default function FinSightDashboard() {
         <ChartCard
           title="Monthly Cash Flow"
           subtitle="Net income trend"
-          action={<Button variant="ghost" size="xs" onClick={() => router.push("/finsight/reconciliation")}>Reconciliation <ArrowRight className="w-3 h-3" /></Button>}
+          action={<Button variant="ghost" size="xs" onClick={() => router.push("/finsight/reports")}>Financial reports <ArrowRight className="w-3 h-3" /></Button>}
         >
           {cashFlow.loading
             ? <div className="h-56 flex items-center justify-center"><Loader2 className="w-5 h-5 animate-spin text-navy/30" /></div>
@@ -221,7 +220,7 @@ export default function FinSightDashboard() {
                   { key: "inflow", label: "Inflow", color: "#182954" },
                   { key: "outflow", label: "Outflow", color: "#d4b366" },
                 ]}
-                valuePrefix="$"
+                valuePrefix={currency ? `${currency} ` : ""}
                 height={220}
               />
           }
@@ -242,7 +241,7 @@ export default function FinSightDashboard() {
                 : activityItems.length > 0
                   ? <div className="divide-y divide-navy/4">
                       {activityItems.map((tx, i) => (
-                        <div key={i} className="flex items-center justify-between px-6 py-3.5 hover:bg-navy/[0.015] cursor-pointer transition-colors" onClick={() => router.push("/finsight/accounting")}>
+                        <div key={i} className="flex items-center justify-between px-6 py-3.5 hover:bg-navy/1.5 cursor-pointer transition-colors" onClick={() => router.push("/finsight/accounting")}>
                           <div>
                             <p className="text-[13px] font-medium text-navy">{tx.party ?? tx.type ?? "Transaction"}{tx.reference ? ` · #${tx.reference}` : ""}</p>
                             <p className="text-[11px] text-navy/35 mt-0.5">{tx.date ? new Date(tx.date).toLocaleDateString() : "—"}</p>
@@ -266,12 +265,11 @@ export default function FinSightDashboard() {
             <CardContent className="space-y-3">
               {[
                 { label: "View Financial Reports", sub: "Income, balance sheet, cash flow", href: "/finsight/reports", badge: null },
-                { label: "Reconcile Accounts", sub: "Match transactions with bank statements", href: "/finsight/reconciliation", badge: null },
                 { label: "Manage Clients", sub: "Connect & manage QuickBooks companies", href: "/finsight/clients", badge: isQbConnected ? "Connected" : isConfirmedDisconnected ? "Setup needed" : "Checking connection" },
                 { label: "AI Intelligence", sub: "Insights, anomalies & forecasts", href: "/finsight/ai-intelligence", badge: "New" },
                 { label: "Financial News", sub: "Latest business & market headlines", href: "/finsight/news", badge: null },
               ].map((item) => (
-                <div key={item.href} className="flex items-center justify-between p-3.5 border border-navy/5 rounded-xl hover:border-navy/10 hover:bg-navy/[0.01] transition-all cursor-pointer" onClick={() => router.push(item.href)}>
+                <div key={item.href} className="flex items-center justify-between p-3.5 border border-navy/5 rounded-xl hover:border-navy/10 hover:bg-navy/1 transition-all cursor-pointer" onClick={() => router.push(item.href)}>
                   <div>
                     <p className="text-[13px] font-medium text-navy">{item.label}</p>
                     <p className="text-[11px] text-navy/40 mt-0.5">{item.sub}</p>
@@ -307,7 +305,7 @@ export default function FinSightDashboard() {
                 { title: "Cash Flow Forecast", message: "Projected cash position dips in 2 weeks. Consider delaying non-essential payments.", severity: "warning" },
                 { title: "Month-End Ready", message: "All reconciliations complete. 98% of transactions categorized automatically.", severity: "success" },
               ].map((insight, i) => (
-                <div key={i} className="flex items-start gap-3.5 p-4 rounded-xl bg-navy/[0.015] border border-navy/4 cursor-pointer hover:bg-navy/[0.025] hover:border-navy/[0.07] transition-all" onClick={() => router.push("/finsight/ai-intelligence")}>
+                <div key={i} className="flex items-start gap-3.5 p-4 rounded-xl bg-navy/1.5 border border-navy/4 cursor-pointer hover:bg-navy/2.5 hover:border-navy/7 transition-all" onClick={() => router.push("/finsight/ai-intelligence")}>
                   <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${insight.severity === "warning" ? "bg-amber-50" : "bg-navy/5"}`}>
                     {insight.severity === "warning"
                       ? <AlertTriangle className="w-4 h-4 text-amber-500" />

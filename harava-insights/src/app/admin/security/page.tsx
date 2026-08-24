@@ -9,12 +9,15 @@ import { Shield, AlertTriangle, Lock, Eye, Loader2, RefreshCw, Search } from "lu
 import { accountApi } from "@/lib/api/endpoints";
 import { useApi } from "@/lib/api/hooks";
 import { PageLoader, PageError } from "@/components/ui/page-loader";
+import { useTenantAdmin } from "@/lib/tenant-admin-context";
 
 export default function SecurityPage() {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(0);
+  const { activeTenantId, isReady } = useTenantAdmin();
+  const canLoadAudit = isReady && !!activeTenantId;
 
-  const audit = useApi(() => accountApi.audit({ page, size: 20 }), [page]);
+  const audit = useApi(() => accountApi.audit({ page, size: 20 }), [page, canLoadAudit], { skip: !canLoadAudit });
 
   const events = (audit.data?.content ?? []) as Array<Record<string, unknown>>;
   const total = audit.data?.totalElements ?? 0;
@@ -26,7 +29,7 @@ export default function SecurityPage() {
 
   const failedLogins = events.filter((e) => String(e.eventType ?? "").toLowerCase().includes("login") && String(e.outcome ?? "") !== "SUCCESS").length;
 
-  if (audit.loading) return <><DashboardHeader title="Security Center" subtitle="Monitor and respond to security events" /><PageLoader message="Loading security events…" /></>;
+  if (!canLoadAudit || audit.loading) return <><DashboardHeader title="Security Center" subtitle="Monitor and respond to security events" /><PageLoader message="Opening tenant security events…" /></>;
   if (audit.error) return <><DashboardHeader title="Security Center" subtitle="Monitor and respond to security events" /><PageError message={audit.error} onRetry={audit.refetch} /></>;
 
   return (
@@ -55,7 +58,7 @@ export default function SecurityPage() {
           <CardContent className="p-0">
             <div className="overflow-x-auto">
                 <table className="w-full text-sm">
-                  <thead className="bg-navy/[0.02] border-b border-navy/6">
+                  <thead className="bg-navy/2 border-b border-navy/6">
                     <tr>
                       <th className="text-left px-5 py-3 text-[11px] font-semibold text-navy/50 uppercase tracking-wider">Time</th>
                       <th className="text-left px-4 py-3 text-[11px] font-semibold text-navy/50 uppercase tracking-wider">Event</th>
@@ -66,7 +69,7 @@ export default function SecurityPage() {
                   </thead>
                   <tbody className="divide-y divide-navy/4">
                     {filtered.map((e, i) => (
-                      <tr key={String(e.id ?? i)} className="hover:bg-navy/[0.015] transition-colors">
+                      <tr key={String(e.id ?? i)} className="hover:bg-navy/1.5 transition-colors">
                         <td className="px-5 py-3 text-[11px] text-navy/50 font-mono whitespace-nowrap">
                           {e.occurredAt ? new Date(String(e.occurredAt)).toLocaleString() : "—"}
                         </td>

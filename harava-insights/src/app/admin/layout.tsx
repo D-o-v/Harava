@@ -9,7 +9,7 @@ import { useEffect } from "react";
 import {
   LayoutDashboard, Users, BookOpen, BarChart3, CreditCard,
   Settings, Shield, Key, Building2 as Building2Icon,
-  Cpu, Activity, FileText, ClipboardList, Wallet,
+  Cpu, Activity, ClipboardList, Wallet,
 } from "lucide-react";
 
 // Platform-level nav (always visible)
@@ -21,7 +21,6 @@ const PLATFORM_NAV: NavItem[] = [
   { title: "System Health",        href: "/admin/health",    icon: Activity },
   { title: "Content Management",   href: "/admin/content",   icon: BookOpen },
   { title: "Billing & Subscriptions", href: "/admin/billing", icon: CreditCard },
-  { title: "Reports",              href: "/admin/reports",   icon: FileText },
   { title: "Settings",             href: "/admin/settings",  icon: Settings },
 ];
 

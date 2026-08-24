@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -35,10 +35,11 @@ export default function LoginPage() {
     return "/finsight";
   }
 
-  if (user) {
-    router.replace(routeForScope(user.scope));
-    return null;
-  }
+  useEffect(() => {
+    if (user) router.replace(routeForScope(user.scope));
+  }, [router, user]);
+
+  if (user) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -8,7 +8,7 @@ import { PERMISSIONS } from "@/lib/permissions";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import {
-  LayoutDashboard, Receipt, FileText, BarChart3,
+  LayoutDashboard, Receipt, BarChart3,
   Calculator, Wallet, FolderOpen, Brain, ShieldCheck, Users, Newspaper,
   Building2, ChevronDown,
 } from "lucide-react";
@@ -17,7 +17,6 @@ import {
 const STAFF_NAV: (NavItem & { requires?: string })[] = [
   { title: "Dashboard",         href: "/finsight",                icon: LayoutDashboard, requires: PERMISSIONS.INSIGHTS_VIEW },
   { title: "Accounting",        href: "/finsight/accounting",     icon: Receipt,         requires: PERMISSIONS.INSIGHTS_VIEW },
-  { title: "Reconciliation",    href: "/finsight/reconciliation", icon: FileText,        requires: PERMISSIONS.INSIGHTS_VIEW },
   { title: "Financial Reports", href: "/finsight/reports",        icon: BarChart3,       requires: PERMISSIONS.INSIGHTS_VIEW },
   { title: "Tax & Compliance",  href: "/finsight/tax",            icon: Calculator,      requires: PERMISSIONS.INSIGHTS_VIEW },
   { title: "Payroll",           href: "/finsight/payroll",        icon: Wallet,          requires: PERMISSIONS.PAYROLL_READ },
@@ -47,7 +46,7 @@ function requiredPermission(pathname: string, isPortal: boolean): string | undef
   if (pathname.startsWith("/finsight/payroll")) return PERMISSIONS.PAYROLL_READ;
   if (pathname.startsWith("/finsight/approvals")) return PERMISSIONS.PAYROLL_APPROVE;
   if (pathname.startsWith("/finsight/access")) return PERMISSIONS.STAFF_READ;
-  if (/^\/finsight\/(accounting|reconciliation|reports|cfo-advisory|tax|documents|ai-intelligence)/.test(pathname) || pathname === "/finsight") return PERMISSIONS.INSIGHTS_VIEW;
+  if (/^\/finsight\/(accounting|reports|cfo-advisory|tax|documents|ai-intelligence)/.test(pathname) || pathname === "/finsight") return PERMISSIONS.INSIGHTS_VIEW;
   return undefined;
 }
 
@@ -77,7 +76,7 @@ function FinSightLayoutInner({ children }: { children: React.ReactNode }) {
           style={{ "--dashboard-header-offset": selectedCompanyId && selectedCompanyName ? "37px" : "0px" } as React.CSSProperties}
         >
           {selectedCompanyId && selectedCompanyName && (
-            <div className="sticky top-0 z-20 flex items-center justify-between gap-3 px-5 py-2 bg-navy/[0.03] border-b border-navy/5 text-[12px]">
+            <div className="sticky top-0 z-20 flex items-center justify-between gap-3 px-5 py-2 bg-navy/3 border-b border-navy/5 text-[12px]">
               <div className="flex items-center gap-2 text-navy/60">
                 <Building2 className="w-3.5 h-3.5 text-gold" />
                 <span>Viewing:</span>

@@ -12,7 +12,7 @@ import { useAuth } from "@/lib/auth";
 import { PERMISSIONS } from "@/lib/permissions";
 import { Can } from "@/components/auth/permission-guard";
 import { Building2, Plus, Search, Loader2, Ban, PlayCircle, Wifi, WifiOff, Users, ArrowRight, RefreshCw, LayoutGrid, List, AlertTriangle } from "lucide-react";
-import { companiesApi, quickbooksApi, type Company } from "@/lib/api/endpoints";
+import { companiesApi, quickbooksApi, rolesApi, type Company } from "@/lib/api/endpoints";
 import { useApi, useMutation } from "@/lib/api/hooks";
 import { PageLoader, PageError } from "@/components/ui/page-loader";
 
@@ -26,10 +26,12 @@ export default function FinsightClientsPage() {
   const [view, setView] = useState<"grid" | "table">("grid");
   const [inviteFor, setInviteFor] = useState<Company | null>(null);
   const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteRoleId, setInviteRoleId] = useState("");
   const [suspendTarget, setSuspendTarget] = useState<Company | null>(null);
 
   const companies = useApi(() => companiesApi.list(), []);
-  const inviteMut = useMutation((id: string, email: string) => companiesApi.inviteUser(id, { email }));
+  const companyRoles = useApi(() => rolesApi.company(), []);
+  const inviteMut = useMutation((id: string, email: string, roleId: string) => companiesApi.inviteUser(id, { email, roleId }));
   const startQb = useMutation(() => quickbooksApi.startConnect());
   const suspendMut = useMutation((id: string) => companiesApi.suspend(id));
   const activateMut = useMutation((id: string) => companiesApi.activate(id));
@@ -93,12 +95,13 @@ export default function FinsightClientsPage() {
   }, [companies, router, toast]);
 
   const submitInvite = async () => {
-    if (!inviteFor) return;
+    if (!inviteFor || !inviteEmail || !inviteRoleId) return;
     try {
-      await inviteMut.mutate(inviteFor.id, inviteEmail);
+      await inviteMut.mutate(inviteFor.id, inviteEmail, inviteRoleId);
       toast("Invitation sent", "success");
       setInviteFor(null);
       setInviteEmail("");
+      setInviteRoleId("");
     } catch (e) {
       toast(e instanceof Error ? e.message : "Failed", "error");
     }
@@ -223,7 +226,7 @@ export default function FinsightClientsPage() {
                   <div className="flex items-center gap-2 pt-3 border-t border-navy/5">
                     {can(PERMISSIONS.COMPANY_USER_INVITE) && <button
                       className="flex-1 flex items-center justify-center gap-1.5 text-[12px] font-medium text-navy/60 hover:text-navy py-1.5 rounded-lg hover:bg-navy/4 transition-all"
-                      onClick={(e) => { e.stopPropagation(); setInviteFor(c); setInviteEmail(""); }}
+                      onClick={(e) => { e.stopPropagation(); setInviteFor(c); setInviteEmail(""); setInviteRoleId(companyRoles.data?.[0]?.id ?? ""); }}
                     >
                       <Users className="w-3.5 h-3.5" /> Invite
                     </button>}
@@ -276,9 +279,17 @@ export default function FinsightClientsPage() {
             <label className="text-[12px] font-medium text-navy/60 block mb-1.5">Email</label>
             <input type="email" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} className="w-full border rounded-xl px-3 py-2 text-sm" placeholder="user@company.com" />
           </div>
+          <div>
+            <label className="text-[12px] font-medium text-navy/60 block mb-1.5">Role</label>
+            <select value={inviteRoleId} onChange={(e) => setInviteRoleId(e.target.value)} className="w-full border rounded-xl px-3 py-2 text-sm bg-white" disabled={companyRoles.loading || !companyRoles.data?.length}>
+              <option value="">{companyRoles.loading ? "Loading roles…" : "Select a role"}</option>
+              {(companyRoles.data ?? []).map((role) => <option key={role.id} value={role.id}>{role.name}</option>)}
+            </select>
+            {!companyRoles.loading && !companyRoles.data?.length && <p className="text-[11px] text-red-500 mt-1">No company roles are available.</p>}
+          </div>
           <div className="flex justify-end gap-2 pt-2">
-            <Button variant="ghost" onClick={() => setInviteFor(null)}>Cancel</Button>
-            <Button variant="primary" onClick={submitInvite} disabled={inviteMut.loading || !inviteEmail}>Send invite</Button>
+            <Button variant="ghost" onClick={() => { setInviteFor(null); setInviteRoleId(""); }}>Cancel</Button>
+            <Button variant="primary" onClick={submitInvite} disabled={inviteMut.loading || !inviteEmail || !inviteRoleId}>Send invite</Button>
           </div>
         </div>
       </Modal>
